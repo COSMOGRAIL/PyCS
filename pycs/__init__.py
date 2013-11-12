@@ -14,6 +14,8 @@ If you use PyCS in a publication, please cite our `COSMOGRAIL XI <http://arxiv.o
 
 __author__ = "Vivien Bonvin and Malte Tewes"
 __copyright__ = "2013"
+__version__ = "2.0dev"
+
 
 __all__ = ["gen", "disp", "spl", "sim", "tdc"]
 
