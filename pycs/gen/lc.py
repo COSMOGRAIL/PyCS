@@ -1725,7 +1725,9 @@ def multidisplay(setlist=[],
 			if len(setlist)==4:
 				ytxtcoord = [0.99,0.73,0.47,0.21]
 			if len(setlist)==5:
-				ytxtcoord = [0.995,0.787,0.582,0.374, 0.167]				
+				ytxtcoord = [0.995,0.787,0.582,0.374, 0.167]
+			if len(setlist)==6:
+				ytxtcoord = [0.995,0.826, 0.655,  0.48, 0.31, 0.14]								
 				
 			# you want more subplots ? Feel free to add ytxtcoord...				
 			
