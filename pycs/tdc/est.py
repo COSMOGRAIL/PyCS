@@ -137,6 +137,37 @@ def bigplot(estimates, plotpath = None):
 		plt.savefig(plotpath)
 	else:
 		plt.show()
+
+
+
+def displaymeplease(estimates, rung, pair):
+
+	'''
+	display the rung / pair curve for each estimate corresponding
+	'''
 	
 	
+	# I select only the estimates with the rung and pair desired
+	estimates = [est for est in estimates if est.rung == rung and est.pair == pair]
+
+	setlist=[]
+		
+	# import the curve from data
+	datapath = '/archive/vbonvin/disk1/LENSES/TDC0/data/'
+	filepath = datapath + 'rung%0i/tdc0_rung%0i_pair%0i.txt' % (rung,rung,pair)
+		
+	for est in estimates:	
+		lcs = pycs.tdc.util.read(filepath)
+		lcs[1].shifttime(est.td)
+		lcs[1].shiftmag(est.ms)
+		setlist.append([lcs,est.methodpar])
+	
+	pycs.gen.lc.multidisplay(setlist, showlegend = False, showdelays = True)		
+		
+	
+
+
+	
+	
+
 
