@@ -1,7 +1,7 @@
 """
 This is PyCS, a python toolbox to estimate time delays between COSMOGRAIL light curves.
 
-:Authors: Malte Tewes
+:Authors: Vivien Bonvin and Malte Tewes
 :License: GPLv3 or later (see README.txt)
 
 If you use PyCS in a publication, please cite our `COSMOGRAIL XI <http://arxiv.org/abs/1208.5598>`_ paper, thanks !
@@ -12,8 +12,8 @@ If you use PyCS in a publication, please cite our `COSMOGRAIL XI <http://arxiv.o
 
 """
 
-__author__ = "Malte Tewes"
-__copyright__ = "2012, Malte Tewes"
+__author__ = "Vivien Bonvin and Malte Tewes"
+__copyright__ = "2013"
 
 __all__ = ["gen", "disp", "spl", "sim", "tdc"]
 
