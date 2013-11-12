@@ -75,3 +75,68 @@ def importfromd3cs(filepath, set="tdc0"):
 		for line in lines]
 
 	return estimates
+	
+	
+
+def bigplot(estimates, plotpath = None):
+	import matplotlib.pyplot as plt
+	for est in estimates:
+		est.tmpid = "(%i, %i)" % (est.rung, est.pair)
+	estids = sorted(list(set([est.tmpid for est in estimates])))
+	
+	#estids = estids[:40]
+	
+	def colour(est):
+		if est.confidence==0: return "black"
+		if est.confidence==1: return "blue"
+		if est.confidence==2: return "green"
+		if est.confidence==3: return "orange"
+		if est.confidence==4: return "red"
+		
+	fig, axes = plt.subplots(nrows=len(estids), figsize=(10, 1.0*(len(estids))))
+	fig.subplots_adjust(top=0.99, bottom=0.05, hspace=0.32)
+   
+	for ax, estid in zip(axes, estids):
+		thisidests = [est for est in estimates if est.tmpid == estid]
+		n = len(thisidests)
+		
+		tds = np.array([est.td for est in thisidests])
+		tderrs = np.array([est.tderr for est in thisidests])
+ 		ys = np.arange(n)
+ 		colours = map(colour, thisidests)
+		#ax.scatter(tds, ys)
+		ax.errorbar(tds, ys, yerr=None, xerr=tderrs, fmt='.', ecolor="gray", capsize=3)
+		ax.scatter(tds, ys, s = 50, c=colours, linewidth=0, zorder=20)#, cmap=plt.cm.get_cmap('jet'), vmin=0, vmax=4)
+		
+		for (est, y) in zip(thisidests, ys):
+			ax.text(est.td, y+0.3, "  %s (%s)" % (est.method, est.methodpar), va='center', ha='left', fontsize=6)
+		
+		
+		ax.set_ylim(-1, n)
+		
+		meantd = np.mean(tds)
+		maxdist = np.max(np.fabs(tds - meantd))
+		if maxdist < 200:
+			tdr = 200
+		else:
+			tdr = maxdist*1.2
+		ax.set_xlim(meantd - tdr, meantd + tdr)
+		
+  		pos = list(ax.get_position().bounds)
+   		x_text = pos[0] - 0.01
+		y_text = pos[1] + pos[3]/2.
+		fig.text(x_text, y_text, estid, va='center', ha='right', fontsize=14)
+		
+	for ax in axes:
+		ax.set_yticks([])
+
+	#cbar = plt.colorbar(sc, cax = axes[0], orientation="horizontal")
+	#cbar.set_label('Confidence')
+
+	if plotpath:
+		plt.savefig(plotpath)
+	else:
+		plt.show()
+	
+	
+
