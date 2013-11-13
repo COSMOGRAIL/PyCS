@@ -7,6 +7,8 @@ import numpy as np
 import pycs.gen.lc
 
 
+def tdcfilepath(set, rung, pair):
+	return "%s/rung%i/%s_rung%i_pair%i.txt" % (set, rung, set, rung, pair)
 
 def read(filepath, verbose=True, shortlabel=True):
 	"""
