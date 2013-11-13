@@ -2314,6 +2314,22 @@ def display(lclist=[], splist=[],
 		plt.close() # this seems important so that the plot is not displayed when a next plt.show() is called.
 
 
+
+def displayrange(lcs, margin=0.1):
+	"""
+	returns a plausible range of mags and hjds to plot, so that you can keep this fixed in your plots
+	"""
+	mags = []
+	jds = []
+	for l in lcs:
+		mags.extend(l.getmags())
+		jds.extend(l.getjds())
+	
+	magrange = np.max(mags) - np.min(mags)
+	jdrange = np.max(jds) - np.min(jds)
+	return ((np.min(jds)-margin*jdrange, np.max(jds)+margin*jdrange), (np.max(mags)+margin*magrange, np.min(mags)-margin*magrange))
+
+
 # 
 # def multigettimedelays(lcs):
 # 	"""
