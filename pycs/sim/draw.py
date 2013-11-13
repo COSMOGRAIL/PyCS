@@ -34,7 +34,7 @@ def sample(lc, spline):
 	
 	if lc.fluxshift != 0.0:
 		if (lc.ml != None):
-			lc.mags = spline.eval(lc.getjds()) - lc.ml.calcmlmags() - lc.magshift
+			lc.mags = spline.eval(lc.getjds()) - lc.ml.calcmlmags(lc) - lc.magshift
 			lc.mags -= lc.calcfluxshiftmags(inverse=True) # Don't put this on the above line ... uses lc.mags !
 		else:
 			lc.mags = spline.eval(lc.getjds()) - lc.magshift
@@ -42,7 +42,7 @@ def sample(lc, spline):
 	
 	else:
 		if (lc.ml != None):
-			lc.mags = spline.eval(lc.getjds()) - lc.ml.calcmlmags() - lc.magshift
+			lc.mags = spline.eval(lc.getjds()) - lc.ml.calcmlmags(lc) - lc.magshift
 		else:
 			lc.mags = spline.eval(lc.getjds()) - lc.magshift	
 
@@ -134,7 +134,7 @@ def draw(lcs, spline, shotnoise=None, shotnoisefrac=1.0, tweakml=None, scaletwea
 	
 	:param spline: reference spline from which I will draw my magnitudes.
 	
-	:param shotnoise: Select among [None, "magerrs", "res", "mcres"] 
+	:param shotnoise: Select among [None, "magerrs", "res", "mcres", "sigma"] 
 		
 		It tells what kind of noise to add to the fake mags.
 		This noise will, as required, be added to the "observed" data (i.e. not fluxshifted).
@@ -277,6 +277,13 @@ def draw(lcs, spline, shotnoise=None, shotnoisefrac=1.0, tweakml=None, scaletwea
 				raise RuntimeError("Save the residuals first !")
 			l.mags += l.residuals * shotnoisefrac * np.random.randn(len(l))
 			l.commentlist.append("Monte Carlo with previously saved residuals as sigma !")
+		elif shotnoise == "sigma":
+			# We use the std of the residuals as 1-sigma amplitude of white noise to add.
+			if not hasattr(l, 'residuals'):
+				raise RuntimeError("Save the residuals first !")
+			sigma = np.std(l.residuals)
+			l.mags += sigma * shotnoisefrac * np.random.randn(len(l))
+			l.commentlist.append("White noise with std of residuals as sigma !")
 		else:
 			raise RuntimeError("Couldn't understand your shotnoise.")
 		
