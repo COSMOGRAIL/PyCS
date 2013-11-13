@@ -327,7 +327,7 @@ def draw(lcs, spline, shotnoise=None, shotnoisefrac=1.0, tweakml=None, scaletwea
 
 
 		
-def multidraw(lcs, spline=None, optfctnots=None, onlycopy=False, n=20, npkl=5, simset="draw", shotnoise=None, shotnoisefrac=1.0, truetsr=0.0, tweakml=None, scaletweakresi=True, tweakspl=None, shuffle=True, verbose=True, trace=False):
+def multidraw(lcs, spline=None, optfctnots=None, onlycopy=False, n=20, npkl=5, simset="draw", simdir=None, shotnoise=None, shotnoisefrac=1.0, truetsr=0.0, tweakml=None, scaletweakresi=True, tweakspl=None, shuffle=True, verbose=True, trace=False):
 	"""
 	Even higher wrapper to produce mock + tweaked lightcurves, and save them into a directory (as pickle files),
 	in preparation for analysing them with :py:func:`pycs.sim.run.multirun`
@@ -354,6 +354,8 @@ def multidraw(lcs, spline=None, optfctnots=None, onlycopy=False, n=20, npkl=5, s
 	
 	:param simset: give a name to your simulation !
 	
+	:param simdir: where should I put these simulations ?
+	
 	:param shotnoise: Select among None, "magerrs", "mcres", "res".
 		See definitions in :py:func:`pycs.sim.draw.draw`. 
 	:type shotnoise: string
@@ -374,7 +376,10 @@ def multidraw(lcs, spline=None, optfctnots=None, onlycopy=False, n=20, npkl=5, s
 
 	"""
 	
-	destdir = "sims_%s" % (simset)
+	if simdir == None:
+		destdir = "sims_%s" % (simset)
+	else:
+		destdir = simdir
 	if verbose:
 		print "Now thowing dice into %s ..." % destdir
 	
@@ -383,7 +388,7 @@ def multidraw(lcs, spline=None, optfctnots=None, onlycopy=False, n=20, npkl=5, s
 		os.mkdir(destdir)
 	else:
 		if verbose:
-			print "The direcotry exists, I'll add my new curves."
+			print "The directory exists, I'll add my new curves."
 	
 	# Print out some info
 	if verbose:
