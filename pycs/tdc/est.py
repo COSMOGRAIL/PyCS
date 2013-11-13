@@ -46,7 +46,28 @@ class Estimate:
 
 	def __str__(self):
 		return "%s %s (%s rung %i pair %i): %.2f +/- %.2f, conf. %i" % (self.method, self.methodpar, self.set, self.rung, self.pair, self.td, self.tderr, self.confidence)
-		
+			
+def readcsv(filepath):
+	"""
+	Read a CSV file of estimates
+	"""
+	pass
+	
+def writecsv(estimates, filepath):
+	"""
+	Write a CSV file of estimates
+	"""
+	pass
+
+def combine(estimates):
+	"""
+	Combines estimates of the same curves into summary-estimates.
+	In other words : takes a messy list of mixed estimates and returns a list with one single estimate per pair.
+	"""
+	pass
+	
+
+
 
 
 def importfromd3cs(filepath, set="tdc0"):
