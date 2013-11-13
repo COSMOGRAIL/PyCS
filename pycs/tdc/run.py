@@ -15,7 +15,7 @@ class Run:
 	Class to contain a run of PyCS methods on a given lens
 	"""
 	
-	def __init__(self, iniest, lca, lcb, plots=True, outdir=None):
+	def __init__(self, iniest, lca, lcb, method="", methodpar="", plots=True, outdir=None):
 		"""
 
 		"""
@@ -24,8 +24,8 @@ class Run:
 		
 		# The output estimate of this run :
 		self.outest = copy.deepcopy(iniest)
-		self.outest.method = ""
-		self.outest.methodpar = ""
+		self.outest.method = method
+		self.outest.methodpar = methodpar
 		self.outest.td = 0.0
 		self.outest.tderr = 0.0
 		self.outest.ms = 0.0
@@ -34,6 +34,7 @@ class Run:
 	
 		self.lca = lca
 		self.lcb = lcb
+		(self.jdrange, self.magrange) = pycs.gen.lc.displayrange([self.lca, self.lcb]) # Just to be sure that they are defined.
 		
 		self.plots = plots
 		
@@ -103,7 +104,10 @@ class Run:
 		#pycs.gen.util.writepickle(self.sourcespline, os.path.join(self.datadir, "sourcespline.pkl"))
 		
 		# Visu
-		pycs.gen.lc.display([self.lca, self.lcb], [self.sourcespline], figsize=(18, 6), filename=os.path.join(self.plotdir, "sourcespline.png"), verbose=False)
+		
+		(self.jdrange, self.magrange) = pycs.gen.lc.displayrange([self.lca, self.lcb])
+		
+		pycs.gen.lc.display([self.lca, self.lcb], [self.sourcespline], jdrange=self.jdrange, magrange = self.magrange, figsize=(18, 6), filename=os.path.join(self.plotdir, "sourcespline.png"), verbose=False)
 		
 		# And we save the residuals, to be used later when drawign simulated curves.
 		pycs.sim.draw.saveresiduals([self.lca, self.lcb], self.sourcespline)
@@ -154,14 +158,18 @@ class Run:
 		
 	
 	def runobsplot(self):
-		
+		"""
+		A quick histogram to see that intrinsic variance compared to the initial estimate
+		"""
 		tdmin = self.iniest.td - 3.0*self.iniest.tderr
 		tdmax = self.iniest.td + 3.0*self.iniest.tderr
 		
 		fig = plt.figure(figsize=(10, 3))
 		fig.subplots_adjust(top=0.95, bottom=0.2)
 		plt.hist(self.obsmesdelays, range=(tdmin, tdmax), bins=200, color="green", lw=0)
+		plt.xlim(tdmin, tdmax)
 		plt.xlabel("Delay [day]")
+		plt.ylabel("Counts")
 		#ax = plt.gca()
 		plt.figtext(0.15, 0.8, "Intrinsic/initial error ratio: %.2f" % self.intrinsicratio)
 		plt.axvline(self.iniest.td - self.iniest.tderr, color="gray", linestyle="-", zorder=20)
@@ -172,6 +180,9 @@ class Run:
 	
 	
 	def runsim(self, optfct, n=5, plots=True):
+		"""
+		Drawing the simulated curves and runing on them
+		"""
 		self.check()
 		
 		self.log("Drawing %i simulations..." % n)
@@ -191,7 +202,7 @@ class Run:
 			lcssim = pycs.sim.draw.draw([self.lca, self.lcb], self.sourcespline, shotnoise="sigma")
 	
 			if plots:
-				pycs.gen.lc.display(lcssim, [self.sourcespline], figsize=(18,6), filename = os.path.join(self.plotdir, "sim_%i.png" % (i)))
+				pycs.gen.lc.display(lcssim, [self.sourcespline], jdrange=self.jdrange, magrange = self.magrange, figsize=(18,6), filename = os.path.join(self.plotdir, "sim_%i.png" % (i+1)))
 			
 			# Set some wrong "initial delays" for the analysys, around these "true delays".
 			lcssim[0].shifttime(float(np.random.uniform(low=-self.iniest.tderr, high=self.iniest.tderr, size=1)))
@@ -211,7 +222,7 @@ class Run:
 		self.simtruedelays = np.array([([lcssim[1].truetimeshift - lcssim[0].truetimeshift]) for lcssim in lcssimlist])
 		self.simmesdelays = np.array([([lcssim[1].timeshift - lcssim[0].timeshift]) for lcssim in lcssimlist])
 		
-		syserr = np.mean(self.simmesdelays - self.simtruedelays)
+		syserr = np.fabs(np.mean(self.simmesdelays - self.simtruedelays))
 		ranerr = np.std(self.simmesdelays - self.simtruedelays)
 		toterr = np.hypot(syserr, ranerr)
 		
@@ -222,8 +233,38 @@ class Run:
 		self.log("Total/initial error ratio: %.2f" % self.totalratio)
 			
 
-	def runsimplot(self):	
-		pass
+	def runsimplot(self):
+		"""
+		Viz of the MC results
+		"""
+		
+		tdmin = self.iniest.td - 3.0*self.iniest.tderr
+		tdmax = self.iniest.td + 3.0*self.iniest.tderr
+		
+		fig = plt.figure(figsize=(10, 3))
+		fig.subplots_adjust(top=0.95, bottom=0.2)
+		plt.scatter(self.simtruedelays, self.simmesdelays - self.simtruedelays)
+		plt.xlim(tdmin, tdmax)
+		plt.xlabel("True delay [day]")
+		plt.ylabel("Measurement error [day]")
+		plt.axvline(self.iniest.td - self.iniest.tderr, color="gray", linestyle="-", zorder=20)
+		plt.axvline(self.iniest.td + self.iniest.tderr, color="gray", linestyle="-", zorder=20)
+		plt.axhline(0, color="black", linestyle="-", zorder=20)
+		plt.axhline(- self.iniest.tderr, color="gray", linestyle="-", zorder=20)
+		plt.axhline(+ self.iniest.tderr, color="gray", linestyle="-", zorder=20)
+		plt.axhspan(-self.outest.tderr, self.outest.tderr, xmin=0, xmax=1, lw=0, color="red", alpha=0.2)
+		#plt.ylim(- 2.0*self.iniest.tderr, + 2.0*self.iniest.tderr)
+		
+		
+		plt.figtext(0.15, 0.8, "Total/initial error ratio: %.2f" % self.totalratio)
+		
+		#ax = plt.gca()
+		#plt.figtext(0.15, 0.8, "Intrinsic/initial error ratio: %.2f" % self.intrinsicratio)
+		#plt.axvline(self.iniest.td - self.iniest.tderr, color="gray", linestyle="-", zorder=20)
+		#plt.axvline(self.iniest.td + self.iniest.tderr, color="gray", linestyle="-", zorder=20)
+		#plt.axvline(self.outest.td, color="red", linestyle="-", zorder=20)
+		
+		plt.savefig(os.path.join(self.plotdir, "measvstrue.png"))
 			
 			
 	
