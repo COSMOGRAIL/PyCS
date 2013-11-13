@@ -2309,7 +2309,8 @@ def display(lclist=[], splist=[],
 		plt.show()
 	else:
 		plt.savefig(filename)
-		print "Plot written to %s" % filename
+		if verbose:
+			print "Plot written to %s" % filename
 		plt.close() # this seems important so that the plot is not displayed when a next plt.show() is called.
 
 
