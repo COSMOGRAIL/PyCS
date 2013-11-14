@@ -5,6 +5,9 @@ Stuff to manipulate time delay estimations from different techniques, specific t
 import pycs.gen.lc
 import numpy as np
 import sys
+import csv
+import glob
+import os
 
 
 class Estimate:
@@ -47,18 +50,50 @@ class Estimate:
 
 	def __str__(self):
 		return "%s %s (%s rung %i pair %i): %.2f +/- %.2f, conf. %i" % (self.method, self.methodpar, self.set, self.rung, self.pair, self.td, self.tderr, self.confidence)
-			
+	
+	def aslist(self):
+		return [self.set, self.rung, self.pair, self.method, self.methodpar, self.td, self.tderr, self.ms, self.confidence, self.timetaken]
+	
+	
 def readcsv(filepath):
 	"""
-	Read a CSV file of estimates
+	Read a CSV file of estimates.
+	You can specify a directory instead of a file, and I will read in all .csv files form there.
 	"""
-	pass
+	
+	if os.path.isdir(filepath):
+		files = sorted(glob.glob(os.path.join(filepath, "*.csv")))
+		estimates = []
+		for file in files:
+			estimates.extend(readcsv(file))
+		return estimates
+			
+	else:
+		f = open(filepath, 'rb')
+		reader = csv.reader(f, delimiter=',', quotechar='"')
+		estimates = []
+		for row in reader:
+			for i in [1, 2, 8]:
+				row[i] = int(row[i])
+			for i in [5, 6, 7, 9]:
+				row[i] = float(row[i])
+			estimates.append(Estimate(*row))
+		f.close()
+		print "Read %i estimates from %s" % (len(estimates), filepath)
+		return estimates
+        
 	
 def writecsv(estimates, filepath):
 	"""
 	Write a CSV file of estimates
 	"""
-	pass
+	f  = open(filepath, "wb")
+	writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
+  	for est in estimates:
+ 		writer.writerow(est.aslist()) 
+	f.close()
+	print "Wrote %i estimates into %s" % (len(estimates), filepath)
+
 
 def combine(estimates):
 	"""
