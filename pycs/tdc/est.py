@@ -51,7 +51,7 @@ class Estimate:
 		self.timetaken = timetaken
 
 	def __str__(self):
-		return "%s %s (%s rung %i pair %i): %.2f +/- %.2f, conf. %i" % (self.method, self.methodpar, self.set, self.rung, self.pair, self.td, self.tderr, self.confidence)
+		return "%s %s (%s, %i, %i): %.2f +/- %.2f, conf. %i" % (self.method, self.methodpar, self.set, self.rung, self.pair, self.td, self.tderr, self.confidence)
 	
 	def aslist(self):
 		return [self.set, self.rung, self.pair, self.method, self.methodpar, self.td, self.tderr, self.ms, self.confidence, self.timetaken]
@@ -101,6 +101,10 @@ def writecsv(estimates, filepath):
 	f  = open(filepath, "wb")
 	writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
   	for est in estimates:
+  		#est.td = "%.5f" % (est.td)
+  		#est.tderr = "%.5f" % (est.tderr)
+  		#est.ms = "%.5f" % (est.ms)
+  		#est.timetaken = "%.5f" % (est.timetaken)
  		writer.writerow(est.aslist()) 
 	f.close()
 	print "Wrote %i estimates into %s" % (len(estimates), filepath)
@@ -131,6 +135,7 @@ def importfromd3cs(filepath, set="tdc0"):
 			timetaken = float(line[10]))
 		for line in lines]
 
+	print "Read %i D3CS estimates from %s" % (len(estimates), filepath)
 	return estimates
 	
 
@@ -143,6 +148,7 @@ def group(estimates):
 		est.id = "%s_%i_%i" % (est.set, est.rung, est.pair)
 	estids = sorted(list(set([est.id for est in estimates])))
 	
+	print "Grouped %i estimates of %i different lenses" % (len(estimates), len(estids))
 	return [[est for est in estimates if est.id == estid] for estid in estids]
 		
 	
@@ -219,8 +225,24 @@ def combine(estimates,method='meanstd',methodcl=None):
 		
 		ms = 0.0
 		
+	if method == "initialestimation":
+		"""
+		To get safe initial conditions for automatic optimizers
+		"""	
+		td = np.median(np.array([est.td for est in estimates]))
+		tderr = np.median(np.array([est.tderr for est in estimates]))
+		ms = np.median(np.array([est.ms for est in estimates]))
 		
-		return Estimate(set=set, rung=rung, pair=pair, method="combi", methodpar=method, td=td, tderr=tderr, ms = ms, confidence=confidence)
+		if np.max([est.confidence for est in estimates]) >= 3:
+			confidence = 4
+		else:
+			confidence = int(np.ceil(np.median(np.array([est.confidence for est in estimates]))))
+
+		
+	combiest = Estimate(set=set, rung=rung, pair=pair, method="combi", methodpar=method, td=td, tderr=tderr, ms = ms, confidence=confidence)
+	combiest.check()
+	
+	return combiest
 
 	
 def multicombine(estimates, method='meanstd'):
@@ -235,6 +257,7 @@ def multicombine(estimates, method='meanstd'):
 	for ests in listests:
 		newests.append(combine(ests,method))
 	
+	checkunique(newests)
 	return newests		
 
 
@@ -297,28 +320,48 @@ def writesubmission(estimates, filepath):
 
 
 
-def bigplot(estimates, plotpath = None):
+def bigplot(estimates, shadedestimates = None, plotpath = None):
+	"""
+	Large graphical representation of your estimates.
+	
+	As shadedestimates you can give me a list of "unique" estimates (typical the result of a multicombine)
+	that I will show as shaded bars instead of errorbars.
+	
+	However, it's estimates that determines which panels I will draw and with what range,
+	so that you can get panels shown without any shadedestimate.
+	
+	"""
+	
 	import matplotlib.pyplot as plt
+	
 	for est in estimates:
-		est.tmpid = "(%i, %i)" % (est.rung, est.pair)
+		est.tmpid = "(%s, %i, %i)" % (est.set, est.rung, est.pair)
 	estids = sorted(list(set([est.tmpid for est in estimates])))
+	
+	if shadedestimates != None:
+		checkunique(shadedestimates)
+		for est in shadedestimates:
+			est.tmpid = "(%s, %i, %i)" % (est.set, est.rung, est.pair)
+		
 	
 	#estids = estids[:40]
 	
 	def colour(est):
 		if est.confidence==0: return "black"
-		if est.confidence==1: return "blue"
-		if est.confidence==2: return "green"
-		if est.confidence==3: return "orange"
-		if est.confidence==4: return "red"
+		elif est.confidence==1: return "blue"
+		elif est.confidence==2: return "green"
+		elif est.confidence==3: return "orange"
+		elif est.confidence==4: return "red"
+		else: return "purple"	
 		
 	fig, axes = plt.subplots(nrows=len(estids), figsize=(10, 1.0*(len(estids))))
-	fig.subplots_adjust(top=0.99, bottom=0.05, hspace=0.32)
+	fig.subplots_adjust(top=0.99, bottom=0.05, left=0.13, right=0.98, hspace=0.32)
    
 	for ax, estid in zip(axes, estids):
 		thisidests = [est for est in estimates if est.tmpid == estid]
 		n = len(thisidests)
 		
+		# The error bars for regular estimates :
 		tds = np.array([est.td for est in thisidests])
 		tderrs = np.array([est.tderr for est in thisidests])
  		ys = np.arange(n)
@@ -330,13 +373,22 @@ def bigplot(estimates, plotpath = None):
 		for (est, y) in zip(thisidests, ys):
 			ax.text(est.td, y+0.3, "  %s (%s)" % (est.method, est.methodpar), va='center', ha='left', fontsize=6)
 		
+		# The shadedestimates
+		if shadedestimates != None:
+			shadedests = [est for est in shadedestimates if est.tmpid == estid]
+			if len(shadedests) == 1:
+				shadedest = shadedests[0]
+				ax.axvspan(shadedest.td - shadedest.tderr, shadedest.td + shadedest.tderr, color=colour(shadedest), alpha=0.2, zorder=-20)
+				ax.text(shadedest.td, -0.9, "%s (%s)" % (shadedest.method, shadedest.methodpar), va='center', ha='center', fontsize=6)
 		
-		ax.set_ylim(-1, n)
+			
+		
+		ax.set_ylim(-1.3, n)
 		
 		meantd = np.mean(tds)
 		maxdist = np.max(np.fabs(tds - meantd))
-		if maxdist < 200:
-			tdr = 200
+		if maxdist < 100:
+			tdr = 100
 		else:
 			tdr = maxdist*1.2
 		ax.set_xlim(meantd - tdr, meantd + tdr)
