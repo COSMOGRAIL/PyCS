@@ -65,10 +65,7 @@ def combine(estimates):
 	Combines estimates of the same curves into summary-estimates.
 	In other words : takes a messy list of mixed estimates and returns a list with one single estimate per pair.
 	"""
-	pass
-	
-
-
+	pass	
 
 
 def importfromd3cs(filepath, set="tdc0"):
@@ -367,8 +364,7 @@ def show(estimates, rung, pair):
 	setlist=[]
 		
 	# import the curve from data
-	datapath = '/archive/vbonvin/disk1/LENSES/TDC0/data/'
-	filepath = datapath + 'rung%0i/tdc0_rung%0i_pair%0i.txt' % (rung,rung,pair)
+	filepath = 'data/rung%0i/tdc0_rung%0i_pair%0i.txt' % (rung,rung,pair)
 		
 	for est in estimates:	
 		lcs = pycs.tdc.util.read(filepath)
@@ -384,9 +380,9 @@ def d3cs(rung,pair):
 	Open d3cs with the rung/pair curve in your default browser
 		
 	'''
-	import os
-	cmd=' xdg-open http://www.astro.uni-bonn.de/~mtewes/d3cs/index.php?user=display\&loadrung=%i\&loadpair=%i' %(rung,pair)
-	os.system(cmd)
+	import webbrowser
+	cmd='http://www.astro.uni-bonn.de/~mtewes/d3cs/index.php?user=display&loadrung=%i&loadpair=%i' %(rung,pair)
+	webbrowser.open(cmd)
 
 	
 	
