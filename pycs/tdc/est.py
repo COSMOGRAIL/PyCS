@@ -4,6 +4,7 @@ Stuff to manipulate time delay estimations from different techniques, specific t
 
 import pycs.gen.lc
 import numpy as np
+import sys
 
 
 class Estimate:
@@ -99,7 +100,7 @@ def importfromd3cs(filepath, set="tdc0"):
 	
 	
 
-def bigplot(estimates, plotpath = None):
+def bigplot(estimates, plotpath = None, wholeset=False):
 	import matplotlib.pyplot as plt
 	for est in estimates:
 		est.tmpid = "(%i, %i)" % (est.rung, est.pair)
@@ -161,10 +162,202 @@ def bigplot(estimates, plotpath = None):
 
 
 
+def interactivebigplot(estimates, plotpath = None):
+	
+	import matplotlib.pyplot as plt
+	import matplotlib.axes as maxes
+	from matplotlib.widgets import Button
+	
+	for est in estimates:
+		est.tmpid = "(%i, %i)" % (est.rung, est.pair)
+	estids = sorted(list(set([est.tmpid for est in estimates])))
+	
+	
+	# init lists for interactive plotting...
+				
+	buttonstod3cs=[]
+	buttonstoshow=[]
+	
+				
+	def colour(est):
+		if est.confidence==0: return "black"
+		if est.confidence==1: return "blue"
+		if est.confidence==2: return "green"
+		if est.confidence==3: return "orange"
+		if est.confidence==4: return "red"
+		
+	fig, axes = plt.subplots(nrows=len(estids), figsize=(10, 1.0*(len(estids))))	
+	fig.subplots_adjust(top=0.99, bottom=0.05, hspace=0.32)
+
+	
+	for ax, estid in zip(axes, estids):
+	
+		# resize ax and add a new box we will fill with other informations (see below)
+		# ugly stuff (but fast), sorry Malte
+		
+		bbox = ax.get_position()
+		points = bbox.get_points()
+		
+		xright = points[1][0] 
+		points[1][0] = 0.73
+		bbox.set_points(points)
+		ax.set_position(bbox)
+		
+		hspace = 0.02
+		width  = xright-hspace-points[1][0]
+		height = points[1][1]-points[0][1]
+		
+		rect = points[1][0]+hspace, points[0][1], width, height
+		ax2 = fig.add_axes(rect)
+		
+		
+				
+		### arange and compute values to fill the left box (ax)	
+		
+		thisidests = [est for est in estimates if est.tmpid == estid]
+		n = len(thisidests)
+		
+		tds = np.array([est.td for est in thisidests])
+		tderrs = np.array([est.tderr for est in thisidests])
+		meantd = np.mean(tds)
+
+ 		ys = np.arange(n)
+		
+		colours = map(colour, thisidests)
+		
+		
+		#ax.scatter(tds, ys)
+		ax.errorbar(tds, ys, yerr=None, xerr=tderrs, fmt='.', ecolor="grey", capsize=3)
+		ax.scatter(tds, ys, s = 50, c=colours, linewidth=0, zorder=20)#, cmap=plt.cm.get_cmap('jet'), vmin=0, vmax=4)
+		
+		for (est, y) in zip(thisidests, ys):
+			ax.text(est.td, y+0.3, "  %s (%s)" % (est.method, est.methodpar), va='center', ha='left', fontsize=6)
+		
+		
+		ax.set_ylim(-1, n)
+		
+		maxdist = np.max(np.fabs(tds - meantd))
+		if maxdist < 200:
+			tdr = 200
+		else:
+			tdr = maxdist*1.2
+		ax.set_xlim(meantd - tdr, meantd + tdr)
+		
+  		pos = list(ax.get_position().bounds)
+   		x_text = pos[0] - 0.01
+		y_text = pos[1] + pos[3]/2.
+		fig.text(x_text, y_text, estid, va='center', ha='right', fontsize=14)
+		ax.set_yticks([])
+		
+		
+		
+		### OK, now fill the right box (ax2)
+		
+		# some inits...
+		conflevelmin = 3
+		maxtolerr = 8
+		
+		thisidests_disc = [est for est in estimates if est.tmpid == estid and est.confidence <= conflevelmin]
+		tds_disc = np.array([est.td for est in thisidests_disc])
+	
+		meantd_disc = np.mean(tds_disc)
+		meantderr1 = np.std(tds_disc)
+		meantderr2 = np.std(tds_disc)/np.sqrt(len(tds_disc))
+				
+				
+		if meantderr1 < maxtolerr:
+			mcolor1 = 'black'
+		else:	
+			mcolor1 = 'red'
+			
+		if meantderr2 < maxtolerr:
+			mcolor2 = 'black'
+		else:	
+			mcolor2 = 'red'			
+		
+		ax2.errorbar(meantd_disc,1,yerr=None, xerr=[meantderr1], fmt='.', ecolor=mcolor1, capsize=3)
+		ax2.errorbar(meantd_disc,1,yerr=None, xerr=[meantderr2], fmt='.', ecolor=mcolor2, capsize=3)					
+		ax2.scatter(meantd_disc,1, s=50, c=mcolor2, linewidth=0, zorder=20)
+		
+		
+		from matplotlib.ticker import MaxNLocator
+		ax2.xaxis.set_major_locator(MaxNLocator(4))
+		
+		ax2.set_xlim(meantd_disc - maxtolerr, meantd_disc + maxtolerr)		
+		ax2.set_yticks([])
+		
+
+		### Interactive plotting options
+		# We create buttons
+		
+		sizescale = 3.3
+		
+		axtod3cs = plt.axes([points[0][0], points[0][1], width/sizescale, height/sizescale])
+		axtoshow = plt.axes([points[0][0], points[0][1]+height-height/sizescale, width/sizescale, height/sizescale])
+				
+		buttonstod3cs.append(Button(axtod3cs, 'D3CS'))
+		buttonstoshow.append(Button(axtoshow, 'Show'))
+
+		
+
+	for buttontoshow, buttontod3cs, estid in zip(buttonstoshow, buttonstod3cs, estids):
+	
+		
+		# weird way of doing things... but didn't find a cleaner way to have everything working... 
+						
+		rung = int(estid[1]) # Done this way to avoid mix up if I select my estimates in a weird order...
+		pair = int(estid[4])
+		
+		class Goto:
+	    		myrung = rung
+			mypair = pair
+	    		def show(self, event):
+				displaymeplease(estimates,self.myrung,self.mypair)
+				
+			def d3cs(self, event):
+				d3cs(self.myrung,self.mypair)	
+				
+		goto = Goto()				
+		buttontoshow.on_clicked(goto.show)
+		buttontod3cs.on_clicked(goto.d3cs)
+	
+		
+	
+	#cbar = plt.colorbar(sc, cax = axes[0], orientation="horizontal")
+	#cbar.set_label('Confidence')
+	
+	# add next/previous rung buttons
+	
+	''' Work in progress
+	
+	axnext = plt.axes()
+	axprev = plt.axes()
+	
+	buttonnext = Button(axnext,'Next Rung')
+	buttonprev = Button(axprev,'Previous Rung')
+	
+		
+	class ChangeRound:
+    		ind = 0
+    		def next(self, event):
+        		self.ind += 1
+        		i = self.ind % len(freqs)
+        		ydata = np.sin(2*np.pi*freqs[i]*t)
+        		l.set_ydata(ydata)
+        		plt.draw()
+	'''
+	
+	
+
+	if plotpath:
+		plt.savefig(plotpath)
+	else:
+		plt.show()
+
 def displaymeplease(estimates, rung, pair):
 
 	'''
-	display the rung / pair curve for each estimate corresponding
+	display the rung / pair curve for each corresponding estimate 
 	'''
 	
 	
@@ -186,7 +379,16 @@ def displaymeplease(estimates, rung, pair):
 	pycs.gen.lc.multidisplay(setlist, showlegend = False, showdelays = True)		
 		
 	
-
+def d3cs(rung,pair):
+	'''
+	Open d3cs with the rung/pair curve in firefox
+	
+	TODO : Is there a way to call one's default browser, not firefox ?
+		
+	'''
+	import os
+	cmd=' firefox http://www.astro.uni-bonn.de/~mtewes/d3cs/index.php?user=display\&loadrung=%i\&loadpair=%i' %(rung,pair)
+	os.system(cmd)
 
 	
 	
