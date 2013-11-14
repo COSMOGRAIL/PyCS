@@ -65,7 +65,6 @@ class Estimate:
 	def copy(self):
 		return pythoncopy.deepcopy(self)	
 
-
 	
 def readcsv(filepath):
 	"""
@@ -155,7 +154,7 @@ def checkunique(estimates):
 		raise RuntimeError("Your estimates are not unique !")
 		
 		
-def checkid(estimates):
+def checkallsame(estimates):
 	"""
 	Checks that the estimates are all about the same quasar
 	If yes, return the rung and pair
@@ -167,7 +166,15 @@ def checkid(estimates):
 	
 	return (estimates[0].set, estimates[0].rung, estimates[0].pair)		
 	
-			
+
+def match(candestimates, refestimates):
+	"""
+	candestimates and refestimates are two lists of estimates.
+	I return those estimates of candestimates which are about quasars that are present in refestimates.
+	"""
+	refids = sorted(list(set(["%s_%i_%i" % (est.set, est.rung, est.pair) for est in refestimates])))
+	return [est for est in candestimates if ("%s_%i_%i" % (est.set, est.rung, est.pair) in refids)]
+	
 
 def removebad(estimates):
 	"""
@@ -190,7 +197,7 @@ def combine(estimates,method='meanstd',methodcl=None):
 	"""
 	
 	
-	(set, rung, pair) = checkid(estimates)
+	(set, rung, pair) = checkallsame(estimates)
 	
 	if method == 'meanstd':		
 		
@@ -216,7 +223,7 @@ def combine(estimates,method='meanstd',methodcl=None):
 		return Estimate(set=set, rung=rung, pair=pair, method="combi", methodpar=method, td=td, tderr=tderr, ms = ms, confidence=confidence)
 
 	
-def multicombine(estimates,method='meanstd'):
+def multicombine(estimates, method='meanstd'):
 	"""
 	Multiple calls to the combine function. Eats a list of messy estimates, groups and combine them
 	by quasar according to method, and return the list of combinated estimates. Can be used to feed writesubmission.	
@@ -231,7 +238,7 @@ def multicombine(estimates,method='meanstd'):
 	return newests		
 
 
-def defineconfidence(method,params):
+def defineconfidence(method, params):
 	"""
 	For each combination method (the same that in the combine function), define the confidence level of the results
 	
@@ -265,10 +272,11 @@ def writesubmission(estimates, filepath):
 	#	return
 	
 	checkunique(estimates)
-
-	estimates = removebad(estimates)
-
-
+	for estimate in estimates:
+		if estimate.confidence >= 4:
+			print estimate
+			raise RuntimeError("Bad confidence in your submission !")
+	
 	tdcfile = open(filepath, "w")
 	
 	tdcfile.write("# TDC submission written by PyCS\n")
