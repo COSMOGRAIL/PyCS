@@ -328,7 +328,7 @@ def interactivebigplot(estimates, plotpath = None):
 	
 	# add next/previous rung buttons
 	
-	''' Work in progress
+	''' Work in progress !
 	
 	axnext = plt.axes()
 	axprev = plt.axes()
@@ -387,7 +387,7 @@ def d3cs(rung,pair):
 		
 	'''
 	import os
-	cmd=' firefox http://www.astro.uni-bonn.de/~mtewes/d3cs/index.php?user=display\&loadrung=%i\&loadpair=%i' %(rung,pair)
+	cmd=' xdg-open http://www.astro.uni-bonn.de/~mtewes/d3cs/index.php?user=display\&loadrung=%i\&loadpair=%i' %(rung,pair)
 	os.system(cmd)
 
 	
