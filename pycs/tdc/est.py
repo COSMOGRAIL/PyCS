@@ -312,7 +312,7 @@ def interactivebigplot(estimates, plotpath = None):
 	    		myrung = rung
 			mypair = pair
 	    		def show(self, event):
-				displaymeplease(estimates,self.myrung,self.mypair)
+				show(estimates,self.myrung,self.mypair)
 				
 			def d3cs(self, event):
 				d3cs(self.myrung,self.mypair)	
@@ -354,7 +354,7 @@ def interactivebigplot(estimates, plotpath = None):
 	else:
 		plt.show()
 
-def displaymeplease(estimates, rung, pair):
+def show(estimates, rung, pair):
 
 	'''
 	display the rung / pair curve for each corresponding estimate 
@@ -381,9 +381,7 @@ def displaymeplease(estimates, rung, pair):
 	
 def d3cs(rung,pair):
 	'''
-	Open d3cs with the rung/pair curve in firefox
-	
-	TODO : Is there a way to call one's default browser, not firefox ?
+	Open d3cs with the rung/pair curve in your default browser
 		
 	'''
 	import os
