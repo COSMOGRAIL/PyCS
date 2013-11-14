@@ -174,7 +174,7 @@ def removebad(estimates):
 
 
 	
-def combine(estimates,method='meanstd'):
+def combine(estimates,method='meanstd',methodcl=None):
 	"""
 	Combine estimates according the method of your choice. Return an estimate object
 	
@@ -193,17 +193,18 @@ def combine(estimates,method='meanstd'):
 		
 		tds   = [est.td for est in estimates]
 		
-		if len(tds) != 0:
+		if len(tds) > 1:
 			td    = np.mean(tds)
 			tderr = np.std(tds)/len(tds)
-			confidence=defineconfidence(method,[td,tderr])
+			
+			if methodcl == None:
+				methodcl = method
+			confidence=defineconfidence(methodcl,[td,tderr])
 		else :
 			td = 0.
 			tderr = 0.
 			confidence = 4	
 		
-				
-			
 		
 		
 		return Estimate(rung=rung,pair=pair,methodpar=method,td=td,tderr=tderr,confidence=confidence)
