@@ -8,6 +8,7 @@ import sys
 import csv
 import glob
 import os
+import datetime
 
 
 class Estimate:
@@ -54,6 +55,13 @@ class Estimate:
 	def aslist(self):
 		return [self.set, self.rung, self.pair, self.method, self.methodpar, self.td, self.tderr, self.ms, self.confidence, self.timetaken]
 	
+	def check(self):
+		
+		#assert self.tderr >= 0.0
+		if self.tderr < 0.0:
+			raise RuntimeError("Negative error...")
+	
+
 	
 def readcsv(filepath):
 	"""
@@ -95,40 +103,6 @@ def writecsv(estimates, filepath):
 	print "Wrote %i estimates into %s" % (len(estimates), filepath)
 
 
-def combine(estimates):
-	"""
-	Combines estimates of the same curves into summary-estimates.
-	In other words : takes a messy list of mixed estimates and returns a list with one single estimate per pair.
-	"""
-	pass	
-
-
-
-
-def writesubmission(estimates, filepath):
-	"""
-	Write a submissible TDC file from a list of estimates
-	It takes td and tderr of estimates, but does not write it 
-	if the confidence level is set to 0
-	
-	The delay td is in positive units
-	
-	"""
-	
-	tdcfile = open(filepath, "w") 
-	
-	basename = 'tdc0_'
-	
-	estimates = [est for est in estimates if est.confidence != 0]
-	
-	for est in estimates:
-		 
-		name = basename+'rung%i_pair%i.txt' %(est.rung , est.pair)
-		tdcfile.write(name+'\t%.2f\t%.2f\n' %(abs(est.td) , est.tderr))
-		
-	tdcfile.close()	
-		
-
 def importfromd3cs(filepath, set="tdc0"):
 	"""
 	Reads a d3cs log file and returns the list of estimates
@@ -156,7 +130,59 @@ def importfromd3cs(filepath, set="tdc0"):
 
 	return estimates
 	
+
+def group(estimates):
+	"""
+	Groups estimates by "quasar"
+	In other words : takes a messy list of mixed estimates and returns a list of lists of estimates for a pair.
+	"""
+	for est in estimates:
+		est.id = "%s_%i_%i" % (est.set, est.rung, est.pair)
+	estids = sorted(list(set([est.id for est in estimates])))
 	
+	return [[est for est in estimates if est.id == estid] for estid in estids]
+		
+	
+def checkunique(estimates):
+	"""
+	Checks that there is only one estimate per pair
+	"""
+	if len(estimates) != len(group(estimates)):
+		raise RuntimeError("Your estimates are not unique !")
+	
+	
+def writesubmission(estimates, filepath):
+	"""
+	Write a submissible TDC file from a list of estimates
+	It takes td and tderr of estimates
+		
+	The delay td is in positive units (?)
+	"""
+	
+	#if os.path.exists(filepath):
+	#	print "WARNING, THAT FILE EXISTS !"
+	#	return
+	
+	checkunique(estimates)
+	tdcfile = open(filepath, "w")
+	
+	tdcfile.write("# TDC submission written by PyCS\n")
+	tdcfile.write("# %s\n" % (datetime.datetime.now()))
+	tdcfile.write("# \n")
+	tdcfile.write("# (Some room for your comment...)\n")
+	tdcfile.write("# \n")
+	tdcfile.write("# \n")
+	tdcfile.write("# datafile              dt      dterr\n")
+		
+	for est in estimates:
+		est.check()
+		name = "%s_rung%i_pair%i.txt" % (est.set, est.rung, est.pair)
+		tdcfile.write("%s\t%.2f\t%.2f\n" % (name, est.td, est.tderr))
+		
+	tdcfile.close()	
+	
+
+
 
 def bigplot(estimates, plotpath = None, wholeset=False):
 	import matplotlib.pyplot as plt
