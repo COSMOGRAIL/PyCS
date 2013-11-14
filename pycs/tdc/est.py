@@ -297,7 +297,7 @@ def writesubmission(estimates, filepath):
 
 
 
-def bigplot(estimates, plotpath = None, wholeset=False):
+def bigplot(estimates, plotpath = None):
 	import matplotlib.pyplot as plt
 	for est in estimates:
 		est.tmpid = "(%i, %i)" % (est.rung, est.pair)

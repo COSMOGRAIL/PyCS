@@ -27,7 +27,7 @@ class Run:
 		self.outest.method = method
 		self.outest.methodpar = methodpar
 		self.outest.td = 0.0
-		self.outest.tderr = 0.0
+		self.outest.tderr = -1.0
 		self.outest.ms = 0.0
 		self.outest.confidence = 0
 		self.outest.timetaken = 0.0
@@ -55,11 +55,12 @@ class Run:
 		self.logpath = os.path.join(self.plotdir, "log.txt")
 		
 		self.gogogo = True
-		
+	
+	
 		
 	def check(self):
 		if self.gogogo == False:
-			return
+			raise RuntimeError("Should not happen.")
 			
 	def rmlog(self):
 		if os.path.exists(self.logpath):
@@ -139,6 +140,10 @@ class Run:
 			lcacop.shifttime(float(np.random.uniform(low=-self.iniest.tderr, high=self.iniest.tderr, size=1)))
 			lcbcop.shifttime(float(np.random.uniform(low=-self.iniest.tderr, high=self.iniest.tderr, size=1)))
 			
+			# Resetting magshifts
+			lcacop.magshift = 0.0
+			lcbcop.magshift = 0.0
+			
 			# Randomize order
 			pycs.gen.lc.shuffle(lcscop)
 			lcscoplist.append(lcscop)
@@ -155,6 +160,11 @@ class Run:
 		self.outest.td = np.median(self.obsmesdelays)
 		self.intrinsicratio = np.std(self.obsmesdelays) / self.iniest.tderr
 		self.log("Intrinsic/initial error ratio: %.2f" % self.intrinsicratio)
+		
+		# We also estimate the magnitude shift, assuming that the method optimized it.
+		self.obsmesms = np.array([np.median(lcscop[1].getmags() - lcscop[1].mags) - np.median(lcscop[0].getmags() - lcscop[0].mags) for lcscop in lcscops])
+		self.outest.ms = np.median(self.obsmesms)
+		
 		
 	
 	def runobsplot(self):
@@ -266,6 +276,12 @@ class Run:
 		
 		plt.savefig(os.path.join(self.plotdir, "measvstrue.png"))
 			
-			
+	
+	def getoutest(self):
+		"""
+		Called at the end...
+		"""
+		return self.outest
+	
 	
 	
