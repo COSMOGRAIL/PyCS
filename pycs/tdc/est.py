@@ -103,6 +103,32 @@ def combine(estimates):
 	pass	
 
 
+
+
+def writesubmission(estimates, filepath):
+	"""
+	Write a submissible TDC file from a list of estimates
+	It takes td and tderr of estimates, but does not write it 
+	if the confidence level is set to 0
+	
+	The delay td is in positive units
+	
+	"""
+	
+	tdcfile = open(filepath, "w") 
+	
+	basename = 'tdc0_'
+	
+	estimates = [est for est in estimates if est.confidence != 0]
+	
+	for est in estimates:
+		 
+		name = basename+'rung%i_pair%i.txt' %(est.rung , est.pair)
+		tdcfile.write(name+'\t%.2f\t%.2f\n' %(abs(est.td) , est.tderr))
+		
+	tdcfile.close()	
+		
+
 def importfromd3cs(filepath, set="tdc0"):
 	"""
 	Reads a d3cs log file and returns the list of estimates
