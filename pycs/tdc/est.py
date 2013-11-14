@@ -9,6 +9,7 @@ import csv
 import glob
 import os
 import datetime
+import copy as pythoncopy
 
 
 class Estimate:
@@ -61,6 +62,9 @@ class Estimate:
 		if self.tderr < 0.0:
 			raise RuntimeError("Negative error...")
 	
+	def copy(self):
+		return pythoncopy.deepcopy(self)	
+
 
 	
 def readcsv(filepath):
@@ -158,10 +162,10 @@ def checkid(estimates):
 	"""
 	
 	for est in estimates:
-		if est.rung != estimates[0].rung or est.pair != estimates[0].pair:
+		if est.set != estimates[0].set or est.rung != estimates[0].rung or est.pair != estimates[0].pair:
 			raise RuntimeError("Your estimates are related to different curves !")
 	
-	return (estimates[0].rung,estimates[0].pair)		
+	return (estimates[0].set, estimates[0].rung, estimates[0].pair)		
 	
 			
 
@@ -179,13 +183,14 @@ def combine(estimates,method='meanstd',methodcl=None):
 	Combine estimates according the method of your choice. Return an estimate object
 	
 	list of methods (add yours): 
+	- meanstd
+	- ... 
 	
-	-meanstd
-	-... 
+	Methods should define : td, tderr, confidence, ms
 	"""
 	
 	
-	rung,pair = checkid(estimates)
+	(set, rung, pair) = checkid(estimates)
 	
 	if method == 'meanstd':		
 		
@@ -205,9 +210,10 @@ def combine(estimates,method='meanstd',methodcl=None):
 			tderr = 0.
 			confidence = 4	
 		
+		ms = 0.0
 		
 		
-		return Estimate(rung=rung,pair=pair,methodpar=method,td=td,tderr=tderr,confidence=confidence)
+		return Estimate(set=set, rung=rung, pair=pair, method="combi", methodpar=method, td=td, tderr=tderr, ms = ms, confidence=confidence)
 
 	
 def multicombine(estimates,method='meanstd'):
