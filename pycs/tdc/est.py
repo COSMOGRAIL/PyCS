@@ -149,6 +149,100 @@ def checkunique(estimates):
 	"""
 	if len(estimates) != len(group(estimates)):
 		raise RuntimeError("Your estimates are not unique !")
+		
+		
+def checkid(estimates):
+	"""
+	Checks that the estimates are all about the same quasar
+	If yes, return the rung and pair
+	"""
+	
+	for est in estimates:
+		if est.rung != estimates[0].rung or est.pair != estimates[0].pair:
+			raise RuntimeError("Your estimates are related to different curves !")
+	
+	return (estimates[0].rung,estimates[0].pair)		
+	
+			
+
+def removebad(estimates):
+	"""
+	Remove the estimates with bad confidence level (typically 4)
+	"""
+	
+	return [est for est in estimates if est.confidence < 4]
+
+
+	
+def combine(estimates,method='meanstd'):
+	"""
+	Combine estimates according the method of your choice. Return an estimate object
+	
+	list of methods (add yours): 
+	
+	-meanstd
+	-... 
+	"""
+	
+	
+	rung,pair = checkid(estimates)
+	
+	if method == 'meanstd':		
+		
+		estimates = removebad(estimates)
+		
+		tds   = [est.td for est in estimates]
+		
+		if len(tds) != 0:
+			td    = np.mean(tds)
+			tderr = np.std(tds)/len(tds)
+			confidence=defineconfidence(method,[td,tderr])
+		else :
+			td = 0.
+			tderr = 0.
+			confidence = 4	
+		
+				
+			
+		
+		
+		return Estimate(rung=rung,pair=pair,methodpar=method,td=td,tderr=tderr,confidence=confidence)
+
+	
+def multicombine(estimates,method='meanstd'):
+	"""
+	Multiple calls to the combine function. Eats a list of messy estimates, groups and combine them
+	by quasar according to method, and return the list of combinated estimates. Can be used to feed writesubmission.	
+	"""	
+
+	newests=[]
+	listests = group(estimates)
+	
+	for ests in listests:
+		newests.append(combine(ests,method))
+	
+	return newests		
+
+
+def defineconfidence(method,params):
+	"""
+	For each combination method (the same that in the combine function), define the confidence level of the results
+	
+	Return the confidence level, as an integer (from 0 to 4...)
+	"""
+	
+	if method == 'meanstd':
+	
+		td    = params[0]
+		tderr = params[1]
+
+		
+		if tderr > 5:
+			return 4
+		else:
+			return 0	
+	
+
 	
 	
 def writesubmission(estimates, filepath):
@@ -164,6 +258,10 @@ def writesubmission(estimates, filepath):
 	#	return
 	
 	checkunique(estimates)
+
+	estimates = removebad(estimates)
+
+
 	tdcfile = open(filepath, "w")
 	
 	tdcfile.write("# TDC submission written by PyCS\n")
