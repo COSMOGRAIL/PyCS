@@ -167,6 +167,20 @@ def importfromd3cs(filepath, set="tdc0"):
 	return estimates
 	
 
+def select(estimates, sets=None, rungs=None, pairs=None):
+	"""
+	Returns a sublist of the estimates selected according to the arguments.
+	"""
+	if sets == None:
+		sets = [e.set for e in estimates]
+	if rungs == None:
+		rungs = [e.rung for e in estimates]
+	if pairs == None:
+		pairs = [e.pair for e in estimates]
+		
+	return [e for e in estimates if (e.set in sets) and (e.rung in rungs) and (e.pair in pairs)]
+	
+
 def group(estimates, verbose=True):
 	"""
 	Groups estimates by "quasar"
