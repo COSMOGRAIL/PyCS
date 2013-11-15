@@ -49,6 +49,9 @@ class Estimate:
 		
 		self.confidence = confidence
 		self.timetaken = timetaken
+		
+		self.setid()
+		self.check()
 
 	def __str__(self):
 		return "%s %s (%s, %i, %i): %.2f +/- %.2f, conf. %i" % (self.method, self.methodpar, self.set, self.rung, self.pair, self.td, self.tderr, self.confidence)
@@ -65,6 +68,18 @@ class Estimate:
 	def copy(self):
 		return pythoncopy.deepcopy(self)	
 
+	def getcolor(self):
+		if self.confidence==0: return "black"
+		elif self.confidence==1: return "blue"
+		elif self.confidence==2: return "green"
+		elif self.confidence==3: return "orange"
+		elif self.confidence==4: return "red"
+		else: return "purple"	
+
+	def setid(self):
+		self.id = "%s_%i_%i" % (self.set, self.rung, self.pair)
+		self.niceid = "(%s, %i, %i)" % (self.set, self.rung, self.pair)
+	
 	
 def readcsv(filepath):
 	"""
@@ -176,10 +191,24 @@ def checkallsame(estimates):
 def match(candestimates, refestimates):
 	"""
 	candestimates and refestimates are two lists of estimates.
-	I return those estimates of candestimates which are about quasars that are present in refestimates.
+	I return a tuple of two lists :
+		- those estimates of candestimates which are about quasars that are present in refestimates.
+		- the remaining candestimates, about quasars not in refestimates
 	"""
-	refids = sorted(list(set(["%s_%i_%i" % (est.set, est.rung, est.pair) for est in refestimates])))
-	return [est for est in candestimates if ("%s_%i_%i" % (est.set, est.rung, est.pair) in refids)]
+	#for e in candestimates:
+	#	e.setid()
+	#for e in refestimates:
+	#	e.setid
+	
+	refids = sorted(list(set([est.id for est in refestimates])))
+	matched = []
+	notmatched = []
+	for e in candestimates:
+		if e.id in refids:
+			matched.append(e)
+		else:
+			notmatched.append(e)
+	
 	
 
 def removebad(estimates):
@@ -345,14 +374,6 @@ def bigplot(estimates, shadedestimates = None, plotpath = None):
 		
 	
 	#estids = estids[:40]
-	
-	def colour(est):
-		if est.confidence==0: return "black"
-		elif est.confidence==1: return "blue"
-		elif est.confidence==2: return "green"
-		elif est.confidence==3: return "orange"
-		elif est.confidence==4: return "red"
-		else: return "purple"	
 		
 	fig, axes = plt.subplots(nrows=len(estids), figsize=(10, 1.0*(len(estids))))
 	fig.subplots_adjust(top=0.99, bottom=0.05, left=0.13, right=0.98, hspace=0.32)
@@ -365,10 +386,10 @@ def bigplot(estimates, shadedestimates = None, plotpath = None):
 		tds = np.array([est.td for est in thisidests])
 		tderrs = np.array([est.tderr for est in thisidests])
  		ys = np.arange(n)
- 		colours = map(colour, thisidests)
+ 		colors = [e.getcolor() for e in thisidests]
 		#ax.scatter(tds, ys)
 		ax.errorbar(tds, ys, yerr=None, xerr=tderrs, fmt='.', ecolor="gray", capsize=3)
-		ax.scatter(tds, ys, s = 50, c=colours, linewidth=0, zorder=20)#, cmap=plt.cm.get_cmap('jet'), vmin=0, vmax=4)
+		ax.scatter(tds, ys, s = 50, c=colors, linewidth=0, zorder=20)#, cmap=plt.cm.get_cmap('jet'), vmin=0, vmax=4)
 		
 		for (est, y) in zip(thisidests, ys):
 			ax.text(est.td, y+0.3, "  %s (%s)" % (est.method, est.methodpar), va='center', ha='left', fontsize=6)
@@ -378,7 +399,7 @@ def bigplot(estimates, shadedestimates = None, plotpath = None):
 			shadedests = [est for est in shadedestimates if est.tmpid == estid]
 			if len(shadedests) == 1:
 				shadedest = shadedests[0]
-				ax.axvspan(shadedest.td - shadedest.tderr, shadedest.td + shadedest.tderr, color=colour(shadedest), alpha=0.2, zorder=-20)
+				ax.axvspan(shadedest.td - shadedest.tderr, shadedest.td + shadedest.tderr, color=shadedest.getcolor(), alpha=0.2, zorder=-20)
 				ax.text(shadedest.td, -0.9, "%s (%s)" % (shadedest.method, shadedest.methodpar), va='center', ha='center', fontsize=6)
 		
 			
