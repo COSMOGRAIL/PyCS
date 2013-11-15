@@ -80,6 +80,15 @@ class Estimate:
 		self.id = "%s_%i_%i" % (self.set, self.rung, self.pair)
 		self.niceid = "(%s, %i, %i)" % (self.set, self.rung, self.pair)
 	
+	def applytolcpair(lca, lcb):
+		lca.timeshift = 0.0
+		lca.magshift = 0.0
+		lca.fluxshift = 0.0
+		
+		lcb.timeshift = self.td
+		lcb.magshift = self.ms
+		lcb.fluxshift = 0.0
+	
 	
 def readcsv(filepath):
 	"""
@@ -109,11 +118,15 @@ def readcsv(filepath):
 		return estimates
         
 	
-def writecsv(estimates, filepath):
+def writecsv(estimates, filepath, append=False):
 	"""
-	Write a CSV file of estimates
+	Write a CSV file of estimates.
+	If append = True, I do NOT overwrite an existing file, but append to it !
 	"""
-	f  = open(filepath, "wb")
+	if append:
+		f = open(filepath, "a")
+	else:
+		f = open(filepath, "w")
 	writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
   	for est in estimates:
   		#est.td = "%.5f" % (est.td)
