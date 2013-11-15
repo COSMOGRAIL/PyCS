@@ -517,8 +517,9 @@ class Spline():
 		self.setintt(intt)
 		self.knottype = "u"
 		
-		# Important : we put some 0 coeffs to go with the new knots (do not remove, used by reset !)
+		# Important : we put some 0 coeffs to go with the new knots
 		self.resetc()
+
 
 	def resetc(self):
 		"""
@@ -593,9 +594,9 @@ class Spline():
 			# Now we see if the use wants a narrower window within those bounds :
 			if self.bokwindow != None:	
 				if tk - 0.5*self.bokwindow >= guessl:
-					guessl = tk - 0.5*window
+					guessl = tk - 0.5*self.bokwindow
 				if tk + 0.5*self.bokwindow <= guessu:
-					guessu = tk + 0.5*window
+					guessu = tk + 0.5*self.bokwindow
 	
 			lowers.append(guessl)
 			uppers.append(guessu)
@@ -1065,7 +1066,7 @@ class Spline():
 # Some functions to interact directly with lightcurves :
 
 
-def fit(lcs, knotstep=20.0, n=None, stab=True,
+def fit(lcs, knotstep=20.0, n=None, knots=None, stab=True,
 	stabext=300.0, stabgap=20.0, stabstep=5.0, stabmagerr=-2.0, stabrampsize=0, stabrampfact=1.0,
 	bokit=1, bokeps=2.0, boktests=5, bokwindow=None, k=3, verbose=True):
 	"""
@@ -1094,10 +1095,14 @@ def fit(lcs, knotstep=20.0, n=None, stab=True,
 	dp = merge(lcs, stab=stab, stabext=stabext, stabgap=stabgap, stabstep=stabstep, stabmagerr=stabmagerr, stabrampsize=stabrampsize, stabrampfact=stabrampfact)
 	
 	s = Spline(dp, k=k, bokeps=bokeps, boktests=boktests, bokwindow=bokwindow)
-	if n == None:
-		s.uniknots(nint = knotstep, n = False)
-	else :
-		s.uniknots(nint = n, n = True)
+	
+	if knots==None:
+		if n == None:
+			s.uniknots(nint = knotstep, n = False)
+		else :
+			s.uniknots(nint = n, n = True)
+	else:
+		s.setintt(knots)
 	#if stab:
 	#	s.unistabknots(stabknotn,n=True)
 	
