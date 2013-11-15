@@ -182,7 +182,7 @@ def checkallsame(estimates):
 	"""
 	
 	for est in estimates:
-		if est.set != estimates[0].set or est.rung != estimates[0].rung or est.pair != estimates[0].pair:
+		if est.id != estimates[0].id:
 			raise RuntimeError("Your estimates are related to different curves !")
 	
 	return (estimates[0].set, estimates[0].rung, estimates[0].pair)		
@@ -349,7 +349,7 @@ def writesubmission(estimates, filepath):
 
 
 
-def bigplot(estimates, minradius=100, shadedestimates = None, plotpath = None):
+def bigplot(estimates, shadedestimates = None, plotpath = None, minradius=100):
 	"""
 	Large graphical representation of your estimates.
 	
@@ -364,23 +364,17 @@ def bigplot(estimates, minradius=100, shadedestimates = None, plotpath = None):
 	
 	import matplotlib.pyplot as plt
 	
-	for est in estimates:
-		est.tmpid = "(%s, %i, %i)" % (est.set, est.rung, est.pair)
-	estids = sorted(list(set([est.tmpid for est in estimates])))
+	
+	estids = sorted(list(set([est.id for est in estimates])))
 	
 	if shadedestimates != None:
 		checkunique(shadedestimates)
-		for est in shadedestimates:
-			est.tmpid = "(%s, %i, %i)" % (est.set, est.rung, est.pair)
-		
-	
-	#estids = estids[:40]
 		
 	fig, axes = plt.subplots(nrows=len(estids), figsize=(10, 1.0*(len(estids))))
 	fig.subplots_adjust(top=0.99, bottom=0.05, left=0.13, right=0.98, hspace=0.32)
    
-	for ax, estid in zip(axes, estids):
-		thisidests = [est for est in estimates if est.tmpid == estid]
+	for ax, thisestid in zip(axes, estids):
+		thisidests = [est for est in estimates if est.id == thisestid]
 		n = len(thisidests)
 		
 		# The error bars for regular estimates :
@@ -397,13 +391,11 @@ def bigplot(estimates, minradius=100, shadedestimates = None, plotpath = None):
 		
 		# The shadedestimates
 		if shadedestimates != None:
-			shadedests = [est for est in shadedestimates if est.tmpid == estid]
+			shadedests = [est for est in shadedestimates if est.id == thisestid]
 			if len(shadedests) == 1:
 				shadedest = shadedests[0]
 				ax.axvspan(shadedest.td - shadedest.tderr, shadedest.td + shadedest.tderr, color=shadedest.getcolor(), alpha=0.2, zorder=-20)
 				ax.text(shadedest.td, -0.9, "%s (%s)" % (shadedest.method, shadedest.methodpar), va='center', ha='center', fontsize=6)
-		
-			
 		
 		ax.set_ylim(-1.3, n)
 		
@@ -418,7 +410,7 @@ def bigplot(estimates, minradius=100, shadedestimates = None, plotpath = None):
   		pos = list(ax.get_position().bounds)
    		x_text = pos[0] - 0.01
 		y_text = pos[1] + pos[3]/2.
-		fig.text(x_text, y_text, estid, va='center', ha='right', fontsize=14)
+		fig.text(x_text, y_text, thisidests[0].niceid, va='center', ha='right', fontsize=14)
 		
 	for ax in axes:
 		ax.set_yticks([])
@@ -428,6 +420,7 @@ def bigplot(estimates, minradius=100, shadedestimates = None, plotpath = None):
 
 	if plotpath:
 		plt.savefig(plotpath)
+		print "Wrote %s" % (plotpath)
 	else:
 		plt.show()
 
