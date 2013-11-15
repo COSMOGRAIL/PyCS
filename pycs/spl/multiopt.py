@@ -550,7 +550,7 @@ def opt_ts_brute(lcs, sourcespline, movefirst = True, optml=False, r=2, step=1.0
 	if movefirst:
 		assert len(combilist) == (2*r + 1)**len(lcs)
 	else:
-		assert len(combilist) == (2*r + 1)**len(lcs)-1
+		assert len(combilist) == (2*r + 1)**(len(lcs)-1)
 	
 
 	combir2s = np.zeros(len(combilist))
