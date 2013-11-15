@@ -169,7 +169,7 @@ def importfromd3cs(filepath, set="tdc0"):
 
 def select(estimates, sets=None, rungs=None, pairs=None):
 	"""
-	Returns a sublist of the estimates selected according to the arguments.
+	Returns a sublist of the estimates selected according to the specified arguments.
 	"""
 	if sets == None:
 		sets = [e.set for e in estimates]
