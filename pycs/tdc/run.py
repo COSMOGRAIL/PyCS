@@ -5,7 +5,6 @@ Wrapper stuff to run PyCS on TDC data
 import os
 import pycs
 import est
-import copy
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,7 +22,7 @@ class Run:
 		self.iniest = iniest
 		
 		# The output estimate of this run :
-		self.outest = copy.deepcopy(iniest)
+		self.outest = iniest.copy()
 		self.outest.method = method
 		self.outest.methodpar = methodpar
 		self.outest.td = 0.0
@@ -44,23 +43,22 @@ class Run:
 		
 		if not os.path.isdir(self.outdir):
 			os.mkdir(self.outdir)
-			
-		self.plotdir = os.path.join(self.outdir, "diagnostics")
-		if not os.path.isdir(self.plotdir):
-			os.mkdir(self.plotdir)
-		self.datadir = os.path.join(self.outdir, "data")
-		if not os.path.isdir(self.datadir):
-			os.mkdir(self.datadir)
+		
+		self.plotdir = self.outdir
+		#self.plotdir = os.path.join(self.outdir, "diagnostics")
+		#if not os.path.isdir(self.plotdir):
+		#	os.mkdir(self.plotdir)
+		#self.datadir = os.path.join(self.outdir, "data")
+		#if not os.path.isdir(self.datadir):
+		#	os.mkdir(self.datadir)
 			
 		self.logpath = os.path.join(self.plotdir, "log.txt")
-		
 		self.gogogo = True
 	
 	
 		
 	def check(self):
-		if self.gogogo == False:
-			raise RuntimeError("Should not happen.")
+		pass
 			
 	def rmlog(self):
 		if os.path.exists(self.logpath):
@@ -86,10 +84,9 @@ class Run:
 		
 				
 	def fitsourcespline(self, sploptfct):
-		self.check()
 		# Adding some simple ML to B (required for the magshift ...)
 		#pycs.gen.polyml.addtolc(self.lca, nparams=1, autoseasonsgap = 100000.0)
-		pycs.gen.polyml.addtolc(self.lcb, nparams=1, autoseasonsgap = 100000.0)
+		#pycs.gen.polyml.addtolc(self.lcb, nparams=1, autoseasonsgap = 100000.0)
 
 		# And run a first spline
 		self.sourcespline = sploptfct([self.lca, self.lcb])
@@ -120,7 +117,6 @@ class Run:
 		Run the optimizer n times on the real data.
 		We draw the copies, run on them
 		"""
-		self.check()
 		
 		#simdir = os.path.join(self.datadir, "copies")
 		#if os.path.isdir(simdir):
@@ -128,6 +124,11 @@ class Run:
 		#pycs.sim.draw.multidraw([self.lca, self.lcb], onlycopy=True, n=n, npkl=1, simset="copies", simdir=simdir)
 		
 		self.log("Running %i times on the observations..." % n)
+		if n == 0:
+			self.intrinsicratio = 0.0
+			self.obsmesdelays = np.array([])
+			return
+		
 		lcscoplist = []
 		for i in range(n):
 			
@@ -162,7 +163,7 @@ class Run:
 		self.log("Intrinsic/initial error ratio: %.2f" % self.intrinsicratio)
 		
 		# We also estimate the magnitude shift, assuming that the method optimized it.
-		self.obsmesms = np.array([np.median(lcscop[1].getmags() - lcscop[1].mags) - np.median(lcscop[0].getmags() - lcscop[0].mags) for lcscop in lcscops])
+		self.obsmesms = np.array([np.median(lcscop[1].getmags() - lcscop[1].mags) - np.median(lcscop[0].getmags() - lcscop[0].mags) for lcscop in lcscoplist])
 		self.outest.ms = np.median(self.obsmesms)
 		
 		
@@ -193,10 +194,14 @@ class Run:
 		"""
 		Drawing the simulated curves and runing on them
 		"""
-		self.check()
 		
 		self.log("Drawing %i simulations..." % n)
-		
+		if n == 0:
+			self.totalratio = 0.0
+			self.simtruedelays = np.array([])
+			self.simmesdelays = np.array([])
+			return
+
 		timeshiftoriga = self.lca.timeshift # So this is what the single spline fit gave us.
 		timeshiftorigb = self.lcb.timeshift
 		
@@ -282,6 +287,91 @@ class Run:
 		Called at the end...
 		"""
 		return self.outest
+	
+	
+def multirun(iniests, 
+	sploptfct, optfct, 
+	nobs = 5, nsim = 5,
+	ncpu=0,
+	diagnostics = True,
+	tdcpath = "./tdc0", outdir="./multirun", method="", methodpar=""):
+
+	"""
+	Running a technique on several TDC curves.
+	
+	:param iniests: a list of (unique) initial estimates. I will run on those quasars.
+	
+	:param sploptfct: a spline optimizer function to draw simulations
+	:param optfct: the optimizer function that you want to use
+	
+	:param nobs: how often should I run on the observations (intrinsic variance)
+	:param nsim: how many Monte Carlo runs should I do ?
+	
+	:param ncpu: how many cpus should I use (0 = automatic)
+	
+	:param diagnostics: do you want me to output some diagnostic plots / data ?
+	
+	:param tdcpath: path to the data directory.
+	
+	:param outdir: where I'll write some output
+	
+	:param method: free string with a name for this run, e.g. the optimizer that you selected
+	:param methodpar: free string with some method parameters
+	
+	"""
+	
+	if not os.path.isdir(outdir):
+		os.mkdir(outdir)
+		
+	outcsv = os.path.join(outdir, "estimates.csv")
+	crashcsv = os.path.join(outdir, "crash.csv")
+	
+	for iniest in iniests:
+		
+		try:
+			lcspath = pycs.tdc.util.tdcfilepath(set=iniest.set, rung=iniest.rung, pair=iniest.pair)
+			(lca, lcb) = pycs.tdc.util.read(lcspath, shortlabel=False)
+		
+			starttime = datetime.datetime.now()
+			
+			r = Run(iniest, lca, lcb, method=method, methodpar=methodpar, outdir=os.path.join(outdir, iniest.id))
+			r.setup()
+			if diagnostics:
+				pycs.gen.lc.display([r.lca, r.lcb], filename = os.path.join(r.outdir, "iniest.png"))
+		
+			# First fit
+			r.fitsourcespline(sploptfct = sploptfct)
+			if not r.gogogo: continue
+		
+			# Getting the delay
+			r.runobs(optfct = optfct, n = nobs)
+			if diagnostics:
+				r.runobsplot()
+	
+			# Getting the error bar
+			r.runsim(optfct = optfct, n = nsim)
+			if diagnostics:
+				r.runsimplot()
+			
+			endtime = datetime.datetime.now()
+			r.outest.timetaken = endtime - starttime
+
+			# Writing the output
+			est.writecsv([r.outest], outcsv, append=True)
+		
+		except RuntimeError as error:
+			r.log("Shit, a RuntimeError !")
+			r.log(str(error))
+			est.writecsv([iniest], crashcsv, append=True)
+			print error
+			raise
+			
+		
+	
+
+	
+	
+	
 	
 	
 	
