@@ -159,13 +159,10 @@ def group(estimates):
 	Groups estimates by "quasar"
 	In other words : takes a messy list of mixed estimates and returns a list of lists of estimates for a pair.
 	"""
-	for est in estimates:
-		est.id = "%s_%i_%i" % (est.set, est.rung, est.pair)
 	estids = sorted(list(set([est.id for est in estimates])))
-	
-	print "Grouped %i estimates of %i different lenses" % (len(estimates), len(estids))
-	return [[est for est in estimates if est.id == estid] for estid in estids]
-		
+	groups = [[est for est in estimates if est.id == estid] for estid in estids]
+	print "Grouped %i estimates of %i different lenses" % (len(estimates), len(groups))	
+	return groups
 	
 def checkunique(estimates):
 	"""
@@ -195,10 +192,6 @@ def match(candestimates, refestimates):
 		- those estimates of candestimates which are about quasars that are present in refestimates.
 		- the remaining candestimates, about quasars not in refestimates
 	"""
-	#for e in candestimates:
-	#	e.setid()
-	#for e in refestimates:
-	#	e.setid
 	
 	refids = sorted(list(set([est.id for est in refestimates])))
 	matched = []
@@ -208,7 +201,7 @@ def match(candestimates, refestimates):
 			matched.append(e)
 		else:
 			notmatched.append(e)
-	
+	return (matched, notmatched)
 	
 
 def removebad(estimates):
