@@ -188,7 +188,7 @@ def checkunique(estimates):
 def checkallsame(estimates):
 	"""
 	Checks that the estimates are all about the same quasar
-	If yes, return the rung and pair
+	If yes, return the set, rung and pair
 	"""
 	
 	for est in estimates:
@@ -217,12 +217,19 @@ def match(candestimates, refestimates):
 	return (matched, notmatched)
 	
 
-def removebad(estimates):
+def removebad(estimates,verbose=False):
 	"""
 	Remove the estimates with bad confidence level (typically 4)
-	"""
 	
+	
+	"""
+	if verbose:
+		print '     ----- WARNING -----     '
+		for est in [est for est in estimates if est.confidence == 4]:
+			print 'Estimate for curve %s removed.' % est.niceid
+				
 	return [est for est in estimates if est.confidence < 4]
+
 
 
 	
@@ -293,6 +300,7 @@ def multicombine(estimates, method='meanstd'):
 		newests.append(combine(ests,method))
 	
 	checkunique(newests)
+	newests = removebad(newests,verbose=True)
 	return newests		
 
 
