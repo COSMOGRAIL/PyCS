@@ -167,21 +167,22 @@ def importfromd3cs(filepath, set="tdc0"):
 	return estimates
 	
 
-def group(estimates):
+def group(estimates, verbose=True):
 	"""
 	Groups estimates by "quasar"
 	In other words : takes a messy list of mixed estimates and returns a list of lists of estimates for a pair.
 	"""
 	estids = sorted(list(set([est.id for est in estimates])))
 	groups = [[est for est in estimates if est.id == estid] for estid in estids]
-	print "Grouped %i estimates of %i different lenses" % (len(estimates), len(groups))	
+	if verbose:
+		print "Grouped %i estimates of %i different lenses" % (len(estimates), len(groups))	
 	return groups
 	
 def checkunique(estimates):
 	"""
 	Checks that there is only one estimate per pair
 	"""
-	if len(estimates) != len(group(estimates)):
+	if len(estimates) != len(group(estimates, verbose=False)):
 		raise RuntimeError("Your estimates are not unique !")
 		
 		
