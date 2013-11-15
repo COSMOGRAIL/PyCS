@@ -349,15 +349,16 @@ def writesubmission(estimates, filepath):
 
 
 
-def bigplot(estimates, shadedestimates = None, plotpath = None):
+def bigplot(estimates, minradius=100, shadedestimates = None, plotpath = None):
 	"""
 	Large graphical representation of your estimates.
 	
-	As shadedestimates you can give me a list of "unique" estimates (typical the result of a multicombine)
-	that I will show as shaded bars instead of errorbars.
+	:param minradius: Minimal half-width of the time delay axes, in day.
 	
-	However, it's estimates that determines which panels I will draw and with what range,
-	so that you can get panels shown without any shadedestimate.
+	:param shadedestimates: Here you can give me a list of "unique" estimates (typical the result of a multicombine)
+		that I will show as shaded bars instead of errorbars.
+		However, it's estimates that determines which panels I will draw and with what range,
+		so that you can get panels shown without any shadedestimate.
 	
 	"""
 	
@@ -408,8 +409,8 @@ def bigplot(estimates, shadedestimates = None, plotpath = None):
 		
 		meantd = np.mean(tds)
 		maxdist = np.max(np.fabs(tds - meantd))
-		if maxdist < 100:
-			tdr = 100
+		if maxdist < minradius:
+			tdr = minradius
 		else:
 			tdr = maxdist*1.2
 		ax.set_xlim(meantd - tdr, meantd + tdr)
