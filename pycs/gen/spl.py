@@ -1078,6 +1078,8 @@ def fit(lcs, knotstep=20.0, n=None, knots=None, stab=True,
 	knotstep : spacing of knots
 	or
 	n : how many knots to place
+	or 
+	knots : give me actual initial knot locations, for instance prepared by seasonknots.
 	
 	stab : do you want to insert stabilization points ?
 	stabext : number of days to the left and right to fill with stabilization points
@@ -1114,6 +1116,69 @@ def fit(lcs, knotstep=20.0, n=None, knots=None, stab=True,
 	s.r2(nostab=True) # This is to set s.lastr2nostab
 	
 	return s
+
+
+def seasonknots(lcs, knotstep, inseas, seasongap=60.0):
+	"""
+	A little helper to get some knot locations inside of seasons only
+	
+	knotstep is for inside seasons
+	inseas is the number of knots inside gaps.
+	
+	"""
+	knots = []
+	
+	#knotstep = 10
+	dp = merge(lcs, splitup=True, deltat=0.000001, sort=True, stab=False)
+		
+	gaps = dp.jds[1:] - dp.jds[:-1]
+	gapindices = list(np.arange(len(dp.jds)-1)[gaps > seasongap])
+	
+	# knots inside of seasons :
+	a = dp.jds[0]
+	for gapi in gapindices:
+		b = dp.jds[gapi]
+		#print (a, b)
+		knots.append(np.linspace(a, b, float(b - a)/float(knotstep)))
+		a = dp.jds[gapi+1]
+	b = dp.jds[-1]
+	knots.append(np.linspace(a, b, float(b - a)/float(knotstep)))
+	
+	
+	# knots inside of gaps	
+	for gapi in gapindices:
+		a = dp.jds[gapi]
+		b = dp.jds[gapi+1]
+		knots.append(np.linspace(a, b, inseas+2)[1:-1])
+	
+	
+	knots = np.concatenate(knots)
+	knots.sort()	
+	return knots
+	
+	#print gapindices
+	
+	
+	"""
+	for n in range(len(gapindices)):
+		i = gapindices[n]
+		a = self.jds[i]
+		b = self.jds[i+1]
+			
+			newgapjds = np.linspace(a, b, float(b-a)/float(self.stabstep))[1:-1]
+			newgapindices = i + 1 + np.zeros(len(newgapjds))
+			newgapmags = np.interp(newgapjds, [a, b], [self.mags[i], self.mags[i+1]])
+			newgapmagerrs = absstabmagerr * np.ones(newgapmags.shape)
+			newgapmask = np.zeros(len(newgapjds), dtype=np.bool)
+			
+			self.jds = np.insert(self.jds, newgapindices, newgapjds)
+		
+	
+	knotstep
+
+	"""
+
+
 
 def r2(lcs, spline):
 	"""
