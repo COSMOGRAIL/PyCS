@@ -361,111 +361,26 @@ def writesubmission(estimates, filepath):
 		
 	tdcfile.close()	
 	
-
-
-
-def bigplot(estimates, shadedestimates = None, plotpath = None, minradius=100):
-	"""
-	Large graphical representation of your estimates.
 	
-	:param minradius: Minimal half-width of the time delay axes, in day.
-	
-	:param shadedestimates: Here you can give me a list of "unique" estimates (typical the result of a multicombine)
-		that I will show as shaded bars instead of errorbars.
-		However, it's estimates that determines which panels I will draw and with what range,
-		so that you can get panels shown without any shadedestimate.
-	
-	"""
-	
-	import matplotlib.pyplot as plt
-	
-	
-	estids = sorted(list(set([est.id for est in estimates])))
-	
-	if shadedestimates != None:
-		checkunique(shadedestimates)
 		
-	fig, axes = plt.subplots(nrows=len(estids), figsize=(10, 1.0*(len(estids))))
-	fig.subplots_adjust(top=0.99, bottom=0.05, left=0.13, right=0.98, hspace=0.32)
-   
-	for ax, thisestid in zip(axes, estids):
-		thisidests = [est for est in estimates if est.id == thisestid]
-		n = len(thisidests)
-		
-		# The error bars for regular estimates :
-		tds = np.array([est.td for est in thisidests])
-		tderrs = np.array([est.tderr for est in thisidests])
- 		ys = np.arange(n)
- 		colors = [e.getcolor() for e in thisidests]
-		#ax.scatter(tds, ys)
-		ax.errorbar(tds, ys, yerr=None, xerr=tderrs, fmt='.', ecolor="gray", capsize=3)
-		ax.scatter(tds, ys, s = 50, c=colors, linewidth=0, zorder=20)#, cmap=plt.cm.get_cmap('jet'), vmin=0, vmax=4)
-		
-		for (est, y) in zip(thisidests, ys):
-			ax.text(est.td, y+0.3, "  %s (%s)" % (est.method, est.methodpar), va='center', ha='left', fontsize=6)
-		
-		# The shadedestimates
-		if shadedestimates != None:
-			shadedests = [est for est in shadedestimates if est.id == thisestid]
-			if len(shadedests) == 1:
-				shadedest = shadedests[0]
-				ax.axvspan(shadedest.td - shadedest.tderr, shadedest.td + shadedest.tderr, color=shadedest.getcolor(), alpha=0.2, zorder=-20)
-				ax.text(shadedest.td, -0.9, "%s (%s)" % (shadedest.method, shadedest.methodpar), va='center', ha='center', fontsize=6)
-		
-		ax.set_ylim(-1.3, n)
-		
-		meantd = np.mean(tds)
-		maxdist = np.max(np.fabs(tds - meantd))
-		if maxdist < minradius:
-			tdr = minradius
-		else:
-			tdr = maxdist*1.2
-		ax.set_xlim(meantd - tdr, meantd + tdr)
-		
-  		pos = list(ax.get_position().bounds)
-   		x_text = pos[0] - 0.01
-		y_text = pos[1] + pos[3]/2.
-		fig.text(x_text, y_text, thisidests[0].niceid, va='center', ha='right', fontsize=14)
-		
-	for ax in axes:
-		ax.set_yticks([])
-
-	#cbar = plt.colorbar(sc, cax = axes[0], orientation="horizontal")
-	#cbar.set_label('Confidence')
-
-	if plotpath:
-		plt.savefig(plotpath)
-		print "Wrote %s" % (plotpath)
-	else:
-		plt.show()
-
-
-
-
-def show(estimates, rung, pair):
+def show(estimates):
 
 	'''
-	display the rung / pair curve for each corresponding estimate 
+	Show the estimates
+	
 	'''
-	
-	
-	# I select only the estimates with the rung and pair desired
-	estimates = [est for est in estimates if est.rung == rung and est.pair == pair]
-
 	setlist=[]
 		
-	# import the curve from data
-	filepath = 'tdc0/rung%0i/tdc0_rung%0i_pair%0i.txt' % (rung,rung,pair)
-		
-	for est in estimates:	
+	for est in estimates:
+		filepath = pycs.tdc.util.tdcfilepath(est.set,est.rung,est.pair)
 		lcs = pycs.tdc.util.read(filepath)
 		lcs[1].shifttime(est.td)
 		lcs[1].shiftmag(est.ms)
 		setlist.append([lcs,est.methodpar])
 	
-	pycs.gen.lc.multidisplay(setlist, showlegend = False, showdelays = True)		
-		
+	pycs.gen.lc.multidisplay(setlist, showlegend = False, showdelays = True)
 	
+		
 def d3cs(rung,pair):
 	'''
 	Open d3cs with the rung/pair curve in your default browser
@@ -521,6 +436,7 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 		groupbyrung = False
 	
 	
+	
 	if groupbyrung:
 			
 		# grouping the estids by rung
@@ -533,16 +449,7 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 			for ind in np.arange(7):
 				if estid[5] == str(ind):
 					groupestids[ind].append(estid)
-							
-				
-	def colour(est):
-		if est.confidence==0: return "black"
-		if est.confidence==1: return "blue"
-		if est.confidence==2: return "green"
-		if est.confidence==3: return "orange"
-		if est.confidence==4: return "red"
-	
-		
+															
 
 	def interactiveplot(estids, figname=None):
 		
@@ -552,12 +459,17 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 		if len(estids)==0:
 			print 'No pair in your estimates for this rung !'
 			return
+			
 		
 		if figname == None:
 			figname = 'various estimates'
 		
-		fig, axes = plt.subplots(nrows=len(estids), figsize=(10, 1.0*(len(estids))), num=figname)
-		fig.subplots_adjust(top=0.99, bottom=0.05, left=0.13, right=0.98, hspace=0.32)
+		fig, axes = plt.subplots(nrows=len(estids), figsize=(10, max(1.0*(len(estids)),3.3)), num=figname)
+		fig.subplots_adjust(top=0.96, bottom=0.08, left=0.13, right=0.98, hspace=0.32)
+		
+		if len(estids) == 1 :
+			axes = [axes] 
+			
 		for ax, estid in zip(axes, estids):
 
 			# resize ax and add a new box we will fill with other informations (see below)
@@ -591,12 +503,12 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 			meantd = np.mean(tds)
 
  			ys = np.arange(n)
-
-			colours = map(colour, thisidests)
+			colors = [e.getcolor() for e in thisidests]
+			
 
 			#ax.scatter(tds, ys)
 			ax.errorbar(tds, ys, yerr=None, xerr=tderrs, fmt='.', ecolor="grey", capsize=3)
-			ax.scatter(tds, ys, s = 50, c=colours, linewidth=0, zorder=20)#, cmap=plt.cm.get_cmap('jet'), vmin=0, vmax=4)
+			ax.scatter(tds, ys, s = 50, c=colors, linewidth=0, zorder=20)#, cmap=plt.cm.get_cmap('jet'), vmin=0, vmax=4)
 
 			for (est, y) in zip(thisidests, ys):
 				ax.text(est.td, y+0.3, "  %s (%s)" % (est.method, est.methodpar), va='center', ha='left', fontsize=6)
@@ -684,20 +596,16 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 		if interactive:
 			for buttontoshow, buttontod3cs, estid in zip(buttonstoshow, buttonstod3cs, estids):
 
-
 				# weird way of doing things... but didn't find a cleaner way to have everything working... 
 
-				rung = int(estid[5]) # Done this way to avoid mix up if I select my estimates in a weird order...
-				pair = int(estid[7])
-
 				class Goto:
-	    				myrung = rung
-					mypair = pair
+					myestid = estid
 	    				def show(self, event):
-						show(estimates,self.myrung,self.mypair)
+						myests = pycs.tdc.est.select(estimates, rungs=[int(self.myestid[5])], pairs=[int(self.myestid[7])])
+						show(myests)
 
 					def d3cs(self, event):
-						d3cs(self.myrung,self.mypair)	
+						d3cs(int(self.myestid[5]),int(self.myestid[7]))	
 
 				goto = Goto()				
 				buttontoshow.on_clicked(goto.show)
@@ -759,7 +667,6 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 				interactiveplot(groupestids[self.ind], figname = figname)
 
 			def prev(self, event):
-				self.ind -= 1
 				if self.ind>0:
 					self.ind -= 1
 				else:
