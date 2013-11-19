@@ -1118,12 +1118,12 @@ def fit(lcs, knotstep=20.0, n=None, knots=None, stab=True,
 	return s
 
 
-def seasonknots(lcs, knotstep, inseas, seasongap=60.0):
+def seasonknots(lcs, knotstep, ingap, seasongap=60.0):
 	"""
 	A little helper to get some knot locations inside of seasons only
 	
 	knotstep is for inside seasons
-	inseas is the number of knots inside gaps.
+	ingap is the number of knots inside gaps.
 	
 	"""
 	knots = []
@@ -1149,7 +1149,7 @@ def seasonknots(lcs, knotstep, inseas, seasongap=60.0):
 	for gapi in gapindices:
 		a = dp.jds[gapi]
 		b = dp.jds[gapi+1]
-		knots.append(np.linspace(a, b, inseas+2)[1:-1])
+		knots.append(np.linspace(a, b, ingap+2)[1:-1])
 	
 	
 	knots = np.concatenate(knots)
