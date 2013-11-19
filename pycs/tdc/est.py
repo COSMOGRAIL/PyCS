@@ -478,11 +478,31 @@ def d3cs(rung,pair):
 	
 	
 
-def interactivebigplot(estimates, shadedestimates = None, plotpath = None, interactive = True, groupbyrung = False, minibox = False, minradius=100):
+def interactivebigplot(estimates, shadedestimates = None, plotpath = None, interactive = True, minibox = False, groupbyrung = False, minradius=100):
 
 	"""
-	Interactive version of the big plot above
-	Set groupbyrung as True and be amazed !
+	Large graphical representation of your estimates.
+	
+	:param minradius: Minimal half-width of the time delay axes, in day.
+	
+	:param shadedestimates: Here you can give me a list of "unique" estimates (typical the result of a multicombine)
+		that I will show as shaded bars instead of errorbars.
+		However, it's estimates that determines which panels I will draw and with what range,
+		so that you can get panels shown without any shadedestimate.
+			
+	:param plotpath: if you want to save your figures instead of displaying them. Work only when interactive is set to False.
+	
+	:param interactive: Add a button to show the curve with shifts corresponding to the displayed estimates,
+		and another button redirecting to d3cs
+		
+	:param minibox: add a minibox to the right of each panel, displaying the mean value of each set of estimate
+		TODO : 	do the same implementation as shadedestimates, but with a list of different estimates
+			also add captions
+			
+	:param groupbyrung: interactive must be set to True. If groupbyrung is True, display a command center allowing the user
+		to navigate between the different rungs of the TDC0 (need an update when the TDC1 data will be available.		
+	
+	
 	"""
 	
 	import matplotlib.pyplot as plt
