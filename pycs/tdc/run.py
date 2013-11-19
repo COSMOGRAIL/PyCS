@@ -14,7 +14,7 @@ class Run:
 	Class to contain a run of PyCS methods on a given lens
 	"""
 	
-	def __init__(self, iniest, lca, lcb, method="", methodpar="", plots=True, outdir=None):
+	def __init__(self, iniest, lca, lcb, method="", methodpar="", outdir=None):
 		"""
 
 		"""
@@ -35,7 +35,6 @@ class Run:
 		self.lcb = lcb
 		(self.jdrange, self.magrange) = pycs.gen.lc.displayrange([self.lca, self.lcb]) # Just to be sure that they are defined.
 		
-		self.plots = plots
 		
 		if outdir == None:
 			outdir = os.getcwd()
@@ -53,7 +52,6 @@ class Run:
 		#	os.mkdir(self.datadir)
 			
 		self.logpath = os.path.join(self.plotdir, "log.txt")
-		self.gogogo = True
 	
 	
 		
@@ -82,8 +80,25 @@ class Run:
 		self.lcb.timeshift = self.iniest.td
 		pycs.tdc.util.setnicemagshift([self.lca, self.lcb])
 		
-				
-	def fitsourcespline(self, sploptfct):
+	
+	def varioanalysis(self):
+		"""
+		Computes the vario analysis, for instance to guess best knot steps
+		"""
+		self.log("Starting vario analysis...")
+		self.varioa = pycs.tdc.vario.vario(self.lca)
+		self.variob = pycs.tdc.vario.vario(self.lcb)
+		self.log("vario results for A : %s" % str(self.varioa))
+		self.log("vario results for B : %s" % str(self.variob))
+		
+		self.knotstep = pycs.tdc.splopt.calcknotstep([self.varioa, self.variob])
+		# To keep the coding simpler, we also write this into the lc objects :
+		self.lca.knotstep = self.knotstep
+		self.lcb.knotstep = self.knotstep
+		self.log("Computed knotstep: %.2f" % self.knotstep)
+		
+			
+	def fitsourcespline(self, sploptfct, saveplot=True):
 		# Adding some simple ML to B (required for the magshift ...)
 		#pycs.gen.polyml.addtolc(self.lca, nparams=1, autoseasonsgap = 100000.0)
 		#pycs.gen.polyml.addtolc(self.lcb, nparams=1, autoseasonsgap = 100000.0)
@@ -97,15 +112,16 @@ class Run:
 		
 		if relshift > 5.0:
 			self.log("That's too much, I stop")
-			self.gogogo = False
+			raise RuntimeError("Source spline fit failed.")
 		
 		#pycs.gen.util.writepickle(self.sourcespline, os.path.join(self.datadir, "sourcespline.pkl"))
 		
 		# Visu
-		
 		(self.jdrange, self.magrange) = pycs.gen.lc.displayrange([self.lca, self.lcb])
 		
-		pycs.gen.lc.display([self.lca, self.lcb], [self.sourcespline], jdrange=self.jdrange, magrange = self.magrange, figsize=(18, 6), filename=os.path.join(self.plotdir, "sourcespline.png"), verbose=False)
+		if saveplot:
+			pycs.gen.lc.display([self.lca, self.lcb], [self.sourcespline], jdrange=self.jdrange, magrange = self.magrange, figsize=(18, 6), plotsize=(0.05, 0.98, 0.09, 0.9), filename=os.path.join(self.plotdir, "sourcespline.png"), verbose=False, legendloc=1)
+			pycs.gen.lc.display([self.lca, self.lcb], [self.sourcespline], jdrange=(0, 1000), magrange = self.magrange, figsize=(18, 6), plotsize=(0.05, 0.98, 0.09, 0.9), filename=os.path.join(self.plotdir, "zoom_sourcespline.png"), verbose=False, legendloc=1)
 		
 		# And we save the residuals, to be used later when drawign simulated curves.
 		pycs.sim.draw.saveresiduals([self.lca, self.lcb], self.sourcespline)
@@ -190,7 +206,7 @@ class Run:
 		
 	
 	
-	def runsim(self, optfct, n=5, plots=True):
+	def runsim(self, optfct, n=5, saveplots=True):
 		"""
 		Drawing the simulated curves and runing on them
 		"""
@@ -216,8 +232,9 @@ class Run:
 			# Draw them
 			lcssim = pycs.sim.draw.draw([self.lca, self.lcb], self.sourcespline, shotnoise="sigma")
 	
-			if plots:
-				pycs.gen.lc.display(lcssim, [self.sourcespline], jdrange=self.jdrange, magrange = self.magrange, figsize=(18,6), filename = os.path.join(self.plotdir, "sim_%i.png" % (i+1)))
+			if saveplots:
+				pycs.gen.lc.display(lcssim, [self.sourcespline], jdrange=self.jdrange, magrange = self.magrange, figsize=(18,6), plotsize=(0.05, 0.98, 0.09, 0.95), legendloc=1, filename = os.path.join(self.plotdir, "sim_%i.png" % (i+1)))
+				pycs.gen.lc.display(lcssim, [self.sourcespline], jdrange=(0, 1000), magrange = self.magrange, figsize=(18,6), plotsize=(0.05, 0.98, 0.09, 0.95), legendloc=1, filename = os.path.join(self.plotdir, "zoom_sim_%i.png" % (i+1)))
 			
 			# Set some wrong "initial delays" for the analysys, around these "true delays".
 			lcssim[0].shifttime(float(np.random.uniform(low=-self.iniest.tderr, high=self.iniest.tderr, size=1)))
@@ -226,6 +243,10 @@ class Run:
 			# Randomize order
 			pycs.gen.lc.shuffle(lcssim)
 			lcssimlist.append(lcssim)
+			
+			# Propagate the "pirate" attributes:
+			lcssim[0].knotstep = self.knotstep
+			lcssim[1].knotstep = self.knotstep
 		
 		# We run the optimizer and unshuffle
 		self.log("Running on %i simulations..." % n)
@@ -294,6 +315,7 @@ def multirun(iniests,
 	nobs = 5, nsim = 5,
 	ncpu=0,
 	diagnostics = True,
+	saveplots = False,
 	tdcpath = "./tdc0", outdir="./multirun", method="", methodpar=""):
 
 	"""
@@ -309,7 +331,8 @@ def multirun(iniests,
 	
 	:param ncpu: how many cpus should I use (0 = automatic)
 	
-	:param diagnostics: do you want me to output some diagnostic plots / data ?
+	:param diagnostics: do you want me to output some summary diagnostic plots / data ?
+	:param saveplots: do you want me to output even more detaild plots (for debugging)
 	
 	:param tdcpath: path to the data directory.
 	
@@ -338,18 +361,21 @@ def multirun(iniests,
 			r.setup()
 			if diagnostics:
 				pycs.gen.lc.display([r.lca, r.lcb], filename = os.path.join(r.outdir, "iniest.png"))
-		
+			
+			# Computing some vario stats
+			r.varioanalysis()
+			
 			# First fit
-			r.fitsourcespline(sploptfct = sploptfct)
-			if not r.gogogo: continue
-		
+			r.fitsourcespline(sploptfct = sploptfct, saveplot=diagnostics)
+			
+			"""
 			# Getting the delay
 			r.runobs(optfct = optfct, n = nobs)
 			if diagnostics:
 				r.runobsplot()
 	
 			# Getting the error bar
-			r.runsim(optfct = optfct, n = nsim)
+			r.runsim(optfct = optfct, n = nsim, saveplots=saveplots)
 			if diagnostics:
 				r.runsimplot()
 			
@@ -358,7 +384,9 @@ def multirun(iniests,
 
 			# Writing the output
 			est.writecsv([r.outest], outcsv, append=True)
-		
+			
+			"""
+			
 		except RuntimeError as error:
 			r.log("Shit, a RuntimeError !")
 			r.log(str(error))
