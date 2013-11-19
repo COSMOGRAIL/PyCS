@@ -231,6 +231,7 @@ def match(candestimates, refestimates):
 			notmatched.append(e)
 	return (matched, notmatched)
 	
+	
 
 def removebad(estimates,verbose=False):
 	"""
@@ -239,9 +240,10 @@ def removebad(estimates,verbose=False):
 	
 	"""
 	if verbose:
-		print '     ----- WARNING -----     '
 		for est in [est for est in estimates if est.confidence == 4]:
+			print '     ----- WARNING -----     '
 			print 'Estimate for curve %s removed.' % est.niceid
+			print '         dt = %.2f   , dterr = %.2f' % (est.td, est.tderr)
 				
 	return [est for est in estimates if est.confidence < 4]
 
@@ -264,20 +266,21 @@ def combine(estimates,method='meanstd',methodcl=None):
 	
 	if method == 'meanstd':		
 		
-		estimates = removebad(estimates)
+		estimates = removebad(estimates,verbose=True)
 		
 		tds   = [est.td for est in estimates]
 		
 		if len(tds) > 1:
-			td    = np.mean(tds)
-			tderr = np.std(tds)/len(tds)
-			
-			if methodcl == None:
-				methodcl = method
-			confidence=defineconfidence(methodcl,[td,tderr])
+			td     	   = np.mean(tds)
+			tderr 	   = np.std(tds)/np.sqrt(len(tds))
+			if tderr < 5:
+				confidence = 0
+			else:
+				confidence = 4				
+
 		else :
-			td = 0.
-			tderr = 0.
+			td 	   = 0.
+			tderr 	   = 0.
 			confidence = 4	
 		
 		ms = 0.0
@@ -304,6 +307,7 @@ def combine(estimates,method='meanstd',methodcl=None):
 	
 def multicombine(estimates, method='meanstd'):
 	"""
+	Wrapper around combine.
 	Multiple calls to the combine function. Eats a list of messy estimates, groups and combine them
 	by quasar according to method, and return the list of combinated estimates. Can be used to feed writesubmission.	
 	"""	
@@ -317,25 +321,7 @@ def multicombine(estimates, method='meanstd'):
 	checkunique(newests)
 	newests = removebad(newests,verbose=True)
 	return newests		
-
-
-def defineconfidence(method, params):
-	"""
-	For each combination method (the same that in the combine function), define the confidence level of the results
 	
-	Return the confidence level, as an integer (from 0 to 4...)
-	"""
-	
-	if method == 'meanstd':
-	
-		td    = params[0]
-		tderr = params[1]
-
-		
-		if tderr > 5:
-			return 4
-		else:
-			return 0	
 	
 
 	
@@ -455,197 +441,6 @@ def bigplot(estimates, shadedestimates = None, plotpath = None, minradius=100):
 
 
 
-def interactivebigplot(estimates, plotpath = None):
-	
-	import matplotlib.pyplot as plt
-	import matplotlib.axes as maxes
-	from matplotlib.widgets import Button
-	
-	for est in estimates:
-		est.tmpid = "(%i, %i)" % (est.rung, est.pair)
-	estids = sorted(list(set([est.tmpid for est in estimates])))
-	
-	
-	# init lists for interactive plotting...
-				
-	buttonstod3cs=[]
-	buttonstoshow=[]
-	
-				
-	def colour(est):
-		if est.confidence==0: return "black"
-		if est.confidence==1: return "blue"
-		if est.confidence==2: return "green"
-		if est.confidence==3: return "orange"
-		if est.confidence==4: return "red"
-		
-	fig, axes = plt.subplots(nrows=len(estids), figsize=(10, 1.0*(len(estids))))	
-	fig.subplots_adjust(top=0.99, bottom=0.05, hspace=0.32)
-
-	
-	for ax, estid in zip(axes, estids):
-	
-		# resize ax and add a new box we will fill with other informations (see below)
-		# ugly stuff (but fast), sorry Malte
-		
-		bbox = ax.get_position()
-		points = bbox.get_points()
-		
-		xright = points[1][0] 
-		points[1][0] = 0.73
-		bbox.set_points(points)
-		ax.set_position(bbox)
-		
-		hspace = 0.02
-		width  = xright-hspace-points[1][0]
-		height = points[1][1]-points[0][1]
-		
-		rect = points[1][0]+hspace, points[0][1], width, height
-		ax2 = fig.add_axes(rect)
-		
-		
-				
-		### arange and compute values to fill the left box (ax)	
-		
-		thisidests = [est for est in estimates if est.tmpid == estid]
-		n = len(thisidests)
-		
-		tds = np.array([est.td for est in thisidests])
-		tderrs = np.array([est.tderr for est in thisidests])
-		meantd = np.mean(tds)
-
- 		ys = np.arange(n)
-		
-		colours = map(colour, thisidests)
-		
-		
-		#ax.scatter(tds, ys)
-		ax.errorbar(tds, ys, yerr=None, xerr=tderrs, fmt='.', ecolor="grey", capsize=3)
-		ax.scatter(tds, ys, s = 50, c=colours, linewidth=0, zorder=20)#, cmap=plt.cm.get_cmap('jet'), vmin=0, vmax=4)
-		
-		for (est, y) in zip(thisidests, ys):
-			ax.text(est.td, y+0.3, "  %s (%s)" % (est.method, est.methodpar), va='center', ha='left', fontsize=6)
-		
-		
-		ax.set_ylim(-1, n)
-		
-		maxdist = np.max(np.fabs(tds - meantd))
-		if maxdist < 200:
-			tdr = 200
-		else:
-			tdr = maxdist*1.2
-		ax.set_xlim(meantd - tdr, meantd + tdr)
-		
-  		pos = list(ax.get_position().bounds)
-   		x_text = pos[0] - 0.01
-		y_text = pos[1] + pos[3]/2.
-		fig.text(x_text, y_text, estid, va='center', ha='right', fontsize=14)
-		ax.set_yticks([])
-		
-		
-		
-		### OK, now fill the right box (ax2)
-		
-		# some inits...
-		conflevelmin = 3
-		maxtolerr = 8
-		
-		thisidests_disc = [est for est in estimates if est.tmpid == estid and est.confidence <= conflevelmin]
-		tds_disc = np.array([est.td for est in thisidests_disc])
-	
-		meantd_disc = np.mean(tds_disc)
-		meantderr1 = np.std(tds_disc)
-		meantderr2 = np.std(tds_disc)/np.sqrt(len(tds_disc))
-				
-				
-		if meantderr1 < maxtolerr:
-			mcolor1 = 'black'
-		else:	
-			mcolor1 = 'red'
-			
-		if meantderr2 < maxtolerr:
-			mcolor2 = 'black'
-		else:	
-			mcolor2 = 'red'			
-		
-		ax2.errorbar(meantd_disc,1,yerr=None, xerr=[meantderr1], fmt='.', ecolor=mcolor1, capsize=3)
-		ax2.errorbar(meantd_disc,1,yerr=None, xerr=[meantderr2], fmt='.', ecolor=mcolor2, capsize=3)					
-		ax2.scatter(meantd_disc,1, s=50, c=mcolor2, linewidth=0, zorder=20)
-		
-		
-		from matplotlib.ticker import MaxNLocator
-		ax2.xaxis.set_major_locator(MaxNLocator(4))
-		
-		ax2.set_xlim(meantd_disc - maxtolerr, meantd_disc + maxtolerr)		
-		ax2.set_yticks([])
-		
-
-		### Interactive plotting options
-		# We create buttons
-		
-		sizescale = 3.3
-		
-		axtod3cs = plt.axes([points[0][0], points[0][1], width/sizescale, height/sizescale])
-		axtoshow = plt.axes([points[0][0], points[0][1]+height-height/sizescale, width/sizescale, height/sizescale])
-				
-		buttonstod3cs.append(Button(axtod3cs, 'D3CS'))
-		buttonstoshow.append(Button(axtoshow, 'Show'))
-
-		
-
-	for buttontoshow, buttontod3cs, estid in zip(buttonstoshow, buttonstod3cs, estids):
-	
-		
-		# weird way of doing things... but didn't find a cleaner way to have everything working... 
-						
-		rung = int(estid[1]) # Done this way to avoid mix up if I select my estimates in a weird order...
-		pair = int(estid[4])
-		
-		class Goto:
-	    		myrung = rung
-			mypair = pair
-	    		def show(self, event):
-				show(estimates,self.myrung,self.mypair)
-				
-			def d3cs(self, event):
-				d3cs(self.myrung,self.mypair)	
-				
-		goto = Goto()				
-		buttontoshow.on_clicked(goto.show)
-		buttontod3cs.on_clicked(goto.d3cs)
-	
-		
-	
-	#cbar = plt.colorbar(sc, cax = axes[0], orientation="horizontal")
-	#cbar.set_label('Confidence')
-	
-	# add next/previous rung buttons
-	
-	''' Work in progress !
-	
-	axnext = plt.axes()
-	axprev = plt.axes()
-	
-	buttonnext = Button(axnext,'Next Rung')
-	buttonprev = Button(axprev,'Previous Rung')
-	
-		
-	class ChangeRound:
-    		ind = 0
-    		def next(self, event):
-        		self.ind += 1
-        		i = self.ind % len(freqs)
-        		ydata = np.sin(2*np.pi*freqs[i]*t)
-        		l.set_ydata(ydata)
-        		plt.draw()
-	'''
-	
-	
-
-	if plotpath:
-		plt.savefig(plotpath)
-	else:
-		plt.show()
 
 def show(estimates, rung, pair):
 
@@ -660,7 +455,7 @@ def show(estimates, rung, pair):
 	setlist=[]
 		
 	# import the curve from data
-	filepath = 'data/rung%0i/tdc0_rung%0i_pair%0i.txt' % (rung,rung,pair)
+	filepath = 'tdc0/rung%0i/tdc0_rung%0i_pair%0i.txt' % (rung,rung,pair)
 		
 	for est in estimates:	
 		lcs = pycs.tdc.util.read(filepath)
@@ -683,4 +478,311 @@ def d3cs(rung,pair):
 	
 	
 
+def interactivebigplot(estimates, shadedestimates = None, plotpath = None, interactive = True, groupbyrung = False, minibox = False, minradius=100):
 
+	"""
+	Interactive version of the big plot above
+	Set groupbyrung as True and be amazed !
+	"""
+	
+	import matplotlib.pyplot as plt
+	import matplotlib.axes as maxes
+	from matplotlib.widgets import Button
+	
+	estids = sorted(list(set([est.id for est in estimates])))
+	
+	if shadedestimates != None:
+		checkunique(shadedestimates)
+			
+	# Check that interactive is set on before allowing groupbyrung
+	if groupbyrung == True and interactive == False:
+		print 'WARNING : interactive option is set to False -- groupbyrung option is not allowed to be True'
+		print 'groupbyrung is set to False' 
+		groupbyrung = False
+	
+	
+	if groupbyrung:
+			
+		# grouping the estids by rung
+		
+		groupestids=[]
+		for ind in np.arange(7):
+			groupestids.append([])
+		
+		for estid in estids: 
+			for ind in np.arange(7):
+				if estid[5] == str(ind):
+					groupestids[ind].append(estid)
+							
+				
+	def colour(est):
+		if est.confidence==0: return "black"
+		if est.confidence==1: return "blue"
+		if est.confidence==2: return "green"
+		if est.confidence==3: return "orange"
+		if est.confidence==4: return "red"
+	
+		
+
+	def interactiveplot(estids, figname=None):
+		
+		buttonstod3cs=[]
+		buttonstoshow=[]	
+	
+		if len(estids)==0:
+			print 'No pair in your estimates for this rung !'
+			return
+		
+		if figname == None:
+			figname = 'various estimates'
+		
+		fig, axes = plt.subplots(nrows=len(estids), figsize=(10, 1.0*(len(estids))), num=figname)
+		fig.subplots_adjust(top=0.99, bottom=0.05, left=0.13, right=0.98, hspace=0.32)
+		for ax, estid in zip(axes, estids):
+
+			# resize ax and add a new box we will fill with other informations (see below)
+			
+			if minibox:
+			
+				bbox = ax.get_position()
+				points = bbox.get_points()
+
+				xright = points[1][0] 
+				points[1][0] = 0.8
+				bbox.set_points(points)
+				ax.set_position(bbox)
+
+				hspace = 0.02
+				width  = xright-hspace-points[1][0]
+				height = points[1][1]-points[0][1]
+
+				rect = points[1][0]+hspace, points[0][1], width, height
+				ax2 = fig.add_axes(rect)
+
+
+
+			### arange and compute values to fill the left box (ax)	
+
+			thisidests = [est for est in estimates if est.id == estid]
+			n = len(thisidests)
+
+			tds = np.array([est.td for est in thisidests])
+			tderrs = np.array([est.tderr for est in thisidests])
+			meantd = np.mean(tds)
+
+ 			ys = np.arange(n)
+
+			colours = map(colour, thisidests)
+
+			#ax.scatter(tds, ys)
+			ax.errorbar(tds, ys, yerr=None, xerr=tderrs, fmt='.', ecolor="grey", capsize=3)
+			ax.scatter(tds, ys, s = 50, c=colours, linewidth=0, zorder=20)#, cmap=plt.cm.get_cmap('jet'), vmin=0, vmax=4)
+
+			for (est, y) in zip(thisidests, ys):
+				ax.text(est.td, y+0.3, "  %s (%s)" % (est.method, est.methodpar), va='center', ha='left', fontsize=6)
+
+			# The shadedestimates
+			if shadedestimates != None:
+				shadedests = [est for est in shadedestimates if est.id == estid]
+				if len(shadedests) == 1:
+					shadedest = shadedests[0]
+					ax.axvspan(shadedest.td - shadedest.tderr, shadedest.td + shadedest.tderr, color=shadedest.getcolor(), alpha=0.2, zorder=-20)
+					ax.text(shadedest.td, -0.9, "%s (%s)" % (shadedest.method, shadedest.methodpar), va='center', ha='center', fontsize=6)
+
+
+			ax.set_ylim(-1.3, n)
+			
+			maxdist = np.max(np.fabs(tds - meantd))
+			if maxdist < minradius:
+				tdr = minradius
+			else:
+				tdr = maxdist*1.2
+			ax.set_xlim(meantd - tdr, meantd + tdr)
+		
+
+
+  			pos = list(ax.get_position().bounds)
+   			x_text = pos[0] - 0.01
+			y_text = pos[1] + pos[3]/2.
+			fig.text(x_text, y_text, estid, va='center', ha='right', fontsize=14)
+			ax.set_yticks([])
+
+			if interactive:
+			
+				### Interactive plotting options : add clickable buttons
+
+				hscale = 3.5
+				wscale = 12.0
+				
+				bbox = ax.get_position()
+				points = bbox.get_points()
+				
+				xright = points[1][0] 
+				hspace = 0.02
+				width  = points[1][0]-points[0][0]
+				height = points[1][1]-points[0][1]
+				
+
+				axtod3cs = plt.axes([points[0][0], points[0][1], width/wscale, height/hscale])
+				axtoshow = plt.axes([points[0][0], points[0][1]+height-height/hscale, width/wscale, height/hscale])
+
+				buttonstod3cs.append(Button(axtod3cs, 'D3CS'))
+				buttonstoshow.append(Button(axtoshow, 'Show'))
+				
+				
+			if minibox:
+			
+				### OK, now fill the right box (ax2)
+
+				# some inits...
+				conflevelmin = 3
+				maxtolerr = 8
+
+				thisidests_disc = [est for est in estimates if est.id == estid and est.confidence <= conflevelmin]
+				tds_disc = np.array([est.td for est in thisidests_disc])
+
+				meantd_disc = np.mean(tds_disc)
+				meantderr = np.std(tds_disc)/np.sqrt(len(tds_disc))
+
+				if meantderr < maxtolerr:
+					mcolor = 'black'
+				else:	
+					mcolor = 'red'			
+
+				
+				ax2.errorbar(meantd_disc,1,yerr=None, xerr=[meantderr], fmt='.', ecolor=mcolor, capsize=3)					
+				ax2.scatter(meantd_disc,1, s=50, c=mcolor, linewidth=0, zorder=20)
+
+
+				from matplotlib.ticker import MaxNLocator
+				ax2.xaxis.set_major_locator(MaxNLocator(4))
+
+				ax2.set_xlim(meantd_disc - maxtolerr, meantd_disc + maxtolerr)		
+				ax2.set_yticks([])
+
+
+		if interactive:
+			for buttontoshow, buttontod3cs, estid in zip(buttonstoshow, buttonstod3cs, estids):
+
+
+				# weird way of doing things... but didn't find a cleaner way to have everything working... 
+
+				rung = int(estid[5]) # Done this way to avoid mix up if I select my estimates in a weird order...
+				pair = int(estid[7])
+
+				class Goto:
+	    				myrung = rung
+					mypair = pair
+	    				def show(self, event):
+						show(estimates,self.myrung,self.mypair)
+
+					def d3cs(self, event):
+						d3cs(self.myrung,self.mypair)	
+
+				goto = Goto()				
+				buttontoshow.on_clicked(goto.show)
+				buttontod3cs.on_clicked(goto.d3cs)
+		
+		plt.show()
+
+
+	
+	
+	# Control Panel
+	
+	if groupbyrung:	
+		class GotoRung():
+			ind = 0
+
+			def rung0(self, event):		
+				self.ind = 0
+				print ' \t currently at rung %i' %self.ind			
+				interactiveplot(groupestids[self.ind], figname = 'rung 0')
+
+			def rung1(self, event):		
+				self.ind = 1
+				print ' \t currently at rung %i' %self.ind
+				interactiveplot(groupestids[self.ind], figname = 'rung 1')			
+
+			def rung2(self, event):		
+				self.ind = 2
+				print ' \t currently at rung %i' %self.ind
+				interactiveplot(groupestids[self.ind], figname = 'rung 2')			
+
+			def rung3(self, event):		
+				self.ind = 3
+				print ' \t currently at rung %i' %self.ind
+				interactiveplot(groupestids[self.ind], figname = 'rung 3')
+
+			def rung4(self, event):		
+				self.ind = 4
+				print ' \t currently at rung %i' %self.ind
+				interactiveplot(groupestids[self.ind], figname = 'rung 4')
+
+			def rung5(self, event):		
+				self.ind = 5
+				print ' \t currently at rung %i' %self.ind
+				interactiveplot(groupestids[self.ind], figname = 'rung 5')
+
+			def rung6(self, event):		
+				self.ind = 6
+				print ' \t currently at rung %i' %self.ind
+				interactiveplot(groupestids[self.ind], figname = 'rung 6')	
+
+			def next(self, event):
+				if self.ind <6:
+					self.ind += 1
+				else:
+					self.ind = 0 	
+				print ' \t currently at rung %i' %self.ind
+				figname = 'rung %i' % self.ind				
+				interactiveplot(groupestids[self.ind], figname = figname)
+
+			def prev(self, event):
+				self.ind -= 1
+				if self.ind>0:
+					self.ind -= 1
+				else:
+					self.ind = 6	
+				print ' \t currently at rung %i' %self.ind
+				figname = 'rung %i' % self.ind		
+				interactiveplot(groupestids[self.ind], figname = figname)	
+	
+				
+		fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(4.5, 3),num='control center')		
+		fig.subplots_adjust(top=0.95, bottom=0.05, hspace=0.32)
+
+
+
+		buttontorung0 = Button(axes[0][0], 'Rung 0')
+		buttontorung1 = Button(axes[0][1], 'Rung 1')	
+		buttontorung2 = Button(axes[0][2], 'Rung 2')
+		buttontorung3 = Button(axes[1][0], 'Rung 3')	
+		buttontorung4 = Button(axes[1][1], 'Rung 4')
+		buttontorung5 = Button(axes[1][2], 'Rung 5')	
+		buttontorung6 = Button(axes[2][0], 'Rung 6')	
+		buttontonext = Button(axes[2][1],'Next Rung')
+		buttontoprev = Button(axes[2][2],'Prev. Rung')
+
+
+		gotorung = GotoRung()
+
+		buttontonext.on_clicked(gotorung.next)
+		buttontoprev.on_clicked(gotorung.prev)
+		buttontorung0.on_clicked(gotorung.rung0)
+		buttontorung1.on_clicked(gotorung.rung1)
+		buttontorung2.on_clicked(gotorung.rung2)
+		buttontorung3.on_clicked(gotorung.rung3)	
+		buttontorung4.on_clicked(gotorung.rung4)
+		buttontorung5.on_clicked(gotorung.rung5)	
+		buttontorung6.on_clicked(gotorung.rung6)			
+
+
+		plt.show()
+	else:
+		if plotpath:			
+			plt.savefig(plotpath)
+			print "Wrote %s" % (plotpath)			
+		else:	
+			interactiveplot(estids)
+	
