@@ -96,7 +96,26 @@ class Run:
 		self.lca.knotstep = self.knotstep
 		self.lcb.knotstep = self.knotstep
 		self.log("Computed knotstep: %.2f" % self.knotstep)
+	
+	def show(self):
+		"""
+		A simple display, with some text
+		"""
+		# Updating the ranges
+		(self.jdrange, self.magrange) = pycs.gen.lc.displayrange([self.lca, self.lcb])
 		
+		stats = self.lca.samplingstats()
+		statstxt = "%s: %i points, %i seasons, gap length : %.1f +/- %.1f days, sampling : median %.1f / mean %.1f days" % (
+			self.iniest.niceid, len(self.lca), stats["nseas"], stats["meansg"], stats["stdsg"], stats["med"], stats["mean"])
+		text = [(0.01, 0.93, statstxt, {"fontsize":12, "color":"black"})]
+
+		pycs.gen.lc.display([self.lca, self.lcb], legendloc=1,
+			filename = os.path.join(self.plotdir, "iniest.png"),
+			figsize=(18, 6), plotsize=(0.05, 0.98, 0.09, 0.98),
+			jdrange=self.jdrange, magrange = self.magrange,
+			showgrid=True, text=text)	
+		
+			
 			
 	def fitsourcespline(self, sploptfct, saveplot=True):
 		# Adding some simple ML to B (required for the magshift ...)
@@ -116,12 +135,12 @@ class Run:
 		
 		#pycs.gen.util.writepickle(self.sourcespline, os.path.join(self.datadir, "sourcespline.pkl"))
 		
-		# Visu
+		# We update the plot ranges
 		(self.jdrange, self.magrange) = pycs.gen.lc.displayrange([self.lca, self.lcb])
 		
 		if saveplot:
-			pycs.gen.lc.display([self.lca, self.lcb], [self.sourcespline], jdrange=self.jdrange, magrange = self.magrange, figsize=(18, 6), plotsize=(0.05, 0.98, 0.09, 0.9), filename=os.path.join(self.plotdir, "sourcespline.png"), verbose=False, legendloc=1)
-			pycs.gen.lc.display([self.lca, self.lcb], [self.sourcespline], jdrange=(0, 1000), magrange = self.magrange, figsize=(18, 6), plotsize=(0.05, 0.98, 0.09, 0.9), filename=os.path.join(self.plotdir, "zoom_sourcespline.png"), verbose=False, legendloc=1)
+			pycs.gen.lc.display([self.lca, self.lcb], [self.sourcespline], jdrange=self.jdrange, magrange = self.magrange, figsize=(18, 6), plotsize=(0.05, 0.98, 0.09, 0.98), filename=os.path.join(self.plotdir, "sourcespline.png"), verbose=False, legendloc=1)
+			pycs.gen.lc.display([self.lca, self.lcb], [self.sourcespline], jdrange=(0, 1300), magrange = self.magrange, figsize=(18, 6), plotsize=(0.05, 0.98, 0.09, 0.98), filename=os.path.join(self.plotdir, "zoom_sourcespline.png"), verbose=False, legendloc=1)
 		
 		# And we save the residuals, to be used later when drawign simulated curves.
 		pycs.sim.draw.saveresiduals([self.lca, self.lcb], self.sourcespline)
@@ -233,8 +252,8 @@ class Run:
 			lcssim = pycs.sim.draw.draw([self.lca, self.lcb], self.sourcespline, shotnoise="sigma")
 	
 			if saveplots:
-				pycs.gen.lc.display(lcssim, [self.sourcespline], jdrange=self.jdrange, magrange = self.magrange, figsize=(18,6), plotsize=(0.05, 0.98, 0.09, 0.95), legendloc=1, filename = os.path.join(self.plotdir, "sim_%i.png" % (i+1)))
-				pycs.gen.lc.display(lcssim, [self.sourcespline], jdrange=(0, 1000), magrange = self.magrange, figsize=(18,6), plotsize=(0.05, 0.98, 0.09, 0.95), legendloc=1, filename = os.path.join(self.plotdir, "zoom_sim_%i.png" % (i+1)))
+				pycs.gen.lc.display(lcssim, [self.sourcespline], jdrange=self.jdrange, magrange = self.magrange, figsize=(18,6), plotsize=(0.05, 0.98, 0.09, 0.98), legendloc=1, filename = os.path.join(self.plotdir, "sim_%i.png" % (i+1)))
+				pycs.gen.lc.display(lcssim, [self.sourcespline], jdrange=(0, 1300), magrange = self.magrange, figsize=(18,6), plotsize=(0.05, 0.98, 0.09, 0.98), legendloc=1, filename = os.path.join(self.plotdir, "zoom_sim_%i.png" % (i+1)))
 			
 			# Set some wrong "initial delays" for the analysys, around these "true delays".
 			lcssim[0].shifttime(float(np.random.uniform(low=-self.iniest.tderr, high=self.iniest.tderr, size=1)))
@@ -359,11 +378,13 @@ def multirun(iniests,
 			
 			r = Run(iniest, lca, lcb, method=method, methodpar=methodpar, outdir=os.path.join(outdir, iniest.id))
 			r.setup()
-			if diagnostics:
-				pycs.gen.lc.display([r.lca, r.lcb], filename = os.path.join(r.outdir, "iniest.png"))
 			
 			# Computing some vario stats
 			r.varioanalysis()
+			
+			# Display of the input light curves
+			if diagnostics:
+				r.show()
 			
 			# First fit
 			r.fitsourcespline(sploptfct = sploptfct, saveplot=diagnostics)
@@ -380,7 +401,7 @@ def multirun(iniests,
 				r.runsimplot()
 			
 			endtime = datetime.datetime.now()
-			r.outest.timetaken = endtime - starttime
+			r.outest.timetaken = (endtime - starttime).total_seconds()
 
 			# Writing the output
 			est.writecsv([r.outest], outcsv, append=True)

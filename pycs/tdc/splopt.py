@@ -48,7 +48,7 @@ def spl1(lcs, verbose=True):
 	sampling = stats["med"]
 	
 	knotstep = lca.knotstep # Is the same for a and b...
-	bokeps = knotstep/3.0
+	bokeps = np.max([sampling, knotstep/3.0])
 	"""
 	if len(lca) > 1000.0:
 		knotstep = 20.
@@ -65,7 +65,7 @@ def spl1(lcs, verbose=True):
 	stabstep = sampling
 	stabmagerr = -3.0
 	
-	knots = pycs.gen.spl.seasonknots(lcs, knotstep, ingap=3)
+	knots = pycs.gen.spl.seasonknots(lcs, knotstep, ingap=1)
 	#exit()
 	if verbose:
 		print "I prepared %i knots" % (len(knots))
@@ -93,7 +93,7 @@ def spl1(lcs, verbose=True):
 	# And now iteratively optimize the shits
 	print "Starting opt on initial delays :"
 	print pycs.gen.lc.getnicetimedelays(lcs, separator=" | ")
-	for it in range(5):
+	for it in range(10):
 		
 		#pycs.spl.multiopt.opt_ts_brute(lcs, spline, movefirst=False, optml=False, r=10, step=1.0, verbose=False)
 		
