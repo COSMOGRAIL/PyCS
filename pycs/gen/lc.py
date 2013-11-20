@@ -2315,7 +2315,7 @@ def display(lclist=[], splist=[],
 
 
 
-def displayrange(lcs, margin=0.1):
+def displayrange(lcs, margin=0.05):
 	"""
 	returns a plausible range of mags and hjds to plot, so that you can keep this fixed in your plots
 	"""

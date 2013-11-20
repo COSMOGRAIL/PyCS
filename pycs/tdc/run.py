@@ -97,9 +97,10 @@ class Run:
 		self.lcb.knotstep = self.knotstep
 		self.log("Computed knotstep: %.2f" % self.knotstep)
 	
-	def show(self):
+	def show(self, interactive=False):
 		"""
 		A simple display, with some text
+		If I have a source spline, I show it !
 		"""
 		# Updating the ranges
 		(self.jdrange, self.magrange) = pycs.gen.lc.displayrange([self.lca, self.lcb])
@@ -108,9 +109,20 @@ class Run:
 		statstxt = "%s: %i points, %i seasons, gap length : %.1f +/- %.1f days, sampling : median %.1f / mean %.1f days" % (
 			self.iniest.niceid, len(self.lca), stats["nseas"], stats["meansg"], stats["stdsg"], stats["med"], stats["mean"])
 		text = [(0.01, 0.93, statstxt, {"fontsize":12, "color":"black"})]
-
-		pycs.gen.lc.display([self.lca, self.lcb], legendloc=1,
-			filename = os.path.join(self.plotdir, "iniest.png"),
+		
+		if interactive:
+			filename = "screen"
+		else:
+			filename = os.path.join(self.plotdir, "iniest.png")
+		
+		if hasattr(self, "sourcespline"):
+			splines = [self.sourcespline]
+		else:
+			splines = []
+		
+		
+		pycs.gen.lc.display([self.lca, self.lcb], splines, legendloc=1,
+			filename = filename,
 			figsize=(18, 6), plotsize=(0.05, 0.98, 0.09, 0.98),
 			jdrange=self.jdrange, magrange = self.magrange,
 			showgrid=True, text=text)	
@@ -329,6 +341,13 @@ class Run:
 		return self.outest
 	
 	
+	def save(self):
+		"""
+		I write myself into a pickle
+		"""
+		pycs.gen.util.writepickle(self, os.path.join(self.outdir, "run.pkl"))
+	
+	
 def multirun(iniests, 
 	sploptfct, optfct, 
 	nobs = 5, nsim = 5,
@@ -389,7 +408,6 @@ def multirun(iniests,
 			# First fit
 			r.fitsourcespline(sploptfct = sploptfct, saveplot=diagnostics)
 			
-			"""
 			# Getting the delay
 			r.runobs(optfct = optfct, n = nobs)
 			if diagnostics:
@@ -402,11 +420,14 @@ def multirun(iniests,
 			
 			endtime = datetime.datetime.now()
 			r.outest.timetaken = (endtime - starttime).total_seconds()
+			r.log("This took me %.0f seconds" % (r.outest.timetaken))
 
 			# Writing the output
 			est.writecsv([r.outest], outcsv, append=True)
 			
-			"""
+			# And saving myself, so that you can inspect me afterwards !
+			r.save()
+			
 			
 		except RuntimeError as error:
 			r.log("Shit, a RuntimeError !")

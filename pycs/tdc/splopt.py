@@ -9,30 +9,35 @@ import numpy as np
 
 def calcknotstep(varios):
 	"""
-	Give me some outputs of vario, I try to return a good knotstep, based on the highest vratio.
+	Give me some outputs of vario, I try to return a good knotstep, based on the highest vratio between the curves and the sampling.
 	"""
 	
 	vratios = np.array([out["vratio"] for out in varios])
-	sampling = np.array([out["sampling"] for out in varios])
+	samplings = np.array([out["sampling"] for out in varios])
 	
+	# First playing around :
+	"""
 	# Max and min vratio :
 	va = 1.0
 	vb = 3.0
-		
 	# We limit the range of these values to meaningful stuff
 	vratios = np.clip(vratios, va, vb)
 	v = np.max(vratios)
-	
 	# Knotstep range corresponding to va and vb:
 	ksa = 50.0
 	ksb = 4.0#*np.min(sampling)
-	
 	# And compute the knotstep, linear scaling :	
 	ks = ksa + (ksb - ksa)*(v - va)/(vb - va)
+	"""
 	
-	#ks = np.clip(
+	# Second more serious attempt, calibrated on a bunch of curves :
+	vratio = np.max(vratios)
+	sampling = np.min(samplings)
+	vratio = np.clip(vratio, 1.2, 5) # OK to lower this min value, but do not allow 1.0. OK to increase max value.
+	ks = 14.0/(vratio - 1.0)
+	ks = np.clip(ks, 2.0*sampling, 100.0)
 	
-	return ks
+	return float(ks)
 	
 
 
@@ -93,7 +98,7 @@ def spl1(lcs, verbose=True):
 	# And now iteratively optimize the shits
 	print "Starting opt on initial delays :"
 	print pycs.gen.lc.getnicetimedelays(lcs, separator=" | ")
-	for it in range(10):
+	for it in range(7):
 		
 		#pycs.spl.multiopt.opt_ts_brute(lcs, spline, movefirst=False, optml=False, r=10, step=1.0, verbose=False)
 		
@@ -104,7 +109,7 @@ def spl1(lcs, verbose=True):
 		#print "opt_ts_brute brute done"
 		#print pycs.gen.lc.getnicetimedelays(lcs, separator=" | ")
 	
-		print "Iteration %i done." % (it)
+		print "Iteration %i done." % (it+1)
 		print pycs.gen.lc.getnicetimedelays(lcs, separator=" | ")
 		
 	
