@@ -35,7 +35,6 @@ class Run:
 		self.lcb = lcb
 		(self.jdrange, self.magrange) = pycs.gen.lc.displayrange([self.lca, self.lcb]) # Just to be sure that they are defined.
 		
-		
 		if outdir == None:
 			outdir = os.getcwd()
 		self.outdir = outdir
@@ -97,6 +96,8 @@ class Run:
 		self.lcb.knotstep = self.knotstep
 		self.log("Computed knotstep: %.2f" % self.knotstep)
 	
+		
+	
 	def show(self, interactive=False):
 		"""
 		A simple display, with some text
@@ -122,17 +123,25 @@ class Run:
 		
 		
 		pycs.gen.lc.display([self.lca, self.lcb], splines, legendloc=1,
-			filename = filename,
+			filename = filename,# capsize=0, markersize=2,
+			knotsize=0.005,
+			showdelays=True,
 			figsize=(18, 6), plotsize=(0.05, 0.98, 0.09, 0.98),
 			jdrange=self.jdrange, magrange = self.magrange,
 			showgrid=True, text=text)	
 		
 			
 			
-	def fitsourcespline(self, sploptfct, saveplot=True):
+	def fitsourcespline(self, sploptfct, addmlfct=None, saveplot=True):
 		# Adding some simple ML to B (required for the magshift ...)
 		#pycs.gen.polyml.addtolc(self.lca, nparams=1, autoseasonsgap = 100000.0)
 		#pycs.gen.polyml.addtolc(self.lcb, nparams=1, autoseasonsgap = 100000.0)
+		
+		# Adding the ML
+		self.lca.magshift = 0.0
+		self.lcb.magshift = 0.0
+		if addmlfct != None:
+			addmlfct([self.lca, self.lcb])
 
 		# And run a first spline
 		self.sourcespline = sploptfct([self.lca, self.lcb])
@@ -151,15 +160,15 @@ class Run:
 		(self.jdrange, self.magrange) = pycs.gen.lc.displayrange([self.lca, self.lcb])
 		
 		if saveplot:
-			pycs.gen.lc.display([self.lca, self.lcb], [self.sourcespline], jdrange=self.jdrange, magrange = self.magrange, figsize=(18, 6), plotsize=(0.05, 0.98, 0.09, 0.98), filename=os.path.join(self.plotdir, "sourcespline.png"), verbose=False, legendloc=1)
-			pycs.gen.lc.display([self.lca, self.lcb], [self.sourcespline], jdrange=(0, 1300), magrange = self.magrange, figsize=(18, 6), plotsize=(0.05, 0.98, 0.09, 0.98), filename=os.path.join(self.plotdir, "zoom_sourcespline.png"), verbose=False, legendloc=1)
+			pycs.gen.lc.display([self.lca, self.lcb], [self.sourcespline], showdelays=True, jdrange=self.jdrange, magrange = self.magrange, figsize=(18, 6), plotsize=(0.05, 0.98, 0.09, 0.98), filename=os.path.join(self.plotdir, "sourcespline.png"), verbose=False, legendloc=1)
+			pycs.gen.lc.display([self.lca, self.lcb], [self.sourcespline], showdelays=True, jdrange=(0, 1300), magrange = self.magrange, figsize=(18, 6), plotsize=(0.05, 0.98, 0.09, 0.98), filename=os.path.join(self.plotdir, "zoom_sourcespline.png"), verbose=False, legendloc=1)
 		
 		# And we save the residuals, to be used later when drawign simulated curves.
 		pycs.sim.draw.saveresiduals([self.lca, self.lcb], self.sourcespline)
 
 		
 
-	def runobs(self, optfct, n=5):
+	def runobs(self, optfct, addmlfct=None, n=5, saveplots=True):
 		"""
 		Run the optimizer n times on the real data.
 		We draw the copies, run on them
@@ -177,29 +186,46 @@ class Run:
 			return
 		
 		lcscoplist = []
+		tsr = np.max([3.0, self.iniest.tderr])
+		
 		for i in range(n):
 			
 			# We make some copies to work with
 			lcacop = self.lca.copy()
 			lcbcop = self.lcb.copy()
+			lcacop.rmml()
+			lcbcop.rmml()
 			lcscop = [lcacop, lcbcop]
-			
-			# Random initial shifts
-			lcacop.shifttime(float(np.random.uniform(low=-self.iniest.tderr, high=self.iniest.tderr, size=1)))
-			lcbcop.shifttime(float(np.random.uniform(low=-self.iniest.tderr, high=self.iniest.tderr, size=1)))
 			
 			# Resetting magshifts
 			lcacop.magshift = 0.0
 			lcbcop.magshift = 0.0
+			
+			# Adding ML
+			if addmlfct != None:
+				addmlfct(lcscop)
+			
+			# Random initial shifts
+			lcacop.shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
+			lcbcop.shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 			
 			# Randomize order
 			pycs.gen.lc.shuffle(lcscop)
 			lcscoplist.append(lcscop)
 		
 		# We run the optimizer and unshuffle
-		for lcscop in lcscoplist:
-			optfct(lcscop)
+		for (i, lcscop) in enumerate(lcscoplist):
+			out = optfct(lcscop)
 			pycs.gen.lc.objsort(lcscop, verbose=False)
+			
+			if hasattr(out, "bokeps"): # then its a spline :)
+				displaysplines = [out]
+			else:
+				displaysplines = []
+			if saveplots:
+				(jdrange, magrange) = pycs.gen.lc.displayrange(lcscop)
+				pycs.gen.lc.display(lcscop, displaysplines, showdelays=True, jdrange=jdrange, magrange=magrange, figsize=(18,6), plotsize=(0.05, 0.98, 0.09, 0.98), legendloc=1, filename = os.path.join(self.plotdir, "obsopt_%i.png" % (i+1)))
+				
 		
 		# We collect the results
 		self.obsmesdelays = np.array([([lcscop[1].timeshift - lcscop[0].timeshift]) for lcscop in lcscoplist])
@@ -219,12 +245,14 @@ class Run:
 		"""
 		A quick histogram to see that intrinsic variance compared to the initial estimate
 		"""
+		
 		tdmin = self.iniest.td - 3.0*self.iniest.tderr
 		tdmax = self.iniest.td + 3.0*self.iniest.tderr
 		
-		fig = plt.figure(figsize=(10, 3))
+		fig = plt.figure(figsize=(6, 3))
 		fig.subplots_adjust(top=0.95, bottom=0.2)
-		plt.hist(self.obsmesdelays, range=(tdmin, tdmax), bins=200, color="green", lw=0)
+		if len(self.obsmesdelays) != 0:
+			plt.hist(self.obsmesdelays, range=(tdmin, tdmax), bins=200, color="green", lw=0)
 		plt.xlim(tdmin, tdmax)
 		plt.xlabel("Delay [day]")
 		plt.ylabel("Counts")
@@ -234,10 +262,11 @@ class Run:
 		plt.axvline(self.iniest.td + self.iniest.tderr, color="gray", linestyle="-", zorder=20)
 		plt.axvline(self.outest.td, color="red", linestyle="-", zorder=20)
 		plt.savefig(os.path.join(self.plotdir, "intrinsic_variance.png"))
+		plt.close()
 		
 	
 	
-	def runsim(self, optfct, n=5, saveplots=True):
+	def runsim(self, optfct, addmlfct=None, n=5, saveplots=True):
 		"""
 		Drawing the simulated curves and runing on them
 		"""
@@ -251,12 +280,13 @@ class Run:
 
 		timeshiftoriga = self.lca.timeshift # So this is what the single spline fit gave us.
 		timeshiftorigb = self.lcb.timeshift
+		truetsr = np.max([3.0, self.iniest.tderr])
+		tsr = np.max([3.0, self.iniest.tderr])
 		
 		lcssimlist = []
 		for i in range(n):
 			
 			# Set some random "true delays"
-			truetsr = self.iniest.tderr
 			self.lca.timeshift = timeshiftoriga + float(np.random.uniform(low = -truetsr, high = truetsr, size=1))
 			self.lcb.timeshift = timeshiftorigb + float(np.random.uniform(low = -truetsr, high = truetsr, size=1))
 			
@@ -264,12 +294,20 @@ class Run:
 			lcssim = pycs.sim.draw.draw([self.lca, self.lcb], self.sourcespline, shotnoise="sigma")
 	
 			if saveplots:
-				pycs.gen.lc.display(lcssim, [self.sourcespline], jdrange=self.jdrange, magrange = self.magrange, figsize=(18,6), plotsize=(0.05, 0.98, 0.09, 0.98), legendloc=1, filename = os.path.join(self.plotdir, "sim_%i.png" % (i+1)))
-				pycs.gen.lc.display(lcssim, [self.sourcespline], jdrange=(0, 1300), magrange = self.magrange, figsize=(18,6), plotsize=(0.05, 0.98, 0.09, 0.98), legendloc=1, filename = os.path.join(self.plotdir, "zoom_sim_%i.png" % (i+1)))
+				pycs.gen.lc.display(lcssim, [self.sourcespline], showdelays=True, jdrange=self.jdrange, magrange = self.magrange, figsize=(18,6), plotsize=(0.05, 0.98, 0.09, 0.98), legendloc=1, filename = os.path.join(self.plotdir, "sim_%i.png" % (i+1)))
+				pycs.gen.lc.display(lcssim, [self.sourcespline], showdelays=True, jdrange=(0, 1300), magrange = self.magrange, figsize=(18,6), plotsize=(0.05, 0.98, 0.09, 0.98), legendloc=1, filename = os.path.join(self.plotdir, "zoom_sim_%i.png" % (i+1)))
+			
+			# Remove ML and add a new one :
+			lcssim[0].magshift = 0.0
+			lcssim[1].magshift = 0.0
+			lcssim[0].rmml()
+			lcssim[1].rmml()
+			if addmlfct != None:
+				addmlfct(lcssim)
 			
 			# Set some wrong "initial delays" for the analysys, around these "true delays".
-			lcssim[0].shifttime(float(np.random.uniform(low=-self.iniest.tderr, high=self.iniest.tderr, size=1)))
-			lcssim[1].shifttime(float(np.random.uniform(low=-self.iniest.tderr, high=self.iniest.tderr, size=1)))
+			lcssim[0].shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
+			lcssim[1].shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 			
 			# Randomize order
 			pycs.gen.lc.shuffle(lcssim)
@@ -281,10 +319,18 @@ class Run:
 		
 		# We run the optimizer and unshuffle
 		self.log("Running on %i simulations..." % n)
-		for lcssim in lcssimlist:
-			optfct(lcssim)
+		for (i, lcssim) in enumerate(lcssimlist):
+			out = optfct(lcssim)
 			pycs.gen.lc.objsort(lcssim, verbose=False)
-		
+			
+			if hasattr(out, "bokeps"): # then its a spline :)
+				displaysplines = [out]
+			else:
+				displaysplines = []
+			if saveplots:
+				(jdrange, magrange) = pycs.gen.lc.displayrange(lcssim)
+				pycs.gen.lc.display(lcssim, displaysplines, jdrange=jdrange, magrange=magrange, figsize=(18,6), plotsize=(0.05, 0.98, 0.09, 0.98), legendloc=1, filename = os.path.join(self.plotdir, "simopt_%i.png" % (i+1)))
+
 		# We collect the results
 		self.simtruedelays = np.array([([lcssim[1].truetimeshift - lcssim[0].truetimeshift]) for lcssim in lcssimlist])
 		self.simmesdelays = np.array([([lcssim[1].timeshift - lcssim[0].timeshift]) for lcssim in lcssimlist])
@@ -308,7 +354,7 @@ class Run:
 		tdmin = self.iniest.td - 3.0*self.iniest.tderr
 		tdmax = self.iniest.td + 3.0*self.iniest.tderr
 		
-		fig = plt.figure(figsize=(10, 3))
+		fig = plt.figure(figsize=(6, 3))
 		fig.subplots_adjust(top=0.95, bottom=0.2)
 		plt.scatter(self.simtruedelays, self.simmesdelays - self.simtruedelays)
 		plt.xlim(tdmin, tdmax)
@@ -332,7 +378,7 @@ class Run:
 		#plt.axvline(self.outest.td, color="red", linestyle="-", zorder=20)
 		
 		plt.savefig(os.path.join(self.plotdir, "measvstrue.png"))
-			
+		plt.close()
 	
 	def getoutest(self):
 		"""
@@ -349,7 +395,7 @@ class Run:
 	
 	
 def multirun(iniests, 
-	sploptfct, optfct, 
+	sploptfct, optfct, addmlfct,
 	nobs = 5, nsim = 5,
 	ncpu=0,
 	diagnostics = True,
@@ -363,6 +409,8 @@ def multirun(iniests,
 	
 	:param sploptfct: a spline optimizer function to draw simulations
 	:param optfct: the optimizer function that you want to use
+	:param addmlfct: a function that adds some ML to the curves passed as argument.
+	
 	
 	:param nobs: how often should I run on the observations (intrinsic variance)
 	:param nsim: how many Monte Carlo runs should I do ?
@@ -406,15 +454,15 @@ def multirun(iniests,
 				r.show()
 			
 			# First fit
-			r.fitsourcespline(sploptfct = sploptfct, saveplot=diagnostics)
+			r.fitsourcespline(sploptfct = sploptfct, addmlfct = addmlfct, saveplot = diagnostics)
 			
 			# Getting the delay
-			r.runobs(optfct = optfct, n = nobs)
+			r.runobs(optfct = optfct, addmlfct = addmlfct, n = nobs, saveplots=saveplots)
 			if diagnostics:
 				r.runobsplot()
 	
 			# Getting the error bar
-			r.runsim(optfct = optfct, n = nsim, saveplots=saveplots)
+			r.runsim(optfct = optfct, addmlfct = addmlfct, n = nsim, saveplots=saveplots)
 			if diagnostics:
 				r.runsimplot()
 			
