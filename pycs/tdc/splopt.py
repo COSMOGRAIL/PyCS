@@ -5,6 +5,8 @@ Here we collect some spline optimizers specifically designed for the TDC
 
 import pycs
 import numpy as np
+import random
+
 
 
 def calcknotstep(varios):
@@ -118,7 +120,7 @@ def spl1(lcs, verbose=True):
 
 
 
-def spl2(lcs, maxit=20, minchange=1.0, verbose=True):
+def spl2(lcs, maxit=7, minchange=1.0, verbose=True):
 	"""
 	Custom spline optimizer for TDC
 	Assumes good initial time shift, but does not care about inital magshift.
@@ -230,4 +232,17 @@ def spl2(lcs, maxit=20, minchange=1.0, verbose=True):
 		
 	
 	return spline
-		
+
+
+def splml1(lcs):
+	"""
+	Some rather simple spline ML model.
+	Randomly added on one curve of lcs
+	"""
+	lctoaddto = random.choice(lcs)
+	mlknotstep = 500.0
+	mlbokeps = 100.0
+	pycs.gen.splml.addtolc(lctoaddto, knotstep=mlknotstep, bokeps=mlbokeps)
+
+
+
