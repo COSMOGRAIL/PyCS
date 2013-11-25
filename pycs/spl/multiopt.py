@@ -34,7 +34,7 @@ def opt_magshift(lcs, sourcespline=None, verbose=False, trace=False):
 	We don't touch the magshift of the first curve.
 	
 	If you do give a sourcespline, I'll optimize the magshift of each curve one by one to match the spline.
-	We don't touch the magshift of the first curve.
+	New : I even touch the magshift of the first curve.
 	"""
 	
 	if sourcespline == None:
@@ -50,7 +50,8 @@ def opt_magshift(lcs, sourcespline=None, verbose=False, trace=False):
 
 	else:
 		
-		for l in lcs[1:]: # We don't touch the first one.
+		#for l in lcs[1:]: # We don't touch the first one.
+		for l in lcs: # We don't touch the first one.
 			
 			if verbose:
 				print "Magshift optimization on %s ..." % (l)
