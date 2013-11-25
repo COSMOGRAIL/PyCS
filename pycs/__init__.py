@@ -17,7 +17,7 @@ __copyright__ = "2013"
 __version__ = "2.0dev"
 
 
-__all__ = ["gen", "disp", "spl", "sim", "tdc"]
+__all__ = ["gen", "disp", "spl", "sim", "tdc", "spldiff"]
 
 
 import gen
@@ -25,5 +25,6 @@ import disp
 import spl
 import sim
 import tdc
+import spldiff
 # import regdiff
 #import regdiff2
