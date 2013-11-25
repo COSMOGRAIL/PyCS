@@ -478,7 +478,7 @@ def multirun(iniests,
 			
 			
 		except RuntimeError as error:
-			r.log("Shit, a RuntimeError !")
+			r.log("Damn, a RuntimeError !") # Be polite !
 			r.log(str(error))
 			est.writecsv([iniest], crashcsv, append=True)
 			print error

@@ -97,7 +97,7 @@ def spl1(lcs, verbose=True):
 	if verbose:
 		print "spline fit done"
 
-	# And now iteratively optimize the shits
+	# And now iteratively optimize the shifts
 	print "Starting opt on initial delays :"
 	print pycs.gen.lc.getnicetimedelays(lcs, separator=" | ")
 	for it in range(7):
