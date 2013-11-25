@@ -393,7 +393,7 @@ def d3cs(rung,pair):
 	
 	
 
-def interactivebigplot(estimates, shadedestimates = None, plotpath = None, interactive = True, minibox = False, groupbyrung = False, minradius=100):
+def interactivebigplot(estimates, shadedestimates = None, plotpath = None, interactive = True, minibox = False, groupbyrung = False, minradius=100, plotpath=None):
 
 	"""
 	Large graphical representation of your estimates.
