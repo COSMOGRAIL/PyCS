@@ -1,8 +1,8 @@
 """
-Regression difference curve shifting technique, using gaussian process regression.
+Spline difference curve shifting technique, using spline enveloppes.
 """
 
-__all__ = ["rslc", "pymcgp", "multiopt"]
+__all__ = ["rslc", "splreg", "multiopt"]
 import rslc
 import multiopt
-import pymcgp
+import splreg

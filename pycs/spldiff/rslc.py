@@ -4,7 +4,7 @@ Defines a class that represents a regularly sampled lightcurve
 """
 import sys
 import numpy as np
-import pymcgp
+import splreg
 import pycs.gen.spl
 import copy as pythoncopy
 import scipy.optimize as spopt
@@ -118,7 +118,7 @@ def factory(l, pad=300, pd=2, plotcolour=None,knotstep=20.0, n=None, stab=True,s
 	def meanprior(query):
 		return (0.0 * query + mean_mag)
 		
-	regfct,spline = pymcgp.splreg(jds, mags, magerrs,knotstep=knotstep, n=n, stab=stab, stabext=stabext, stabgap=stabgap, stabstep=stabstep,
+	regfct,spline = splreg.splreg(jds, mags, magerrs,knotstep=knotstep, n=n, stab=stab, stabext=stabext, stabgap=stabgap, stabstep=stabstep,
 				stabmagerr=stabmagerr, stabrampsize=stabrampsize, stabrampfact=stabrampfact, bokit=bokit, bokeps=bokeps,
 				boktests=boktests,bokwindow=bokwindow, k=k, verbose=verbose)
 	

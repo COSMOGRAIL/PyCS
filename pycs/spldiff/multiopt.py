@@ -16,10 +16,10 @@ def opt_ts(lcs, method="weights", pd=5,plotcolour=None,knotstep=20.0, n=None, st
 		stabmagerr=-2.0, stabrampsize=0, stabrampfact=1.0, bokit=1, bokeps=2.0, boktests=5, bokwindow=None, k=3, verbose=True, magshift=True):
 	"""
 	Give me lightcurves (with more or less good initial time shifts)
-	I run a regression on them, optimize spldiff, and set their delays to the optimal values.
+	I run a spline regression on them, optimize the difference, and set their delays to the optimal values.
 	I also optimise the magnitude shifts for display purpose, but it does not affect the time shifts at all !
 	
-	:param pd: the point density, in points per days.
+	:param pd: the point density of the regularly sampled lightcurves, in points per days.
 		"""
 	
 	if verbose:
@@ -47,7 +47,7 @@ def opt_ts(lcs, method="weights", pd=5,plotcolour=None,knotstep=20.0, n=None, st
 	
 	for (l, r) in zip(lcs, rss):
 		l.timeshift = r.timeshift
-		l.commentlist.append("Timeshift optimized with regdiff.")
+		l.commentlist.append("Timeshift optimized with spldiff.")
 		
 	if magshift:
 		if verbose:
