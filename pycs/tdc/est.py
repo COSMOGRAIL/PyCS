@@ -56,6 +56,9 @@ class Estimate:
 	def __str__(self):
 		return "%s %s (%s, %i, %i): %.2f +/- %.2f, conf. %i" % (self.method, self.methodpar, self.set, self.rung, self.pair, self.td, self.tderr, self.confidence)
 	
+	def valstr(self):
+		return "%.1f +/- %.1f" % (self.td, self.tderr)
+	
 	def aslist(self):
 		return [self.set, self.rung, self.pair, self.method, self.methodpar, self.td, self.tderr, self.ms, self.confidence, self.timetaken]
 	
@@ -393,7 +396,7 @@ def d3cs(rung,pair):
 	
 	
 
-def interactivebigplot(estimates, shadedestimates = None, plotpath = None, interactive = True, minibox = False, groupbyrung = False, minradius=100, plotpath=None):
+def interactivebigplot(estimates, shadedestimates = None, plotpath = None, interactive = True, minibox = False, groupbyrung = False, minradius=100):
 
 	"""
 	Large graphical representation of your estimates.
@@ -713,3 +716,86 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 		else:	
 			interactiveplot(estids)
 	
+
+
+
+
+
+
+
+def bigplot(estimates, shadedestimates = None, plotpath = None, minradius=100):
+	"""
+	Large graphical representation of your estimates.
+	
+	:param minradius: Minimal half-width of the time delay axes, in day.
+	
+	:param shadedestimates: Here you can give me a list of estimates
+		that I will show as shaded bars instead of errorbars.
+		However, it's estimates that determines which panels I will draw and with what range,
+		so that you can get panels shown without any shadedestimate.
+	
+	"""
+	
+	import matplotlib.pyplot as plt
+	
+	
+	estids = sorted(list(set([est.id for est in estimates])))
+	
+	#if shadedestimates != None:
+	#	checkunique(shadedestimates)
+		
+	fig, axes = plt.subplots(nrows=len(estids), figsize=(10, 1.0*(len(estids))))
+	fig.subplots_adjust(top=0.99, bottom=0.05, left=0.13, right=0.98, hspace=0.32)
+   
+	for ax, thisestid in zip(axes, estids):
+		thisidests = [est for est in estimates if est.id == thisestid]
+		n = len(thisidests)
+		
+		# The error bars for regular estimates :
+		tds = np.array([est.td for est in thisidests])
+		tderrs = np.array([est.tderr for est in thisidests])
+ 		ys = np.arange(n)
+ 		colors = [e.getcolor() for e in thisidests]
+		#ax.scatter(tds, ys)
+		ax.errorbar(tds, ys, yerr=None, xerr=tderrs, fmt='.', ecolor="gray", capsize=3)
+		ax.scatter(tds, ys, s = 50, c=colors, linewidth=0, zorder=20)#, cmap=plt.cm.get_cmap('jet'), vmin=0, vmax=4)
+		
+		for (est, y) in zip(thisidests, ys):
+			ax.text(est.td, y+0.3, "  %s (%s): %s" % (est.method, est.methodpar, est.valstr()), va='center', ha='left', fontsize=6)
+		
+		# The shadedestimates
+		if shadedestimates != None:
+			shadedests = [est for est in shadedestimates if est.id == thisestid]
+			for (i, shadedest) in enumerate(shadedests):
+				ax.axvspan(shadedest.td - shadedest.tderr, shadedest.td + shadedest.tderr, color=shadedest.getcolor(), alpha=0.2, zorder=-20)
+				ax.text(0.05, 0.8-i*0.15, "%s (%s): %s" % (shadedest.method, shadedest.methodpar, shadedest.valstr()), color=shadedest.getcolor(), va='center', ha='left', fontsize=6, transform=ax.transAxes)
+		
+		ax.set_ylim(-1.3, n)
+		
+		meantd = np.mean(tds)
+		maxdist = np.max(np.fabs(tds - meantd))
+		if maxdist < minradius:
+			tdr = minradius
+		else:
+			tdr = maxdist*1.2
+		ax.set_xlim(meantd - tdr, meantd + tdr)
+		
+  		pos = list(ax.get_position().bounds)
+   		x_text = pos[0] - 0.01
+		y_text = pos[1] + pos[3]/2.
+		fig.text(x_text, y_text, thisidests[0].niceid, va='center', ha='right', fontsize=14)
+		
+	for ax in axes:
+		ax.set_yticks([])
+
+	#cbar = plt.colorbar(sc, cax = axes[0], orientation="horizontal")
+	#cbar.set_label('Confidence')
+
+	if plotpath:
+		plt.savefig(plotpath)
+		print "Wrote %s" % (plotpath)
+	else:
+		plt.show()
+
+
+
