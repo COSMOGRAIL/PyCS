@@ -320,7 +320,7 @@ def combine(estimates,method='meanstd',methodcl=None):
 		
 			
 		
-	if method == "d3csmalte1":
+	if method == "d3cscombi1":
 		"""
 		To get combined estimates from a D3CS sample.
 		Results should be filtered afterwards according to confidence.
