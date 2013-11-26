@@ -644,9 +644,16 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 				goto = Goto()				
 				buttontoshow.on_clicked(goto.show)
 				buttontod3cs.on_clicked(goto.d3cs)
+				
+				
 		
-		plt.show()
+		
 
+		if plotpath != None and interactive == False:			
+			plt.savefig(plotpath)
+			print "Wrote %s" % (plotpath)			
+		else:	
+			plt.show()
 
 	
 	
@@ -740,14 +747,10 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 
 
 		plt.show()
-	else:
-		if plotpath:			
-			plt.savefig(plotpath)
-			print "Wrote %s" % (plotpath)			
-		else:	
-			interactiveplot(estids)
-	
 
+	
+	else:
+		interactiveplot(estids)
 
 
 

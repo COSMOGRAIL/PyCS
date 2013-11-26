@@ -468,7 +468,9 @@ def multirun(iniests,
 				r.runsimplot()
 			
 			endtime = datetime.datetime.now()
-			r.outest.timetaken = (endtime - starttime).total_seconds()
+			
+			
+			r.outest.timetaken = (endtime - starttime).seconds
 			r.log("This took me %.0f seconds" % (r.outest.timetaken))
 
 			# Writing the output
@@ -483,7 +485,7 @@ def multirun(iniests,
 			r.log(str(error))
 			est.writecsv([iniest], crashcsv, append=True)
 			print error
-			raise
+			pass # raise
 			
 		
 	

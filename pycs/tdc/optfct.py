@@ -7,13 +7,47 @@ Typically, they are called by the runsim and runobs functions of run.py
 
 import pycs
 import numpy as np
+import random
+
+def calcknotstep(varios):
+	"""
+	Give me some outputs of vario, I try to return a good knotstep, based on the highest vratio between the curves and the sampling.
+	"""
+	
+	vratios = np.array([out["vratio"] for out in varios])
+	samplings = np.array([out["sampling"] for out in varios])
+	
+	# First playing around :
+	"""
+	# Max and min vratio :
+	va = 1.0
+	vb = 3.0
+	# We limit the range of these values to meaningful stuff
+	vratios = np.clip(vratios, va, vb)
+	v = np.max(vratios)
+	# Knotstep range corresponding to va and vb:
+	ksa = 50.0
+	ksb = 4.0#*np.min(sampling)
+	# And compute the knotstep, linear scaling :	
+	ks = ksa + (ksb - ksa)*(v - va)/(vb - va)
+	"""
+	
+	# Second more serious attempt, calibrated on a bunch of curves :
+	vratio = np.max(vratios)
+	sampling = np.min(samplings)
+	vratio = np.clip(vratio, 1.2, 5) # OK to lower this min value, but do not allow 1.0. OK to increase max value.
+	ks = 14.0/(vratio - 1.0)
+	ks = np.clip(ks, 2.0*sampling, 100.0)
+	
+	return float(ks)
+
+
+
 
 def spldiff(lcs, verbose=True, magshift=False):
 
 	"""
 	Custom spldiff optimizer for TDC
-	here, the lcs belong the a run object and inherit its stats and knotstep
-	that's why we can call them.
 	
 	"""
 	
@@ -24,7 +58,7 @@ def spldiff(lcs, verbose=True, magshift=False):
 	stats = lca.samplingstats(seasongap=100)
 	sampling = stats["med"]
 	
-	knotstep = lca.knotstep 
+	knotstep = calcknotstep([lca.vario, lcb.vario])
 	bokeps = np.max([sampling, knotstep/3.0])
 	bokwindow = None
 	
