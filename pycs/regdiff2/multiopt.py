@@ -47,30 +47,33 @@ def opt_ts(lcs, method="weights", pd=5, inistep=5, iniradius=5, nit=5, finish=Tr
 
 
 
-def opt_ts_indi(lcs, method="weights", pd=0.5, inistep=3, nit=5, verbose=True):
+def opt_ts_indi(lcs, method="weights", pd=0.5, radius="auto", inistep=3, nit=5, verbose=True):
 	"""
 	I optimize the time shifts one by one with respect to the first curve only.
 	I do not shift the first curve.
 	This is a function to robustly get first guess time delays.
 	"""
 	
-	jdss = [l.getjds() for l in lcs]
-	lengths = map(lambda x: np.max(x) - np.min(x), jdss)
-	minlength = np.min(lengths)
-	radius = minlength / (2.0 * (float(inistep)))
+	if radius == "auto":
+		jdss = [l.getjds() for l in lcs]
+		lengths = map(lambda x: np.max(x) - np.min(x), jdss)
+		minlength = np.min(lengths)
+		radius = minlength / (2.0 * (float(inistep)))
+	else:
+		minlength = radius*inistep
 	
 	if verbose:
 		print "I will search for time shifts in a range of %.1f days (%i steps)." % (minlength, 2*radius+1)
 		
 	if verbose:
 		print "Computing GPRs..."
-	rss = [pycs.regdiff2.rslc.factory(l, pd=pd, pad=0.0) for l in lcs]
+	rss = [pycs.regdiff2.rslc.factory(l, theta0 = l.theta0, pd=pd, pad=0.0) for l in lcs]
 	# The time shifts are transfered to these rss, any microlensing is disregarded
 	if verbose:
 		print "Regressions done."
 	
 	for rs in rss[1:]:
-		minwtv = pycs.regdiff2.rslc.opt_ts([rss[0], rs], method=method, inistep=inistep, iniradius=radius, nit=nit, finish=False, verbose=True)
+		minwtv = pycs.regdiff2.rslc.opt_ts([rss[0], rs], method=method, inistep=inistep, iniradius=radius, nit=nit, finish=True, verbose=True)
 	
 	for (l, r) in zip(lcs, rss):
 		l.timeshift = r.timeshift

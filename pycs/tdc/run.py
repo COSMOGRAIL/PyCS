@@ -93,7 +93,7 @@ class Run:
 		# To keep the coding simpler, we also write this into the lc objects :
 		#self.lca.knotstep = self.knotstep
 		#self.lcb.knotstep = self.knotstep
-		self.knotstep = pycs.tdc.splopt.calcknotstep([self.lca.varioa, self.lcb.variob])
+		self.knotstep = pycs.tdc.splopt.calcknotstep([self.lca.vario, self.lcb.vario])
 		self.log("Computed knotstep: %.2f" % self.knotstep)
 	
 		
@@ -309,14 +309,15 @@ class Run:
 			lcssim[0].shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 			lcssim[1].shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 			
+			# Propagate the "pirate" attributes:
+			lcssim[0].vario = self.lca.vario
+			lcssim[1].vario = self.lcb.vario
+			
 			# Randomize order
 			pycs.gen.lc.shuffle(lcssim)
 			lcssimlist.append(lcssim)
 			
-			# Propagate the "pirate" attributes:
-			lcssim[0].vario = self.vario
-			lcssim[1].vario = self.vario
-		
+			
 		# We run the optimizer and unshuffle
 		self.log("Running on %i simulations..." % n)
 		for (i, lcssim) in enumerate(lcssimlist):

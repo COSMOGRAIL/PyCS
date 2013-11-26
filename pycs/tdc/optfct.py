@@ -52,14 +52,24 @@ def spldiff(lcs, verbose=True, magshift=False):
 
 
 
-def regdiff2(lcs)
+def regdiff2(lcs):
 	"""
-	
+	Regdiff usign scikit-learn
+	Let's see if this works without any initial shift.
 	"""
 	import pycs.regdiff2
 	
+	# We compute a theta0 parameter for the covariance function :
+	for l in lcs:
+		if not hasattr(l, "vario"):
+			l.vario = pycs.tdc.vario.vario(l, verbose=True)
+		vratio = np.clip(l.vario["vratio"], 1.0, 3.0)
+		l.theta0 = 10.0**(1.3 + (vratio-0.95)*(4.4-1.3)/(2.5-0.95))
 	
+	#
+	inistep = 2.0
+	radius = 100.0/inistep
 	
-	pycs.regdiff2.multiopt.opt_ts_indi(lcs, method="weights", pd=0.25, inistep=10, nit=7, verbose=True)
+	pycs.regdiff2.multiopt.opt_ts_indi(lcs, method="weights", pd=2.0, radius=radius, inistep=inistep, nit=7, verbose=True)
 
 
