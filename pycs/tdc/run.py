@@ -470,7 +470,8 @@ def multirun(iniests,
 			endtime = datetime.datetime.now()
 			
 			
-			r.outest.timetaken = (endtime - starttime).seconds
+			td = (endtime - starttime)#.total_seconds()
+			r.outest.timetaken =  td.seconds + td.days * 24.0 * 3600.0
 			r.log("This took me %.0f seconds" % (r.outest.timetaken))
 
 			# Writing the output

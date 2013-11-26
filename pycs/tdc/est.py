@@ -298,17 +298,36 @@ def combine(estimates,method='meanstd',methodcl=None):
 		ms = np.median(np.array([est.ms for est in estimates]))
 		timetaken = np.sum(np.array([est.timetaken for est in estimates]))
 		
-		# Now, the error on the delay
-		
+		# The error on the delay should not be smaller then any of these :
 		tderr1 = np.median(np.array([est.tderr for est in estimates]))
 		tderr2 = np.std(np.array([est.td for est in estimates]))
 		tderr = max([tderr1, tderr2])
-		
-		#if np.max([est.confidence for est in estimates]) >= 3:
-		#	confidence = 4
-		#else:
+				
+		# And the confidence is propagated according to this arbitrary definition :
 		confidence = int(np.ceil(np.median(np.array([est.confidence for est in estimates]))))
-
+		if len(estimates) > 2:
+			if sorted([est.confidence for est in estimates])[-2] >= 3: # So we accept only a single 3...
+				confidence = 4
+		
+	if method == "d3csmalte1":
+		"""
+		To get combined estimates from a D3CS sample.
+		Results should be filtered afterwards according to confidence.
+		"""	
+		# The easy things :
+		td = np.median(np.array([est.td for est in estimates]))
+		ms = np.median(np.array([est.ms for est in estimates]))
+		timetaken = np.sum(np.array([est.timetaken for est in estimates]))
+		
+		# The error on the delay should not be smaller then any of these :
+		tderr1 = np.median(np.array([est.tderr for est in estimates]))
+		tderr2 = np.std(np.array([est.td for est in estimates]))
+		tderr = max([tderr1, tderr2])
+		tderr /= np.sqrt(len(estimates))
+				
+		# And the confidence is propagated according to this arbitrary definition :
+		confidence = int(np.round(np.median(np.array([est.confidence for est in estimates]))))
+		
 		
 	combiest = Estimate(set=set, rung=rung, pair=pair, method="combi", methodpar=method, td=td, tderr=tderr, ms = ms, confidence=confidence, timetaken=timetaken)
 	combiest.check()
@@ -434,7 +453,7 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 	
 	:param minradius: Minimal half-width of the time delay axes, in day.
 	
-	:param shadedestimates: Here you can give me a list of "unique" estimates (typical the result of a multicombine)
+	:param shadedestimates: Here you can give me a list of estimates
 		that I will show as shaded bars instead of errorbars.
 		However, it's estimates that determines which panels I will draw and with what range,
 		so that you can get panels shown without any shadedestimate.
@@ -459,18 +478,13 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 	from matplotlib.widgets import Button
 	
 	estids = sorted(list(set([est.id for est in estimates])))
-	
-	if shadedestimates != None:
-		checkunique(shadedestimates)
-			
+				
 	# Check that interactive is set on before allowing groupbyrung
 	if groupbyrung == True and interactive == False:
 		print 'WARNING : interactive option is set to False -- groupbyrung option is not allowed to be True'
 		print 'groupbyrung is set to False' 
 		groupbyrung = False
-	
-	
-	
+		
 	if groupbyrung:
 			
 		# grouping the estids by rung
@@ -499,8 +513,8 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 			figname = 'various estimates'
 		
 		fig, axes = plt.subplots(nrows=len(estids), figsize=(10, max(1.0*(len(estids)),3.3)), num=figname)
-		fig.subplots_adjust(top=0.96, bottom=0.08, left=0.13, right=0.98, hspace=0.32)
-		
+		fig.subplots_adjust(top=0.99, bottom=0.05, left=0.13, right=0.98, hspace=0.32)
+
 		if len(estids) == 1 :
 			axes = [axes] 
 			
@@ -545,15 +559,14 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 			ax.scatter(tds, ys, s = 50, c=colors, linewidth=0, zorder=20)#, cmap=plt.cm.get_cmap('jet'), vmin=0, vmax=4)
 
 			for (est, y) in zip(thisidests, ys):
-				ax.text(est.td, y+0.3, "  %s (%s)" % (est.method, est.methodpar), va='center', ha='left', fontsize=6)
-
+				ax.text(est.td, y+0.3, "  %s (%s): %s" % (est.method, est.methodpar, est.valstr()), va='center', ha='left', fontsize=6)
+		
 			# The shadedestimates
 			if shadedestimates != None:
 				shadedests = [est for est in shadedestimates if est.id == estid]
-				if len(shadedests) == 1:
-					shadedest = shadedests[0]
+				for (i, shadedest) in enumerate(shadedests):
 					ax.axvspan(shadedest.td - shadedest.tderr, shadedest.td + shadedest.tderr, color=shadedest.getcolor(), alpha=0.2, zorder=-20)
-					ax.text(shadedest.td, -0.9, "%s (%s)" % (shadedest.method, shadedest.methodpar), va='center', ha='center', fontsize=6)
+					ax.text(0.02, 0.8-i*0.15, "%s (%s): %s" % (shadedest.method, shadedest.methodpar, shadedest.valstr()), color=shadedest.getcolor(), va='center', ha='left', fontsize=6, transform=ax.transAxes)
 
 
 			ax.set_ylim(-1.3, n)
@@ -570,7 +583,7 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
   			pos = list(ax.get_position().bounds)
    			x_text = pos[0] - 0.01
 			y_text = pos[1] + pos[3]/2.
-			fig.text(x_text, y_text, estid, va='center', ha='right', fontsize=14)
+			fig.text(x_text, y_text, thisidests[0].niceid, va='center', ha='right', fontsize=14)
 			ax.set_yticks([])
 
 			if interactive:
