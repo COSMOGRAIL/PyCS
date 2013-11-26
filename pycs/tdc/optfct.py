@@ -48,3 +48,18 @@ def spldiff(lcs, verbose=True, magshift=True):
 	return pycs.spldiff.multiopt.opt_ts(lcs, pd=pd, knotstep=knotstep, stab=True, stabext=stabext, stabgap=stabgap, stabstep=stabstep,
 					stabmagerr=stabmagerr, bokit=0, bokeps=bokeps,
 					boktests=5, bokwindow=bokwindow, verbose=verbose, magshift=magshift)
+
+
+
+
+def regdiff2(lcs)
+	"""
+	
+	"""
+	import pycs.regdiff2
+	
+	
+	
+	pycs.regdiff2.multiopt.opt_ts_indi(lcs, method="weights", pd=0.25, inistep=10, nit=7, verbose=True)
+
+

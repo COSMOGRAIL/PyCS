@@ -85,15 +85,15 @@ class Run:
 		Computes the vario analysis, for instance to guess best knot steps
 		"""
 		self.log("Starting vario analysis...")
-		self.varioa = pycs.tdc.vario.vario(self.lca)
-		self.variob = pycs.tdc.vario.vario(self.lcb)
-		self.log("vario results for A : %s" % str(self.varioa))
-		self.log("vario results for B : %s" % str(self.variob))
+		self.lca.vario = pycs.tdc.vario.vario(self.lca)
+		self.lcb.vario = pycs.tdc.vario.vario(self.lcb)
+		self.log("vario results for A : %s" % str(self.lca.vario))
+		self.log("vario results for B : %s" % str(self.lcb.vario))
 		
-		self.knotstep = pycs.tdc.splopt.calcknotstep([self.varioa, self.variob])
 		# To keep the coding simpler, we also write this into the lc objects :
-		self.lca.knotstep = self.knotstep
-		self.lcb.knotstep = self.knotstep
+		#self.lca.knotstep = self.knotstep
+		#self.lcb.knotstep = self.knotstep
+		self.knotstep = pycs.tdc.splopt.calcknotstep([self.lca.varioa, self.lcb.variob])
 		self.log("Computed knotstep: %.2f" % self.knotstep)
 	
 		
@@ -314,8 +314,8 @@ class Run:
 			lcssimlist.append(lcssim)
 			
 			# Propagate the "pirate" attributes:
-			lcssim[0].knotstep = self.knotstep
-			lcssim[1].knotstep = self.knotstep
+			lcssim[0].vario = self.vario
+			lcssim[1].vario = self.vario
 		
 		# We run the optimizer and unshuffle
 		self.log("Running on %i simulations..." % n)

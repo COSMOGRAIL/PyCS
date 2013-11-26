@@ -14,13 +14,17 @@ def regression(x, y, yerr, verbose=True):
 	"""
 	x = np.atleast_2d(x).T
 	
-#	gp = GaussianProcess(corr='squared_exponential',
-#		theta0=1.0, thetaL=1e-2, thetaU=1e2, nugget = (yerr)**2,
-#		random_start=100, verbose=verbose)
+#  	gp = GaussianProcess(corr='squared_exponential',
+#  		theta0=1.0, thetaL=1e-2, thetaU=1e2, nugget = (yerr)**2,
+#  		random_start=1, verbose=verbose)
+
+#  	gp = GaussianProcess(corr='squared_exponential',
+#  		theta0=100.0, thetaL=10.0, thetaU=1.0e6, nugget = (yerr)**2,
+#  		random_start=3, verbose=verbose)
 	
 	
 	gp = GaussianProcess(corr='squared_exponential',
-		theta0=100.0, random_start=1, nugget = 0.001, verbose=verbose)
+		theta0=100000.0, random_start=1, nugget = 0.001, verbose=verbose)
 
 	gp.fit(x, y)
 	

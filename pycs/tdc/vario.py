@@ -5,7 +5,7 @@ Variability analysis stuff
 
 import numpy as np
 
-def vario(l, plot=False, nsamp=1000000):
+def vario(l, plot=False, nsamp=1000000, verbose=False):
 	"""
 	A simple stochatic variogram-like plot, and return the ratio
 	delta_mag around 50-75 over delta_mag for the smallest step
@@ -13,6 +13,9 @@ def vario(l, plot=False, nsamp=1000000):
 	:param nsamp: the number of random samples to take
 
 	"""
+	
+	if verbose:
+		print "Starting vario analysis of %s" % (str(l))
 	
 	jds = l.getjds()
 	mags = l.getmags()

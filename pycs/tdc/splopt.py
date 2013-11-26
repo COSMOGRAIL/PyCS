@@ -49,12 +49,16 @@ def spl1(lcs, verbose=True):
 	Assumes reasonable initial time shift, but no magshift.
 	
 	"""
-	(lca, lcb) = lcs
+	(lca, lcb) = lcs  # Just nomenclature : lca is the "first one", NOT necesserily A !!!
 	
 	stats = lca.samplingstats(seasongap=100)
 	sampling = stats["med"]
 	
-	knotstep = lca.knotstep # Is the same for a and b...
+	if not (hasattr(lca, "vario") and hasattr(lcb, "vario")):
+		lca.vario = pycs.tdc.vario.vario(lca, verbose=True)
+		lcb.vario = pycs.tdc.vario.vario(lcb, verbose=True)
+	
+	knotstep = calcknotstep(lca.vario, lcb.vario)
 	bokeps = np.max([sampling, knotstep/3.0])
 	"""
 	if len(lca) > 1000.0:
@@ -131,12 +135,16 @@ def spl2(lcs, maxit=7, minchange=1.0, verbose=True):
 	:param minchange: minimum decrease in percent of the r2. I stop if the decrease gets smaller.
 	
 	"""
-	(lca, lcb) = lcs # Just nomenclature : lca is the "first one".
+	(lca, lcb) = lcs # Just nomenclature : lca is the "first one", NOT necesserily A !!!
 	
 	stats = lca.samplingstats(seasongap=100)
 	sampling = stats["med"]
 	
-	knotstep = lca.knotstep # Must be the same for a and b !
+	if not (hasattr(lca, "vario") and hasattr(lcb, "vario")):
+		lca.vario = pycs.tdc.vario.vario(lca, verbose=True)
+		lcb.vario = pycs.tdc.vario.vario(lcb, verbose=True)
+	
+	knotstep = calcknotstep(lca.vario, lcb.vario)
 	bokeps = np.max([sampling, knotstep/3.0])
 	"""
 	if len(lca) > 1000.0:
