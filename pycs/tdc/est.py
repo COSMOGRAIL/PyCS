@@ -261,11 +261,12 @@ def combine(estimates,method='meanstd',methodcl=None):
 	- meanstd
 	- ... 
 	
-	Methods should define : td, tderr, confidence, ms
+	Methods should define : td, tderr, confidence, ms, timetaken
 	"""
 	
 	
 	(set, rung, pair) = checkallsame(estimates)
+	timetaken = 0.0 # A default value...
 	
 	if method == 'meanstd':		
 		
@@ -292,17 +293,24 @@ def combine(estimates,method='meanstd',methodcl=None):
 		"""
 		To get safe initial conditions for automatic optimizers
 		"""	
+		# The easy things :
 		td = np.median(np.array([est.td for est in estimates]))
-		tderr = np.median(np.array([est.tderr for est in estimates]))
 		ms = np.median(np.array([est.ms for est in estimates]))
+		timetaken = np.sum(np.array([est.timetaken for est in estimates]))
 		
-		if np.max([est.confidence for est in estimates]) >= 3:
-			confidence = 4
-		else:
-			confidence = int(np.ceil(np.median(np.array([est.confidence for est in estimates]))))
+		# Now, the error on the delay
+		
+		tderr1 = np.median(np.array([est.tderr for est in estimates]))
+		tderr2 = np.std(np.array([est.td for est in estimates]))
+		tderr = max([tderr1, tderr2])
+		
+		#if np.max([est.confidence for est in estimates]) >= 3:
+		#	confidence = 4
+		#else:
+		confidence = int(np.ceil(np.median(np.array([est.confidence for est in estimates]))))
 
 		
-	combiest = Estimate(set=set, rung=rung, pair=pair, method="combi", methodpar=method, td=td, tderr=tderr, ms = ms, confidence=confidence)
+	combiest = Estimate(set=set, rung=rung, pair=pair, method="combi", methodpar=method, td=td, tderr=tderr, ms = ms, confidence=confidence, timetaken=timetaken)
 	combiest.check()
 	
 	return combiest
@@ -322,7 +330,6 @@ def multicombine(estimates, method='meanstd'):
 		newests.append(combine(ests,method))
 	
 	checkunique(newests)
-	newests = removebad(newests,verbose=True)
 	return newests		
 	
 	
