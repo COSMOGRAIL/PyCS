@@ -80,11 +80,17 @@ class season:
 
 # Factory functions to make such seasons, directly in form of lists :
 
-def autofactory(l, seasongap=60):
+def autofactory(l, seasongap=60, tpe='seas'):
 	"""
 	A factory function that automatically create season objects. Formerly known as the lightcurve method "autoseasons".
 	Returns a LIST of season objects, describing the "shape" of the seasons of lc.
 	In this case, these seasons are determined simply by looking for gaps larger then seasonsgap in the lightcurve.
+	
+		mode option added 11/2013:
+		
+		mode='seasons' (default option) ,  do create the season objects descibed above
+		mode='interseasons' , return the extremity days between seasons, useful for cutting seasons in a synthetic lightcurve.
+		
 		
 	Small example : suppose you have a lightcurve called C{mylc}, then :
 	
@@ -120,8 +126,43 @@ def autofactory(l, seasongap=60):
 	#seasonlengths = [len(season) for season in returnlist]
 	#print "Lengths of seasons :", seasonlengths
 	validateseasons(seasons)
-	return seasons
+	
+	if tpe == 'seas':
+		return seasons
+	
+	  
+	if tpe == 'interseasons':
+		
+		"""
+		Here, we play with the seasons, and return a list of 2d tuples (jdsmin, jdsmax)
+		which determine the extremity days of the inter-season. It is useful e.g. to play with
+		days out of observations in a synthetic lightcurve (as done in the spldiff method)		 
+		"""
+	    	
+		# by the way, this is not optimized at all, but as the operation is nearly costless we don't care...(for now)
+		          	
+		beg=[]
+		end=[]
+		begint=[]
+		endint=[]
+		intsea=[]
+		
+		for sea in seasons:
+			beg.append(sea.getjdlims(l)[0])
+			end.append(sea.getjdlims(l)[1])
+		
+		for ind in arange(len(seasons)-1):
+			begint.append(end[ind])  
+			endint.append(beg[ind+1])
+		
+		for ind in arange(len(seasons)-1):
+			intsea.append((begint[ind],endint[ind]))
+		
+		return intsea
+			
+	
 
+	
 
 
 def manfactory(lc, jdranges):

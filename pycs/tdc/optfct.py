@@ -8,7 +8,7 @@ Typically, they are called by the runsim and runobs functions of run.py
 import pycs
 import numpy as np
 
-def spldiff(lcs, verbose=True, magshift=True):
+def spldiff(lcs, verbose=True, magshift=False):
 
 	"""
 	Custom spldiff optimizer for TDC

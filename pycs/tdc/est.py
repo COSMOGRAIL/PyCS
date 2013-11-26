@@ -396,7 +396,11 @@ def d3cs(rung,pair):
 	
 	
 
+<<<<<<< .mine
+def interactivebigplot(estimates, shadedestimates = None, interactive = True, minibox = False, groupbyrung = False, minradius=100, plotpath=None):
+=======
 def interactivebigplot(estimates, shadedestimates = None, plotpath = None, interactive = True, minibox = False, groupbyrung = False, minradius=100):
+>>>>>>> .r68
 
 	"""
 	Large graphical representation of your estimates.
