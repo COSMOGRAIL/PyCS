@@ -58,7 +58,7 @@ def spl1(lcs, verbose=True):
 		lca.vario = pycs.tdc.vario.vario(lca, verbose=True)
 		lcb.vario = pycs.tdc.vario.vario(lcb, verbose=True)
 	
-	knotstep = calcknotstep(lca.vario, lcb.vario)
+	knotstep = calcknotstep([lca.vario, lcb.vario])
 	bokeps = np.max([sampling, knotstep/3.0])
 	"""
 	if len(lca) > 1000.0:
@@ -144,7 +144,7 @@ def spl2(lcs, maxit=7, minchange=1.0, verbose=True):
 		lca.vario = pycs.tdc.vario.vario(lca, verbose=True)
 		lcb.vario = pycs.tdc.vario.vario(lcb, verbose=True)
 	
-	knotstep = calcknotstep(lca.vario, lcb.vario)
+	knotstep = calcknotstep([lca.vario, lcb.vario])
 	bokeps = np.max([sampling, knotstep/3.0])
 	"""
 	if len(lca) > 1000.0:
