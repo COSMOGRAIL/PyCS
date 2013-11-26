@@ -67,9 +67,9 @@ def regdiff2(lcs):
 		l.theta0 = 10.0**(1.3 + (vratio-0.95)*(4.4-1.3)/(2.5-0.95))
 	
 	#
-	inistep = 2.0
+	inistep = 1.0
 	radius = 100.0/inistep
 	
-	pycs.regdiff2.multiopt.opt_ts_indi(lcs, method="weights", pd=2.0, radius=radius, inistep=inistep, nit=7, verbose=True)
+	pycs.regdiff2.multiopt.opt_ts_indi(lcs, method="weights", pd=2.0, radius=radius, inistep=inistep, nit=1, verbose=True)
 
 

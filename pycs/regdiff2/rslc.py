@@ -242,8 +242,8 @@ def opt_ts(rslcs, method="weights", verbose=True, inistep=10, iniradius=10, nit=
 	# The first iteration explores a large grid, then grids get finer around that solution.
 	res = inishifts
 	for it in range(nit):
-		step = inistep / 2.0**it # this is inistep for the first iteartion
-		radius = iniradius if it == 0 else 3 # this is iniradius for the first iteration
+		step = inistep# / 2.0**it # this is inistep for the first iteartion
+		radius = iniradius# if it == 0 else 3 # this is iniradius for the first iteration
 		if verbose:
 			print "Starting brute iteration %i with step = %.1f and radius = %.1f" % (it+1, step, radius)
 		
