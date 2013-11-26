@@ -364,7 +364,28 @@ def writesubmission(estimates, filepath):
 		
 	tdcfile.close()	
 	
+
+def readsubmission(filepath, set="tdc0"):
+	"""
+	Returns a list of estimates from a TDC submission
+	"""
+	f = open(filepath, 'rb')
+	f = filter(lambda row: row[0]!='#' and len(row) > 2, f)
+	reader = csv.reader(f, delimiter='\t', quotechar='"')
+	estimates = []
+	for row in reader:
+		name = row[0].split(".")[0].split("_")
+		#print name
+		set = name[0]
+		rung = int(name[1][4:])
+		pair = int(name[2][4:])
+		td = float(row[1])
+		tderr = float(row[2])
+		if tderr > 0.0:
+			estimates.append(Estimate(rung=rung, pair=pair, td=td, tderr=tderr, confidence=0))
 	
+	print "Read %i estimates from %s" % (len(estimates), filepath)
+	return estimates
 		
 def show(estimates):
 
