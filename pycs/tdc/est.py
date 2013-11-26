@@ -293,21 +293,27 @@ def combine(estimates,method='meanstd',methodcl=None):
 		"""
 		To get safe initial conditions for automatic optimizers
 		"""	
+
 		# The easy things :
 		td = np.median(np.array([est.td for est in estimates]))
 		ms = np.median(np.array([est.ms for est in estimates]))
 		timetaken = np.sum(np.array([est.timetaken for est in estimates]))
-		
+				
 		# The error on the delay should not be smaller then any of these :
 		tderr1 = np.median(np.array([est.tderr for est in estimates]))
 		tderr2 = np.std(np.array([est.td for est in estimates]))
 		tderr = max([tderr1, tderr2])
-				
+		#tderr = tderr1
+		
 		# And the confidence is propagated according to this arbitrary definition :
-		confidence = int(np.ceil(np.median(np.array([est.confidence for est in estimates]))))
+		confidence = int(np.round(np.median(np.array([est.confidence for est in estimates]))))
+		if max([est.confidence for est in estimates]) >= 4: # A single 4 kills it.
+			confidence = 4
 		if len(estimates) > 2:
-			if sorted([est.confidence for est in estimates])[-2] >= 3: # So we accept only a single 3...
+			if sorted([est.confidence for est in estimates])[-2] >= 3: # We accept a single 3.
 				confidence = 4
+		
+			
 		
 	if method == "d3csmalte1":
 		"""
@@ -327,7 +333,12 @@ def combine(estimates,method='meanstd',methodcl=None):
 				
 		# And the confidence is propagated according to this arbitrary definition :
 		confidence = int(np.round(np.median(np.array([est.confidence for est in estimates]))))
-		
+		if max([est.confidence for est in estimates]) >= 4: # A single 4 kills it.
+			confidence = 4
+		if len(estimates) > 2:
+			if sorted([est.confidence for est in estimates])[-2] >= 3: # We accept a single 3.
+				confidence = 4
+
 		
 	combiest = Estimate(set=set, rung=rung, pair=pair, method="combi", methodpar=method, td=td, tderr=tderr, ms = ms, confidence=confidence, timetaken=timetaken)
 	combiest.check()
