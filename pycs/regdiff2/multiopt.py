@@ -70,7 +70,7 @@ def opt_ts_indi(lcs, method="weights", pd=0.5, radius="auto", inistep=3, nit=5, 
 	rss = [pycs.regdiff2.rslc.factory(l, theta0 = l.theta0, pd=pd, pad=0.0) for l in lcs]
 	
 	
-	pycs.gen.lc.display(lcs, rss)
+	#pycs.gen.lc.display(lcs, rss)
 	
 	
 	# The time shifts are transfered to these rss, any microlensing is disregarded
@@ -84,7 +84,7 @@ def opt_ts_indi(lcs, method="weights", pd=0.5, radius="auto", inistep=3, nit=5, 
 		l.timeshift = r.timeshift
 		l.commentlist.append("Timeshift optimized with regdiff.")
 
-	pycs.gen.lc.display(lcs, rss)
+	#pycs.gen.lc.display(lcs, rss)
 	
 	if verbose:
 		print "Optimization done ! Optimal time delays :"
