@@ -202,7 +202,12 @@ def checkunique(estimates):
 	if len(estimates) != len(group(estimates, verbose=False)):
 		raise RuntimeError("Your estimates are not unique !")
 		
-		
+def sort(estimates):
+	"""
+	Sorts by set, rung, pair... by id !
+	"""		
+	estimates.sort(key=lambda est: est.id)
+
 def checkallsame(estimates):
 	"""
 	Checks that the estimates are all about the same quasar
@@ -379,6 +384,7 @@ def writesubmission(estimates, filepath):
 	#	return
 	
 	checkunique(estimates)
+	sort(estimates)
 	for estimate in estimates:
 		if estimate.confidence >= 4:
 			print estimate
