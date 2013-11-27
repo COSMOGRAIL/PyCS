@@ -19,7 +19,6 @@ bottomline :
 
 
 
-
 PyCS_regdiff2_v1.dt
 ===================
 
@@ -46,4 +45,15 @@ pycs.tdc.run.multirun(iniests,
 	tdcpath = "./tdc0", outdir="./test2_spl2", method="spl2", methodpar="First test")
 
 
+PyCS_spldiff_v1.dt
+===================
 
+pycs.tdc.run.multirun(iniests, 
+	sploptfct = pycs.tdc.splopt.spl2, optfct = pycs.tdc.optfct.spldiff, addmlfct = None,
+	nobs = 10, nsim = 20,
+	ncpu=0,
+	diagnostics = True,
+	tdcpath = "./tdc0", outdir="./test_spldiff", method="spldiff1", methodpar="10pd")
+
+
+3 courbes avec des tderr > 10 supprimees manuellement
