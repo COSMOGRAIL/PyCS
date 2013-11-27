@@ -264,6 +264,8 @@ def combine(estimates,method='meanstd',methodcl=None):
 	
 	list of methods (add yours): 
 	- meanstd
+	- initialestimation
+	- d3cscombi1
 	- ... 
 	
 	Methods should define : td, tderr, confidence, ms, timetaken
@@ -649,33 +651,35 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 				
 			if minibox:
 			
-				### OK, now fill the right box (ax2)
-
-				# some inits...
-				conflevelmin = 3
-				maxtolerr = 8
-
-				thisidests_disc = [est for est in estimates if est.id == estid and est.confidence <= conflevelmin]
-				tds_disc = np.array([est.td for est in thisidests_disc])
-
-				meantd_disc = np.mean(tds_disc)
-				meantderr = np.std(tds_disc)/np.sqrt(len(tds_disc))
-
-				if meantderr < maxtolerr:
-					mcolor = 'black'
-				else:	
-					mcolor = 'red'			
+				### OK, now fill the right box (ax2) with the contents of shadedestimates	
 
 				
-				ax2.errorbar(meantd_disc,1,yerr=None, xerr=[meantderr], fmt='.', ecolor=mcolor, capsize=3)					
-				ax2.scatter(meantd_disc,1, s=50, c=mcolor, linewidth=0, zorder=20)
-
+				if shadedestimates != None:
+					shadedests = [est for est in shadedestimates if est.id == estid]
+					meanshadedests = []
+					devshadedests = []
+					for (i, shadedest) in enumerate(shadedests):				
+						ax2.errorbar(shadedest.td,i, xerr=shadedest.tderr, yerr=None, fmt='.',  ecolor=shadedest.getcolor())
+						ax2.scatter(shadedest.td,i,s=50, c=shadedest.getcolor(), linewidth=0, zorder=20)
+						meanshadedests.append(shadedest.td)
+						devshadedests.append(shadedest.tderr)
+								
 
 				from matplotlib.ticker import MaxNLocator
 				ax2.xaxis.set_major_locator(MaxNLocator(4))
+				
+				if len(meanshadedests) != 0:
+					meanval = np.mean(meanshadedests)
+					maxsca = max(abs(meanshadedests[:]-meanval))
+					
+					errval = max(devshadedests)+maxsca*1.1
 
-				ax2.set_xlim(meantd_disc - maxtolerr, meantd_disc + maxtolerr)		
+					ax2.set_xlim(meanval-errval, meanval+errval)
+					
+				else:
+					ax2.set_xticks([])			
 				ax2.set_yticks([])
+				
 
 
 		if interactive:
