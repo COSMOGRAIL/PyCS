@@ -1,0 +1,32 @@
+# TDC submission written by PyCS
+# 2013-11-27 13:53:03.284711
+# 
+# (Some room for your comment...)
+# 
+# 
+# datafile              dt      dterr
+tdc0_rung0_pair1.txt	-25.30	2.52
+tdc0_rung0_pair2.txt	-0.53	1.20
+tdc0_rung0_pair3.txt	-5.64	2.09
+tdc0_rung0_pair4.txt	-257.90	2.73
+tdc0_rung0_pair5.txt	-0.53	1.45
+tdc0_rung0_pair6.txt	-10.08	2.66
+tdc0_rung0_pair7.txt	-97.28	1.89
+tdc0_rung0_pair8.txt	-111.05	2.06
+tdc0_rung1_pair1.txt	-8.37	1.19
+tdc0_rung1_pair5.txt	-22.78	2.90
+tdc0_rung1_pair6.txt	0.98	5.04
+tdc0_rung1_pair7.txt	-1.78	3.03
+tdc0_rung1_pair8.txt	-30.06	2.36
+tdc0_rung2_pair4.txt	-2.37	0.24
+tdc0_rung2_pair8.txt	-0.55	0.43
+tdc0_rung3_pair1.txt	-202.30	4.78
+tdc0_rung3_pair2.txt	2.88	2.19
+tdc0_rung3_pair4.txt	0.89	3.25
+tdc0_rung3_pair5.txt	-46.20	6.58
+tdc0_rung3_pair6.txt	-146.01	6.04
+tdc0_rung3_pair7.txt	-37.39	6.12
+tdc0_rung3_pair8.txt	-7.38	4.58
+tdc0_rung4_pair6.txt	-1.05	7.97
+tdc0_rung5_pair1.txt	-27.90	4.33
+tdc0_rung5_pair2.txt	-46.60	4.97
