@@ -318,8 +318,7 @@ def combine(estimates,method='meanstd',methodcl=None):
 			if sorted([est.confidence for est in estimates])[-2] >= 3: # We accept a single 3.
 				confidence = 4
 		
-			
-		
+	
 	if method == "d3cscombi1":
 		"""
 		To get combined estimates from a D3CS sample.
@@ -334,7 +333,6 @@ def combine(estimates,method='meanstd',methodcl=None):
 		tderr1 = np.median(np.array([est.tderr for est in estimates]))
 		tderr2 = np.std(np.array([est.td for est in estimates]))
 		tderr = max([tderr1, tderr2])
-		tderr /= np.sqrt(len(estimates))
 				
 		# And the confidence is propagated according to this arbitrary definition :
 		confidence = int(np.round(np.median(np.array([est.confidence for est in estimates]))))
@@ -344,6 +342,29 @@ def combine(estimates,method='meanstd',methodcl=None):
 			if sorted([est.confidence for est in estimates])[-2] >= 3: # We accept a single 3.
 				confidence = 4
 
+
+	if method == "scatter":
+		"""
+		Simple median and formal error on median, usign only the scatter of estimates
+		"""
+		# The easy things :
+		td = np.median(np.array([est.td for est in estimates]))
+		ms = np.median(np.array([est.ms for est in estimates]))
+		timetaken = np.sum(np.array([est.timetaken for est in estimates]))
+		
+		# The error on the delay
+		tderr = np.std(np.array([est.td for est in estimates]))
+		tderr /= np.sqrt(len(estimates))
+				
+		# And the confidence is propagated according to this arbitrary definition :
+		confidence = int(np.round(np.median(np.array([est.confidence for est in estimates]))))
+		if max([est.confidence for est in estimates]) >= 4: # A single 4 kills it.
+			confidence = 4
+		if len(estimates) > 2:
+			if sorted([est.confidence for est in estimates])[-2] >= 3: # We accept a single 3.
+				confidence = 4
+		
+		
 		
 	combiest = Estimate(set=set, rung=rung, pair=pair, method="combi", methodpar=method, td=td, tderr=tderr, ms = ms, confidence=confidence, timetaken=timetaken)
 	combiest.check()
