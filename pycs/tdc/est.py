@@ -82,6 +82,7 @@ class Estimate:
 	def setid(self):
 		self.id = "%s_%i_%i" % (self.set, self.rung, self.pair)
 		self.niceid = "(%s, %i, %i)" % (self.set, self.rung, self.pair)
+		self.fullid = "%s_rung%i_pair%i.txt" % (self.set, self.rung, self.pair)
 	
 	def applytolcpair(lca, lcb):
 		lca.timeshift = 0.0
@@ -425,12 +426,26 @@ def writesubmission(estimates, filepath):
 	tdcfile.write("# \n")
 	tdcfile.write("# \n")
 	tdcfile.write("# datafile              dt      dterr\n")
+	
+	
+	
+	estids = [est.fullid for est in estimates]
+	
+	#tdc0 parameters...
+	nrungs = 7
+	npairs = 8
 		
-	for est in estimates:
-		est.check()
-		name = "%s_rung%i_pair%i.txt" % (est.set, est.rung, est.pair)
-		tdcfile.write("%s\t%.2f\t%.2f\n" % (name, est.td, est.tderr))
-		
+	for nrung in np.arange(nrungs):
+		for npair in np.arange(npairs):	
+						
+			name = 'tdc0_rung%i_pair%i.txt' % (nrung, npair+1)			
+			try:				
+				ind=estids.index(name)
+				tdcfile.write("%s\t%.2f\t%.2f\n" % (name, -estimates[ind].td, estimates[ind].tderr))
+				# --- WARNING --- The TDC convention for the delays is the inverse of PyCS, thus the "-" sign above				
+			except:				
+				tdcfile.write("%s\t-99\t-99\n" % (name))
+	
 	tdcfile.close()	
 	
 
@@ -448,8 +463,9 @@ def readsubmission(filepath, set="tdc0"):
 		set = name[0]
 		rung = int(name[1][4:])
 		pair = int(name[2][4:])
-		td = float(row[1])
+		td = -float(row[1])
 		tderr = float(row[2])
+		# --- WARNING --- The TDC convention for the delays is the inverse of PyCS, thus the "-" sign above
 		if tderr > 0.0:
 			estimates.append(Estimate(rung=rung, pair=pair, td=td, tderr=tderr, confidence=0))
 	
@@ -680,7 +696,8 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 					ax2.set_xlim(meanval-errval, meanval+errval)
 					
 				else:
-					ax2.set_xticks([])			
+					ax2.set_xticks([])
+								
 				ax2.set_yticks([])
 				
 

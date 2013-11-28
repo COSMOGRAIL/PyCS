@@ -69,7 +69,7 @@ def spldiff(lcs, verbose=True, magshift=False):
 	stabmagerr = -3.0
 	
 	#rslc params
-	pd = 2 # keep it low to avoid taking too much time running on it
+	pd = 10 # keep it low to avoid taking too much time running on it
 	
 	knots = pycs.gen.spl.seasonknots(lcs, knotstep, ingap=1)	
 	if verbose:
