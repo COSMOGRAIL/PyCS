@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 
 def fN(estimates):
-	return len(estimates)
+	return float(len(estimates))
 
 def f(estimates, N):
 	return float(len(estimates))/float(N)

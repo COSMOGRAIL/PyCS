@@ -465,9 +465,10 @@ def readsubmission(filepath, set="tdc0"):
 		pair = int(name[2][4:])
 		td = -float(row[1])
 		tderr = float(row[2])
+		method = os.path.basename(filepath)
 		# --- WARNING --- The TDC convention for the delays is the inverse of PyCS, thus the "-" sign above
 		if tderr > 0.0:
-			estimates.append(Estimate(rung=rung, pair=pair, td=td, tderr=tderr, confidence=0))
+			estimates.append(Estimate(rung=rung, pair=pair, td=td, tderr=tderr, confidence=0, method=method))
 	
 	print "Read %i estimates from %s" % (len(estimates), filepath)
 	return estimates
