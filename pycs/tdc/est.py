@@ -119,7 +119,10 @@ def readcsv(filepath):
 		f.close()
 		print "Read %i estimates from %s" % (len(estimates), filepath)
 		return estimates
-        
+
+def printestimates(estimates):
+	for e in estimates:
+		print e      
 	
 def writecsv(estimates, filepath, append=False):
 	"""
