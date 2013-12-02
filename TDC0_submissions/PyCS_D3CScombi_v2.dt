@@ -1,0 +1,63 @@
+# TDC submission written by PyCS
+# 2013-12-02 11:12:29.529859
+# 
+# (Some room for your comment...)
+# 
+# 
+# datafile              dt      dterr
+tdc0_rung0_pair1.txt	25.80	1.61
+tdc0_rung0_pair2.txt	-99	-99
+tdc0_rung0_pair3.txt	7.25	1.04
+tdc0_rung0_pair4.txt	254.00	1.09
+tdc0_rung0_pair5.txt	-99	-99
+tdc0_rung0_pair6.txt	13.00	1.09
+tdc0_rung0_pair7.txt	94.35	0.97
+tdc0_rung0_pair8.txt	113.35	0.90
+tdc0_rung1_pair1.txt	-99	-99
+tdc0_rung1_pair2.txt	-99	-99
+tdc0_rung1_pair3.txt	-99	-99
+tdc0_rung1_pair4.txt	-99	-99
+tdc0_rung1_pair5.txt	21.85	6.50
+tdc0_rung1_pair6.txt	-99	-99
+tdc0_rung1_pair7.txt	-99	-99
+tdc0_rung1_pair8.txt	24.00	10.08
+tdc0_rung2_pair1.txt	-99	-99
+tdc0_rung2_pair2.txt	238.80	58.88
+tdc0_rung2_pair3.txt	-99	-99
+tdc0_rung2_pair4.txt	-99	-99
+tdc0_rung2_pair5.txt	-99	-99
+tdc0_rung2_pair6.txt	-99	-99
+tdc0_rung2_pair7.txt	-99	-99
+tdc0_rung2_pair8.txt	-99	-99
+tdc0_rung3_pair1.txt	201.80	3.21
+tdc0_rung3_pair2.txt	-1.90	0.70
+tdc0_rung3_pair3.txt	30.50	3.83
+tdc0_rung3_pair4.txt	-99	-99
+tdc0_rung3_pair5.txt	55.00	3.42
+tdc0_rung3_pair6.txt	157.50	10.33
+tdc0_rung3_pair7.txt	35.90	2.77
+tdc0_rung3_pair8.txt	8.00	2.76
+tdc0_rung4_pair1.txt	-99	-99
+tdc0_rung4_pair2.txt	-99	-99
+tdc0_rung4_pair3.txt	-99	-99
+tdc0_rung4_pair4.txt	-99	-99
+tdc0_rung4_pair5.txt	-99	-99
+tdc0_rung4_pair6.txt	-99	-99
+tdc0_rung4_pair7.txt	-99	-99
+tdc0_rung4_pair8.txt	-99	-99
+tdc0_rung5_pair1.txt	-99	-99
+tdc0_rung5_pair2.txt	41.00	12.00
+tdc0_rung5_pair3.txt	-99	-99
+tdc0_rung5_pair4.txt	-99	-99
+tdc0_rung5_pair5.txt	-99	-99
+tdc0_rung5_pair6.txt	-99	-99
+tdc0_rung5_pair7.txt	-99	-99
+tdc0_rung5_pair8.txt	-99	-99
+tdc0_rung6_pair1.txt	-99	-99
+tdc0_rung6_pair2.txt	-99	-99
+tdc0_rung6_pair3.txt	-99	-99
+tdc0_rung6_pair4.txt	-99	-99
+tdc0_rung6_pair5.txt	-99	-99
+tdc0_rung6_pair6.txt	-99	-99
+tdc0_rung6_pair7.txt	-99	-99
+tdc0_rung6_pair8.txt	-99	-99
