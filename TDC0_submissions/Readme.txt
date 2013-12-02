@@ -57,3 +57,15 @@ pycs.tdc.run.multirun(iniests,
 
 
 3 courbes avec des tderr > 10 supprimees manuellement
+
+
+
+
+
+=============================================================================================================
+
+PyCS_D3CScombi_v2.dt / PyCS_regdiff2_v2.dt / PyCS_spl2_v2.dt / PyCS_spldiff_v2.dt
+
+Pareil que v1, mais on selectionne seulement les 30% de courbes avec le plus petit tderr /td
+
+estimates = pycs.tdc.est.removebad(estimates, crit = 'bestfrac')
