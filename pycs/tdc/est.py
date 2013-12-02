@@ -245,21 +245,41 @@ def match(candestimates, refestimates):
 	
 	
 
-def removebad(estimates,verbose=False):
+def removebad(estimates,verbose=True, crit='conflevel'):
 	"""
-	Remove the estimates with bad confidence level (typically 4)
-	
+	Remove the estimates with bad confidence level (typically 4)	
 	
 	"""
-	if verbose:
-		for est in [est for est in estimates if est.confidence == 4]:
-			print '     ----- WARNING -----     '
-			print 'Estimate for curve %s removed.' % est.niceid
-			print '         dt = %.2f   , dterr = %.2f' % (est.td, est.tderr)
+	
+	if crit == 'conflevel':
+	
+		if verbose:
+			for est in [est for est in estimates if est.confidence == 4]:
+				print '     ----- WARNING -----     '
+				print 'Estimate for curve %s removed.' % est.niceid
+				print '         dt = %.2f   , dterr = %.2f' % (est.td, est.tderr)
+
+		return [est for est in estimates if est.confidence < 4]
+
+	if crit == 'bestfrac':
+	
+		ncurvemin = 17 #minimal number of tdc0 delays to submit
+	
+		newests = [est.copy() for est in estimates]	
+	
+		crit = [abs(est.tderr/est.td) for est in newests]
+		
+		while len(newests) > ncurvemin:
+			removed = newests.pop(crit.index(max(crit)))
+
+			ratio = crit.pop(crit.index(max(crit)))
+									
+			if verbose:
+				print '     ----- WARNING -----     ' 
+				print 'Estimate for curve %s removed.' % removed.niceid
+				print '         tderr/td = %.2f ' % ratio
 				
-	return [est for est in estimates if est.confidence < 4]
-
-
+		return newests		
 
 	
 def combine(estimates,method='meanstd',methodcl=None):
