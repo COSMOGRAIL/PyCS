@@ -10,7 +10,45 @@ import pycs.gen.lc
 def tdcfilepath(set, rung, pair):
 	return "%s/rung%i/%s_rung%i_pair%i.txt" % (set, rung, set, rung, pair)
 
-def read(filepath, verbose=True, shortlabel=True):
+
+
+def pogmag(flux, fluxerr, m0 = 22.5):
+	"""
+	Computes a "normal" Pogson magnitude from TDC info.
+	Used for TDC0
+
+	flux and fluxerr are two numpy arrays
+	
+	"""
+	# This is the code used for TDC0 :
+# 	# First we compute the error bars :
+# 	l.magerrs = 2.5 * np.log10(1.0 + (l.magerrs / l.mags))
+# 	# Then the magnitudes, assumging nanomaggies :
+# 	l.mags = 22.5 - 2.5 * np.log10(l.mags)
+	
+	mag = m0 - 2.5 * np.log10(flux)
+	magerr = 2.5 * np.log10(1.0 + (fluxerr / flux))
+
+	return (mag, magerr)
+	
+	
+	
+def asinhmag(flux, fluxerr,  m0 = 22.5, f0=1.0, b=0.01):
+	"""
+	Implements
+	http://ssg.astro.washington.edu/elsst/opsim.shtml?lightcurve_mags
+	"""
+
+	mag = m0 -(2.5/np.log(10.)) * ( np.arcsinh( flux / (f0 * 2.0 * b)) + np.log(b) )
+	
+	magplu = m0 -(2.5/np.log(10.)) * ( np.arcsinh( (flux+fluxerr) / (f0 * 2.0 * b)) + np.log(b) )
+	magmin = m0 -(2.5/np.log(10.)) * ( np.arcsinh( (flux-fluxerr) / (f0 * 2.0 * b)) + np.log(b) )
+	magerr = 0.5*(magmin - magplu)
+	
+	return (mag, magerr)
+
+
+def read(filepath, mag="pog", verbose=True, shortlabel=True):
 	"""
 	Imports TDC light curves.
 	So far we expect exactly 2 curves in each file, as TDC simulates only doubles.
@@ -31,10 +69,10 @@ def read(filepath, verbose=True, shortlabel=True):
 	for l in lcs:
 		#l.jds += 56586.0 # Starts on 21 October 2013 :)
 		
-		# First we compute the error bars :
-		l.magerrs = 2.5 * np.log10(1.0 + (l.magerrs / l.mags))
-		# Then the magnitudes, assumging nanomaggies :
-		l.mags = 22.5 - 2.5 * np.log10(l.mags)
+		if mag == "pog":
+			(l.mags, l.magerrs) = pogmag(l.mags, l.magerrs, m0 = 22.5)
+		if mag == "asinh":
+			(l.mags, l.magerrs) = asinhmag(l.mags, l.magerrs, m0 = 22.5, b=0.01)
 			
 	return lcs
 
