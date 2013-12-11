@@ -8,8 +8,29 @@ import pycs.gen.lc
 
 
 def tdcfilepath(set, rung, pair):
-	return "%s/rung%i/%s_rung%i_pair%i.txt" % (set, rung, set, rung, pair)
+	
+	if set=='tdc0':
+		return "%s/rung%i/%s_rung%i_pair%i.txt" % (set, rung, set, rung, pair)
 
+
+	if set=='tdc1':
+	
+		if pair<=720:	
+			return "%s/rung%i/%s_rung%i_double_pair%i.txt" % (set, rung, set, rung, pair)
+		else:
+			modpair  = int(pair-720) 
+			intdiv   = modpair/2    # gives the integer portion
+			floatdiv = modpair/2.0  # gives the float value
+			
+			if abs(intdiv-floatdiv)> 1e-5:
+				quadpair = str(intdiv+1)+str('A')
+			else:
+				quadpair = str(intdiv)+str('B')	
+				
+			return "%s/rung%i/%s_rung%i_quad_pair%s.txt" % (set, rung, set, rung, quadpair)	
+
+def read(filepath, verbose=True, shortlabel=True):
+=======
 
 
 def pogmag(flux, fluxerr, m0 = 22.5):
