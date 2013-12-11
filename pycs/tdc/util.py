@@ -4,10 +4,18 @@ General purpose functions related to the TDC.
 
 import os
 import numpy as np
+import math
 import pycs.gen.lc
 
 
 def tdcfilepath(set, rung, pair):
+	"""
+	
+	For tdc1 :
+	rung is in [0, 4]
+	pair is in [1, 1036]
+	
+	"""
 	
 	if set=='tdc0':
 		return "%s/rung%i/%s_rung%i_pair%i.txt" % (set, rung, set, rung, pair)
@@ -18,7 +26,11 @@ def tdcfilepath(set, rung, pair):
 		if pair<=720:	
 			return "%s/rung%i/%s_rung%i_double_pair%i.txt" % (set, rung, set, rung, pair)
 		else:
-			modpair  = int(pair-720) 
+			modpair  = int(pair-720) 		# 1, 2, 3, 4
+			quadpair = (modpair+1) // 2 	# 1, 1, 2, 2, ...
+			quadcode = "A" if modpair % 2 == 1 else "B"
+			 
+			"""
 			intdiv   = modpair/2    # gives the integer portion
 			floatdiv = modpair/2.0  # gives the float value
 			
@@ -26,11 +38,11 @@ def tdcfilepath(set, rung, pair):
 				quadpair = str(intdiv+1)+str('A')
 			else:
 				quadpair = str(intdiv)+str('B')	
-				
-			return "%s/rung%i/%s_rung%i_quad_pair%s.txt" % (set, rung, set, rung, quadpair)	
+			"""
+			
+			return "%s/rung%i/%s_rung%i_quad_pair%s%s.txt" % (set, rung, set, rung, quadpair, quadcode)	
 
-def read(filepath, verbose=True, shortlabel=True):
-=======
+
 
 
 def pogmag(flux, fluxerr, m0 = 22.5):
