@@ -953,7 +953,7 @@ class lightcurve:
 		self.validate()
 			
 
-	def rdbexport(self, filename=None, writeheader=True, properties=None):
+	def rdbexport(self, filename=None, separator="\t", writeheader=True, properties=None):
 		"""
 		Writes the lightcurve into an "rdb" file, that is tab-separeted columns and a header.
 		Note that any shifts/ML are taken into account. So it's a bit like if you would apply the
@@ -964,6 +964,8 @@ class lightcurve:
 		
 		:param filename: where to write the file
 		:type filename: string or path
+		:param separator: how to separate the collumns
+		:type separator: string
 		:param writeheader: include rdb header ?
 		:type writeheader: boolean	
 		:param properties: properties of the lightcurves to be include in the file.
@@ -1005,7 +1007,7 @@ class lightcurve:
 		underline = ["="*n for n in map(len, colnames)]	
 		
 		outfile = open(filename, "wb") # b needed for csv
-		writer = csv.writer(outfile, delimiter="\t")
+		writer = csv.writer(outfile, delimiter=separator)
 	
 		if writeheader :
 			writer.writerow(colnames)
