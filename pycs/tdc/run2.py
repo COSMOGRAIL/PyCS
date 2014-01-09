@@ -288,6 +288,8 @@ def runsim(estimates, path, optfct, n=1, slist=None):
 		simttds = []
 		simmags = []
 
+		# run the optimizer on each simcurve
+		
 		for ind in index_list:
 
 			simfile = 's%s' % str(ind).rjust(3,'0')+'.pkl'
@@ -345,11 +347,13 @@ def multirun(estimates, path, optfct, ncopy, nsim, clist=None, slist=None):
 	# And we put the results in the output estimates
 	
 	for outest,copytds,simtds,simttds in zip(outests,copytdslist,simtdslist,simttdslist):
-		print '='*20
+		print '='*30
 		print outest.niceid
-		outest.td = np.mean(copytds)
+		outest.td = np.median(copytds)
 		print 'time delay:  ',outest.td
-		outest.tderr  = max([abs(simtds[i]-simttds[i]) for i in np.arange(len(simtds))])
+		syserr = np.fabs(np.mean([simtds[i]-simttds[i] for i in np.arange(len(simtds))]))
+		ranerr = np.std([simtds[i]-simttds[i] for i in np.arange(len(simtds))])
+		outest.tderr  = np.hypot(syserr, ranerr)
 		print '     error:  ',outest.tderr		
 
 	

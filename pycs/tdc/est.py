@@ -145,7 +145,7 @@ def writecsv(estimates, filepath, append=False):
 	print "Wrote %i estimates into %s" % (len(estimates), filepath)
 
 
-def importfromd3cs(filepath, set="tdc0"):
+def importfromd3cs(filepath, set="tdc1"):
 	"""
 	Reads a d3cs log file and returns the list of estimates
 	"""
