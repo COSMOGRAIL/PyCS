@@ -8,7 +8,7 @@ import math
 import pycs.gen.lc
 
 
-def tdcfilepath(set, rung, pair):
+def tdcfilepath(set, rung, pair, skipset=False):
 	"""
 	
 	For tdc1 :
@@ -23,8 +23,11 @@ def tdcfilepath(set, rung, pair):
 
 	if set=='tdc1':
 	
-		if pair<=720:	
-			return "%s/rung%i/%s_rung%i_double_pair%i.txt" % (set, rung, set, rung, pair)
+		if pair<=720:
+			if skipset == False:	
+				return "%s/rung%i/%s_rung%i_double_pair%i.txt" % (set, rung, set, rung, pair)
+			else:
+				return "rung%i/%s_rung%i_double_pair%i.txt" % (rung, set, rung, pair)
 		else:
 			modpair  = int(pair-720) 		# 1, 2, 3, 4
 			quadpair = (modpair+1) // 2 	# 1, 1, 2, 2, ...
@@ -40,8 +43,10 @@ def tdcfilepath(set, rung, pair):
 				quadpair = str(intdiv)+str('B')	
 			"""
 			
-			return "%s/rung%i/%s_rung%i_quad_pair%s%s.txt" % (set, rung, set, rung, quadpair, quadcode)	
-
+			if skipset == False:
+				return "%s/rung%i/%s_rung%i_quad_pair%s%s.txt" % (set, rung, set, rung, quadpair, quadcode)	
+			else:
+				return "rung%i/%s_rung%i_quad_pair%s%s.txt" % (rung, set, rung, quadpair, quadcode)
 
 
 
