@@ -511,13 +511,13 @@ def show(estimates):
 	pycs.gen.lc.multidisplay(setlist, showlegend = False, showdelays = True)
 	
 		
-def d3cs(rung,pair):
+def d3cs(set,rung,pair):
 	'''
 	Open d3cs with the rung/pair curve in your default browser
 		
 	'''
 	import webbrowser
-	cmd='http://www.astro.uni-bonn.de/~mtewes/d3cs/index.php?user=display&loadrung=%i&loadpair=%i' %(rung,pair)
+	cmd='http://www.astro.uni-bonn.de/~mtewes/d3cs/tdc%i/index.php?user=display&loadrung=%i&loadpair=%i' %(set,rung,pair)
 	webbrowser.open(cmd)
 
 	
@@ -731,11 +731,11 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 				class Goto:
 					myestid = estid
 	    				def show(self, event):
-						myests = pycs.tdc.est.select(estimates, rungs=[int(self.myestid[5])], pairs=[int(self.myestid[7])])
+						myests = pycs.tdc.est.select(estimates, rungs=[int(self.myestid[5])], pairs=[int(self.myestid[7:])])
 						show(myests)
 
 					def d3cs(self, event):
-						d3cs(int(self.myestid[5]),int(self.myestid[7]))	
+						d3cs(int(self.myestid[3]),int(self.myestid[5]),int(self.myestid[7:]))	
 
 				goto = Goto()				
 				buttontoshow.on_clicked(goto.show)

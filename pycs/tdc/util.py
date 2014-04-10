@@ -130,6 +130,9 @@ def setnicemagshift(lcs):
 		bottom = np.max(l.getmags())
 
 def cutlcs(lcs, nseasons=3.0,overlapfrac=0.2):
+
+	# APPARENTLY UNUSED, TO BE DELETED...? (10.01.2014)
+
 	"""
 	From a given set of lcs, return cutted lcs, only part of the original lcs
 	The goal is then to run the optimisation on these cutted lcs to estimate the error
@@ -194,118 +197,31 @@ def cutlcs(lcs, nseasons=3.0,overlapfrac=0.2):
 	return map(None,*cuts)
 
 
+
+def cutdb(filepath,newpath,season):
+
+	import sys	
+	"""
+	small hand-tuned function to cut the d3cs database in two
+	"""
+
+	db=open(filepath,'r')
+	newdb=open(newpath,'w')
+	
+	
+	lines = db.readlines()
+
+	#for ind,line in enumerate(lines):
+		#print ind,line
 		
-def importfromd3cs(filepath='d3cslog.txt', user='vivien-08/11', maxconflevel=4, writeto=None):	
-
-	'''
-	This function read the d3cs database located at filepath, and put the values
-	added by user in a database. If you give a writeto path, the function will write
-	a .pkl file there containing the database. 
+	if season == 2:
+		cut = 7518 
 	
-	If a pkl of the db already exists and you give a writeto path, the function
-	will update the existing database
-	
-	WARNING : for the same username+rung+pair, only the latest entry in the db is considered
-	
-	Return a database: db[rung][pair] gives you the corresponding delay
-	'''
-		
-	print 'Looking for a database in: %s ...' %filepath
-
-	eyedbfile = open(filepath, 'r')
-
-	lines = eyedbfile.readlines()
-	lines = [line.split(', ') for line in lines]
-	
-
-	### structure of the d3cslogfile
-
-	date	 = 0    	# Date and time of submission
-	ip	 = 1		# IP address 
-	set	 = 2		# Username
-	rung	 = 3		# Rung
-	pair	 = 4		# Pair
-	delay	 = 5		# Time shift [day]
-	detdelay = 6		# Time shift uncertainty [day] 
-	mag	 = 7		# Mag shift 
-	flux     = 8		# Flux shift [fraction of median flux] 
-	cl	 = 9		# Confidence category
-	elapt 	 = 10		# Time between page load and submission [s] 
-	
-	
-	# create database
-	
-	if writeto != None:
-		if os.path.isfile(writeto):
-			print 'database located in %s already exists' % writeto
-		 	print 'going on...'
-
-		else:
-			print 'The database does not exist yet'
-	  		print 'I will create a database on %s' % writeto
-
-	  		'''
-	  		structure of the database:
-	  		[rung][pair][val]
-				[val=0] = delay
-				[val=1]	= deltadelay
-	  		'''				
-
-	  		# init size, hardcoded (must be changed ! booh! )
-
-	  		nrungs   = 7
-	  		npairs   = 8
-	  		nvals 	 = 2
+	for line in lines[cut:]:
+		newdb.write(line)	
+	 	 
+	db.close()
+	newdb.close()
 		
 		
-			print '%i rungs, with %s pairs of lightcurves each' %(nrungs,npairs) 
-		
-			eyedb=[]
-			for nrung in np.arange(nrungs):
-  				eyedb.append([])
-				for npair in np.arange(npairs):
-					eyedb[nrung].append([])
-					for nval in np.arange(nvals):
-						eyedb[nrung][npair].append([])		
-			
-		
-		
-			pycs.gen.util.writepickle(eyedb,writeto)
-		
-
-		eyedb = pycs.gen.util.readpickle(writeto)
 	
-	else:
-	
-	  	# init size, hardcoded (must be changed ! booh! )
-
-	  	nrungs   = 7
-	  	npairs   = 8
-	  	nvals 	 = 2	
-	
-
-		print '%i rungs, with %s pairs of lightcurves each' %(nrungs,npairs) 
-		
-		eyedb=[]
-		for nrung in np.arange(nrungs):
-  			eyedb.append([])
-			for npair in np.arange(npairs):
-				eyedb[nrung].append([])
-				for nval in np.arange(nvals):
-					eyedb[nrung][npair].append([])	
-											
-	
-	# Ok, now we fill the database (eyedb)  
-	
-	
-	for line in lines:
-
-		if (str(line[set]) == str(user) and int(line[cl]) < maxconflevel):
-			print 'rung %i pair %i : eyedelay is %.2f' %(int(line[rung]), int(line[pair]), float(line[delay]) )
-			eyedb[int(line[rung])][int(line[pair])-1][0].append(float(line[delay]))
-			eyedb[int(line[rung])][int(line[pair])-1][1].append(float(line[detdelay]))					
-
-	if writeto != None:
-		pycs.gen.util.writepickle(eyedb,writeto)
-		
-	return eyedb	

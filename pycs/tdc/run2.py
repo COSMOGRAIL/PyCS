@@ -40,6 +40,9 @@ def fitsourcespline(lcs, sploptfct, addmlfct=None):
 	
 	return sourcespline
 
+
+
+
 def drawcopy(estimates, path, addmlfct=None, n=1):
 	"""
 	Draw n times one single copy of lcs (the ones your esimate is about) into the path directory.
@@ -57,9 +60,14 @@ def drawcopy(estimates, path, addmlfct=None, n=1):
 	
 	copydir = os.path.join(os.getcwd(),path)
 
-	if os.path.isfile(copydir)==False:
-		os.system('mkdir %s' % copydir)
 
+	
+	if os.path.isfile(copydir)==False:
+		try:
+			os.system('mkdir %s' % copydir)
+		except:
+			print "going on..."	
+	
 	for estimate in estimates:
 	
 		lcspath = pycs.tdc.util.tdcfilepath(set=estimate.set, rung=estimate.rung, pair=estimate.pair)
@@ -87,15 +95,19 @@ def drawcopy(estimates, path, addmlfct=None, n=1):
 			tsr = np.max([3.0, estimate.tderr])
 
 			lca.shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
-			lcb.shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
-
+			lcb.shifttime(estimate.td +float(np.random.uniform(low=-tsr, high=tsr, size=1)))
+			
 
 			# Now, we write that copycurve
 
 			if os.path.exists(os.path.join(copydir,estimate.id)) == False:
-				os.system('mkdir %s' % os.path.join(copydir,estimate.id))
-				print ' \n ----- New copy/sim directory created: %s ' % os.path.join(copydir,estimate.id)
-
+				try:
+					os.system('mkdir %s' % os.path.join(copydir,estimate.id))
+					print ' \n ----- New copy/sim directory created: %s ' % os.path.join(copydir,estimate.id)
+	
+				except:
+					print "going on..."
+					
 			find_max_ind = 'ls %s | wc -l' % os.path.join(copydir,estimate.id,'c*')
 			next_copy_ind = 'c'+str(int(os.popen(find_max_ind).readline())).rjust(3,'0')+'.pkl'
 			copypath = os.path.join(copydir,estimate.id,next_copy_ind)
@@ -121,7 +133,10 @@ def drawsim(estimates, path, sploptfct, addmlfct=None, n=1) :
 	simdir = os.path.join(os.getcwd(),path)
 	
 	if os.path.isfile(simdir)==False:
-		os.system('mkdir %s' % simdir)	
+		try:
+			os.system('mkdir %s' % simdir)
+		except:
+			print "going on..."		
 		
 	for estimate in estimates:				
 	
@@ -142,11 +157,11 @@ def drawsim(estimates, path, sploptfct, addmlfct=None, n=1) :
 			lcb.timeshift = 0.0	
 
 
-			# set  a random "true" timeshift
+			# set  a random "true" delay 
 			truetsr = np.max([3.0, estimate.tderr])
 			lca.shifttime(float(np.random.uniform(low = -truetsr, high = truetsr, size=1)))
 			lcb.shifttime(float(np.random.uniform(low = -truetsr, high = truetsr, size=1)))
-
+			
 
 			# fit a spline on the data
 			sourcespline = fitsourcespline([lca, lcb], sploptfct, addmlfct)
@@ -166,16 +181,22 @@ def drawsim(estimates, path, sploptfct, addmlfct=None, n=1) :
 
 			tsr = np.max([3.0, estimate.tderr])
 
-			# Set some wrong "initial delays" for the analisys, around these "true delays".
+			# Set some wrong "initial delays" for the analysis, around these "true delays".
 			lcssim[0].shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 			lcssim[1].shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 
 
+			# Put in our initial guess of the delay in it, for PyCS
+			lcssim[1].shifttime(estimate.td)
+			
 			# And write that simcurve
 
 			if os.path.exists(os.path.join(simdir,estimate.id)) == False:
-				os.system('mkdir %s' % os.path.join(simdir,estimate.id))
-				print ' \n ----- New copy/sim directory created: %s ' % os.path.join(simdir,estimate.id)
+				try:
+					os.system('mkdir %s' % os.path.join(simdir,estimate.id))
+					print ' \n ----- New copy/sim directory created: %s ' % os.path.join(simdir,estimate.id)
+				except:
+					print "going on..."	
 
 			find_max_ind = 'ls %s | wc -l' % os.path.join(simdir,estimate.id,'s*')
 			next_sim_ind = 's'+str(int(os.popen(find_max_ind).readline())).rjust(3,'0')+'.pkl'
@@ -308,7 +329,9 @@ def runsim(estimates, path, optfct, n=1, slist=None):
 			simttds.append(lcs[1].truetimeshift-lcs[0].truetimeshift)
 			simtds.append(lcs[1].timeshift-lcs[0].timeshift)
 			simmags.append(np.median(lcs[1].getmags() - lcs[1].mags) - np.median(lcs[0].getmags() - lcs[0].mags))
-
+			#print "simttds",lcs[1].truetimeshift-lcs[0].truetimeshift
+			#print "simtds",lcs[1].timeshift-lcs[0].timeshift
+			#sys.exit()
 		 			
 		simtdslist.append(simtds)
 		simmagslist.append(simmags)

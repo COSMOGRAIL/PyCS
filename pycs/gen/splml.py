@@ -255,7 +255,7 @@ def addtolc(lc, n = 5, knotstep=None, stab=True, stabgap=30.0, stabstep=3.0, sta
 	jdoffset = lcjds[0] # We can do this, as jds is sorted.
 	lcjds -= jdoffset # so the first true datapoint of a ML spline is at 0.0
 	
-	dp = pycs.gen.spl.DataPoints(lcjds, np.zeros(len(lcjds)), np.ones(len(lcjds)), splitup=False, sort=False,
+	dp = pycs.gen.spl.DataPoints(lcjds, np.zeros(len(lcjds)), np.ones(len(lcjds)), splitup=True, sort=True,
 		stab=stab, stabext=0.0, stabgap=stabgap, stabstep=stabstep, stabmagerr=stabmagerr)
 	
 	s = pycs.gen.spl.Spline(dp, bokeps=bokeps, boktests=boktests, bokwindow=bokwindow)

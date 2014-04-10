@@ -2270,7 +2270,19 @@ def display(lclist=[], splist=[],
 			axes.add_artist(ab)
 			axes.annotate("COSMOGRAIL.org", xy=(0.0, 0.0), xycoords='axes fraction', fontsize=16, xytext=(105, 7),
 				textcoords='offset points', ha='left', va='bottom', color="gray")
-		
+				
+			## name lightcurves:
+			if 0:	
+				axes.annotate("A", xy=(0.0,0.0), xycoords='axes fraction', fontsize=25 , xytext=(20,260),
+					textcoords='offset points', ha='center', va='bottom', color="red")
+				axes.annotate("B", xy=(0.0,0.0), xycoords='axes fraction', fontsize=25 , xytext=(20,150),
+					textcoords='offset points', ha='center', va='bottom', color="green")					
+				axes.annotate("C", xy=(0.0,0.0), xycoords='axes fraction', fontsize=25 , xytext=(20,125),
+					textcoords='offset points', ha='center', va='bottom', color="blue")						
+				axes.annotate("D", xy=(0.0,0.0), xycoords='axes fraction', fontsize=25 , xytext=(20,80),
+					textcoords='offset points', ha='center', va='bottom', color="purple")
+					
+							
 		if logopos == "right":
 			ab = AnnotationBbox(imagebox,  xy=(1.0, 0.0), xycoords='axes fraction', xybox = (-200, 30),
 				boxcoords="offset points",
@@ -2315,6 +2327,8 @@ def display(lclist=[], splist=[],
 		#if verbose:
 		print "Plot written to %s" % filename
 		plt.close() # this seems important so that the plot is not displayed when a next plt.show() is called.
+
+
 
 
 

@@ -34,8 +34,27 @@ def progress(estimates,htmlcode=False,path='leaderboard.html'):
 
 	estids       = [est.id for est in estimates]		
 	nperestids   = [estids.count(estid) for estid in set(estids)] # number of estimations per pairs
-	nestims      = [nperestids.count(nestim) for nestim in set(nperestids)] # number of pairs with 1 estimation, 2, 3,...
+	nperestids_corr = []
+	for n in nperestids:
+		if n > 5:
+			nperestids_corr.append(5)
+		else:
+			nperestids_corr.append(n)
+		
+
+
+	nestims      = [nperestids_corr.count(nestim) for nestim in set(nperestids_corr)] # number of pairs with 1 estimation, 2, 3,...
+	print nestims
+	
+	if min(nperestids_corr) > 1:
+		nestims.insert(0,0)
+		
+	if min(nperestids_corr) > 2:
+		nestims.insert(0,0)		
+	
 	nestimcumuls = [sum(nestims[ind:]) for ind in np.arange(len(nestims))]
+	print nestimcumuls
+	
 	fracs	     = [nestimcumul / 5180.0 * 100 for nestimcumul in nestimcumuls]
 	maxoverall   = 3
 	print '=======================================|'
@@ -44,7 +63,6 @@ def progress(estimates,htmlcode=False,path='leaderboard.html'):
 		print '-- Overall %i x \t %i/5180 \t %.2f |'   % (ind+1,nestimcumuls[ind],fracs[ind])
 		print '=======================================|'
 
-	
 	if htmlcode:
 		
 		stats = sorted(stats, key=lambda stat: stat[1])
@@ -71,8 +89,9 @@ def progress(estimates,htmlcode=False,path='leaderboard.html'):
 			f.write('<td>%.2f</td> \n'% float(stat[2])) 
 			f.write('</tr> \n')
 		
-		# Overall estimation 
+		# Overall estimation (buggy, need to investigate...)
 
+		
 		for ind in np.arange(min(len(nestimcumuls),maxoverall)):
 			f.write('<tr> </tr>\n')
 			f.write('<td>Overall '+str(ind+1)+'x</td> \n')
@@ -88,7 +107,7 @@ def progress(estimates,htmlcode=False,path='leaderboard.html'):
 		f.close()
 
 
-def achievements(estimates,user, htmlcode=False,path='leaderboard.html'):
+def achievements(estimates,user, htmlcode=False,path='achievements_fct.html'):
 
 	"""
 	D3CS Achievements, fun stuff only (no science here !)
@@ -247,7 +266,7 @@ def achievements(estimates,user, htmlcode=False,path='leaderboard.html'):
 	
 	
 	
-	# The sweet pairs (one chocolate per estimate)
+	# The sweet pairs (one chocolate per estimate) -- season 1
 	
 
 	sweet_combs  = [(2, 987), (1, 287), (1, 679), (0, 13), (4, 899), (2, 971), (2, 977), (0, 884), (1, 802), (3, 859),(4, 1036), (4, 131), (2, 223), (3, 496), (1, 278), (3, 96), (0, 678), (0, 162), (1, 772),(2, 833), (3, 467), (2, 355), (1, 330), (3, 698), (1, 374), (1, 972), (2, 976), (2, 775)]
@@ -271,6 +290,73 @@ def achievements(estimates,user, htmlcode=False,path='leaderboard.html'):
 	
 	
 	f.close()
+	
+	
+	
+	# The sweet pairs (one chocolate per estimate) -- season 2
+	
+	#sweet_combs_2 = [(1, 375), (1, 289), (1, 517), (2, 9), (0, 141), (4, 832), (3, 11), (2, 909), (3, 180), (1, 925), (3, 28), (1, 649), (2, 245), (0, 335), (2, 573), (4, 1033), (4, 433), (2, 579), (3, 133), (2, 690), (4, 583), (0, 706), (4, 196), (1, 677), (4, 460), (1, 52), (4, 268), (0, 714), (3, 433), (1, 310), (1, 703), (0, 363), (2, 600), (3, 82), (4, 225), (3, 555), (3, 939), (3, 617), (3, 217), (1, 957), (2, 954), (2, 491), (3, 970), (2, 838), (2, 425), (4, 229), (3, 280), (4, 200), (2, 817), (4, 369)]
+
+	
+
+def sweetpairs(filepath,user,season,htmlcode=False,path='achievements_fct.html'):
+
+
+	# season selection
+	
+	if season == 1:
+		new_path = filepath
+	
+	if season == 2:
+		new_path = 'd3cslog_s2.txt'
+		pycs.tdc.util.cutdb(filepath,new_path,2)
+		
+			
+	estimates = pycs.tdc.est.importfromd3cs(new_path)
+	userests = [est for est in estimates if est.methodpar == user]
+	
+
+	# winner computation
+	
+	if season == 1:
+	
+		sweet_combs  = [(2, 987), (1, 287), (1, 679), (0, 13), (4, 899), (2, 971), (2, 977), (0, 884), (1, 802), (3, 859),(4, 1036), (4, 131), (2, 223), (3, 496), (1, 278), (3, 96), (0, 678), (0, 162), (1, 772),(2, 833), (3, 467), (2, 355), (1, 330), (3, 698), (1, 374), (1, 972), (2, 976), (2, 775)]		
+		for comb in sweet_combs:
+			combid = 'tdc1_%i_%i' % (comb[0],comb[1])		
+			ids     = [est.id for est in estimates]
+			try:
+				combpos = ids.index(combid)
+				sweetest = estimates[combpos]
+				if sweetest.methodpar == user:
+					print '-- Sweet pair (s1) estimated ! %s ' % sweetest.niceid
+					if htmlcode:
+						f.write('<p>-- Sweet pair (season 1) estimated ! %s</p>' % sweetest.niceid)
+			except:
+				pass			
+
+	
+
+	
+	if season == 2:
+		#sweet_combs = [(1, 375), (1, 289), (1, 517), (2, 9), (0, 141), (4, 832), (3, 11), (2, 909), (3, 180), (1, 925), (3, 28), (1, 649), (2, 245), (0, 335), (2, 573), (4, 1033), (4, 433), (2, 579), (3, 133), (2, 690), (4, 583), (0, 706), (4, 196), (1, 677), (4, 460), (1, 52), (4, 268), (0, 714), (3, 433), (1, 310), (1, 703), (0, 363), (2, 600), (3, 82), (4, 225), (3, 555), (3, 939), (3, 617), (3, 217), (1, 957), (2, 954), (2, 491), (3, 970), (2, 838), (2, 425), (4, 229), (3, 280), (4, 200), (2, 817), (4, 369)]
+		sweet_combs = [(4,232),(4,233)]
+		nsweetmax = len(sweet_combs)
+		nsweet = 0
+		for comb in sweet_combs:
+			combid = 'tdc1_%i_%i' % (comb[0],comb[1])		
+			ids     = [est.id for est in estimates]
+			try:
+				combpos = ids.index(combid)
+				sweetest = estimates[combpos]
+				if sweetest.methodpar == user:
+					#print '-- Sweet pair (s2) estimated ! %s ' % sweetest.niceid
+					nsweet += 1
+					
+
+			except:
+				pass	
+			
+		print 'Sweet pairs estimated : ',nsweet,'/',nsweetmax 
 	
 
 
