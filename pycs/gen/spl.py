@@ -745,6 +745,9 @@ class Spline():
 		relimp = (iniscore - bestscore)/iniscore
 		self.knottype += "b"
 		self.setintt(intknots)
+		
+		#pycs.gen.lc.display([],[self])
+		#self.display()
 		self.optc() # Yes, not yet done !
 		finalr2 = self.r2(nostab=True)
 		if verbose:
@@ -946,7 +949,7 @@ class Spline():
 		Sets lastr2stab, but not lastr2nostab !
 		
 		"""
-	
+
 		out = si.splrep(self.datapoints.jds, self.datapoints.mags, w=1.0/self.datapoints.magerrs, xb=None, xe=None, k=self.k, task=-1, s=None, t=self.getintt(), full_output=1, per=0, quiet=1)
 		# We check if it worked :
 		if not out[2] <= 0: 

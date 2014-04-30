@@ -2,7 +2,7 @@
 Wrapper stuff to run PyCS on TDC data
 """
 
-import os
+import os,sys
 import pycs
 import est
 import datetime
@@ -173,7 +173,8 @@ class Run:
 		Run the optimizer n times on the real data.
 		We draw the copies, run on them
 		"""
-		
+		#pycs.gen.lc.display([self.lca,self.lcb],[self.sourcespline])
+		#sys.exit()
 		#simdir = os.path.join(self.datadir, "copies")
 		#if os.path.isdir(simdir):
 		#	os.remove(simdir)
@@ -196,6 +197,8 @@ class Run:
 			lcacop.rmml()
 			lcbcop.rmml()
 			lcscop = [lcacop, lcbcop]
+			#pycs.gen.lc.display(lcscop)
+			#sys.exit()
 			
 			# Resetting magshifts
 			lcacop.magshift = 0.0
@@ -213,6 +216,8 @@ class Run:
 			pycs.gen.lc.shuffle(lcscop)
 			lcscoplist.append(lcscop)
 		
+			#pycs.gen.lc.display(lcscop)
+			#sys.exit()
 		# We run the optimizer and unshuffle
 		for (i, lcscop) in enumerate(lcscoplist):
 			out = optfct(lcscop)
@@ -271,6 +276,8 @@ class Run:
 		Drawing the simulated curves and runing on them
 		"""
 		
+		#pycs.gen.lc.display([self.lca,self.lcb])
+		#sys.exit()
 		self.log("Drawing %i simulations..." % n)
 		if n == 0:
 			self.totalratio = 0.0
@@ -285,11 +292,14 @@ class Run:
 		
 		lcssimlist = []
 		for i in range(n):
-			
+			print 'IND---->',i
 			# Set some random "true delays"
 			self.lca.timeshift = timeshiftoriga + float(np.random.uniform(low = -truetsr, high = truetsr, size=1))
 			self.lcb.timeshift = timeshiftorigb + float(np.random.uniform(low = -truetsr, high = truetsr, size=1))
+			#pycs.gen.lc.display([self.lca,self.lcb])
+			#sys.exit()
 			
+			# HERE, I FEED DRAW.DRAW WITH THE OUTPUT OF FITSOURCESPLINE, WHICH HAS BEEN FEEDED WITH D3CS TD !!
 			# Draw them
 			lcssim = pycs.sim.draw.draw([self.lca, self.lcb], self.sourcespline, shotnoise="sigma")
 	
@@ -297,6 +307,8 @@ class Run:
 				pycs.gen.lc.display(lcssim, [self.sourcespline], showdelays=True, jdrange=self.jdrange, magrange = self.magrange, figsize=(18,6), plotsize=(0.05, 0.98, 0.09, 0.98), legendloc=1, filename = os.path.join(self.plotdir, "sim_%i.png" % (i+1)))
 				pycs.gen.lc.display(lcssim, [self.sourcespline], showdelays=True, jdrange=(0, 1300), magrange = self.magrange, figsize=(18,6), plotsize=(0.05, 0.98, 0.09, 0.98), legendloc=1, filename = os.path.join(self.plotdir, "zoom_sim_%i.png" % (i+1)))
 			
+			#pycs.gen.lc.display(lcssim)
+			#sys.exit()
 			# Remove ML and add a new one :
 			lcssim[0].magshift = 0.0
 			lcssim[1].magshift = 0.0
@@ -305,6 +317,8 @@ class Run:
 			if addmlfct != None:
 				addmlfct(lcssim)
 			
+			#pycs.gen.lc.display(lcssim)
+			#sys.exit()
 			# Set some wrong "initial delays" for the analysys, around these "true delays".
 			lcssim[0].shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 			lcssim[1].shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
@@ -401,7 +415,7 @@ def multirun(iniests,
 	ncpu=0,
 	diagnostics = True,
 	saveplots = False,
-	tdcpath = "./tdc0", outdir="./multirun", method="", methodpar=""):
+	tdcpath = "./tdc1", outdir="./multirun", method="", methodpar=""):
 
 	"""
 	Running a technique on several TDC curves.
@@ -441,7 +455,8 @@ def multirun(iniests,
 		try:
 			lcspath = pycs.tdc.util.tdcfilepath(set=iniest.set, rung=iniest.rung, pair=iniest.pair)
 			(lca, lcb) = pycs.tdc.util.read(lcspath, shortlabel=False)
-		
+			#pycs.gen.lc.display([lca,lcb])
+			#sys.exit()
 			starttime = datetime.datetime.now()
 			
 			r = Run(iniest, lca, lcb, method=method, methodpar=methodpar, outdir=os.path.join(outdir, iniest.id))
@@ -453,9 +468,12 @@ def multirun(iniests,
 			# Display of the input light curves
 			if diagnostics:
 				r.show()
-			
+
 			# First fit
 			r.fitsourcespline(sploptfct = sploptfct, addmlfct = addmlfct, saveplot = diagnostics)
+			#pycs.gen.lc.display([r.lca,r.lcb],[r.sourcespline])
+			#sys.exit()
+			
 			
 			# Getting the delay
 			r.runobs(optfct = optfct, addmlfct = addmlfct, n = nobs, saveplots=saveplots)

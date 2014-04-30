@@ -43,6 +43,24 @@ def fitsourcespline(lcs, sploptfct, addmlfct=None):
 
 
 
+def createdir(estimates, path):
+	
+	dirpath = os.path.join(os.getcwd(),path)
+
+
+	# 1) Create main directory
+	
+	if not os.path.isdir(dirpath):
+		os.mkdir(dirpath)
+		
+	# 2) Create sub-directories for each estimate
+	
+	for est in estimates:
+		subdirpath = os.path.join(dirpath,est.id)
+		if not os.path.isdir(subdirpath):
+			os.mkdir(subdirpath)	
+	
+
 def drawcopy(estimates, path, addmlfct=None, n=1):
 	"""
 	Draw n times one single copy of lcs (the ones your esimate is about) into the path directory.
@@ -61,12 +79,13 @@ def drawcopy(estimates, path, addmlfct=None, n=1):
 	copydir = os.path.join(os.getcwd(),path)
 
 
-	
+	'''
 	if os.path.isfile(copydir)==False:
 		try:
 			os.system('mkdir %s' % copydir)
 		except:
 			print "going on..."	
+	'''
 	
 	for estimate in estimates:
 	
@@ -77,14 +96,16 @@ def drawcopy(estimates, path, addmlfct=None, n=1):
 
 		while ind < n:
 
-			# Reset ML and shifts
+			
+			# Reset ML and shifts (get them "as read" from scratch...)
 			lca.rmml()
 			lcb.rmml()	
 			lca.magshift = 0.0
 			lcb.magshift = 0.0	
 			lca.timeshift = 0.0
 			lcb.timeshift = 0.0
-
+			
+			
 			lcs = [lca,lcb] 
 
 			# Add new ML
@@ -132,46 +153,68 @@ def drawsim(estimates, path, sploptfct, addmlfct=None, n=1) :
 
 	simdir = os.path.join(os.getcwd(),path)
 	
+	'''
 	if os.path.isfile(simdir)==False:
 		try:
 			os.system('mkdir %s' % simdir)
 		except:
 			print "going on..."		
-		
+	'''	
 	for estimate in estimates:				
 	
 		# get the model lightcurves	
 		lcspath = pycs.tdc.util.tdcfilepath(set=estimate.set, rung=estimate.rung, pair=estimate.pair)
 		(lca, lcb) = pycs.tdc.util.read(lcspath, shortlabel=False)
-
+		#pycs.gen.lc.display([lca,lcb])
+		#sys.exit()
 		ind=0
+		
+		# shift lcs as estimated by d3cs
+		lcb.shifttime(estimate.td)
+		#pycs.gen.lc.display([lca,lcb])
+		#sys.exit()
+		
+		# fit a spline on the data and save residuals
+		sourcespline = fitsourcespline([lca, lcb], sploptfct, addmlfct)
+		pycs.sim.draw.saveresiduals([lca, lcb], sourcespline)
+		
+		# define 'initial timeshifts', given by fitsourcespline
+		timeshifta = lca.timeshift
+		timeshiftb = lcb.timeshift		
+		#pycs.gen.lc.display([lca,lcb],[sourcespline])
+		#sys.exit()
 
+		#TODO : propagate knotstep attribute from varioanalysis to every copy, to avoid running varioanalysis for every simcurve...
+
+		# now, draw n copycurves
 		while ind < n:
+	
+			print 'IND---->',ind
+						
+			# set  a random "true" delay 
+			truetsr = np.max([3.0, estimate.tderr])
+			lca.timeshift = timeshifta + (float(np.random.uniform(low = -truetsr, high = truetsr, size=1)))
+			lcb.timeshift = timeshiftb + (float(np.random.uniform(low = -truetsr, high = truetsr, size=1))) 
+			
 
+			'''
 			# Reset ML and shifts
 			lca.rmml()
 			lcb.rmml()	
 			lca.magshift = 0.0
-			lcb.magshift = 0.0	
-			lca.timeshift = 0.0
-			lcb.timeshift = 0.0	
+			lcb.magshift = 0.0			
+			'''
 
-
-			# set  a random "true" delay 
-			truetsr = np.max([3.0, estimate.tderr])
-			lca.shifttime(float(np.random.uniform(low = -truetsr, high = truetsr, size=1)))
-			lcb.shifttime(float(np.random.uniform(low = -truetsr, high = truetsr, size=1)))
 			
-
-			# fit a spline on the data
-			sourcespline = fitsourcespline([lca, lcb], sploptfct, addmlfct)
-
 			# Use the magic draw function to create simulated lcs
-
-			pycs.sim.draw.saveresiduals([lca, lcb], sourcespline)	
+				
 			lcssim = pycs.sim.draw.draw([lca, lcb], sourcespline, shotnoise="sigma")
 
-			# Remove ML and add a new one :
+			print 'TRUE DELAY: ',lcssim[1].truetimeshift-lcssim[0].truetimeshift
+			#pycs.gen.lc.display(lcssim)			
+			#sys.exit()
+
+			# Remove magshift, remove ML and add a new one :
 			lcssim[0].magshift = 0.0
 			lcssim[1].magshift = 0.0
 			lcssim[0].rmml()
@@ -181,14 +224,15 @@ def drawsim(estimates, path, sploptfct, addmlfct=None, n=1) :
 
 			tsr = np.max([3.0, estimate.tderr])
 
-			# Set some wrong "initial delays" for the analysis, around these "true delays".
+			# Set some wrong "initial delays" for the analysis, around the "true delays".
 			lcssim[0].shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 			lcssim[1].shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
-
-
-			# Put in our initial guess of the delay in it, for PyCS
-			lcssim[1].shifttime(estimate.td)
 			
+			print 'TRUE DELAY  : ',lcssim[1].truetimeshift-lcssim[0].truetimeshift
+			print 'WRONG INITIAL DELAY: ',lcssim[1].timeshift-lcssim[0].timeshift						
+			#pycs.gen.lc.display(lcssim)
+			#sys.exit()
+	
 			# And write that simcurve
 
 			if os.path.exists(os.path.join(simdir,estimate.id)) == False:
@@ -203,8 +247,9 @@ def drawsim(estimates, path, sploptfct, addmlfct=None, n=1) :
 			simpath = os.path.join(simdir,estimate.id,next_sim_ind)
 
 			pycs.gen.util.writepickle(lcssim,simpath)
+			
 			ind += 1	
-
+			
 
 def runcopy(estimates, path, optfct, n=1, clist=None):
 	"""
@@ -251,6 +296,8 @@ def runcopy(estimates, path, optfct, n=1, clist=None):
 
 			lcs = pycs.gen.util.readpickle(copypath)
 
+			#pycs.gen.lc.display(lcs)
+			#sys.exit()
 			out = optfct(lcs)
 
 			if hasattr(out, "bokeps"): # then its a spline !!
@@ -318,8 +365,12 @@ def runsim(estimates, path, optfct, n=1, slist=None):
 
 			lcs = pycs.gen.util.readpickle(simpath)
 
+			
 			out = optfct(lcs)
-
+			print 'TRUE DELAY: ',lcs[1].truetimeshift-lcs[0].truetimeshift
+			print 'WRONG GUESSED DELAY: ',lcs[1].timeshift-lcs[0].timeshift			
+			#pycs.gen.lc.display(lcs)
+			#sys.exit()
 			if hasattr(out, "bokeps"): # then its a spline !!
 				displaysplines = [out]
 			else:
@@ -377,7 +428,9 @@ def multirun(estimates, path, optfct, ncopy, nsim, clist=None, slist=None):
 		syserr = np.fabs(np.mean([simtds[i]-simttds[i] for i in np.arange(len(simtds))]))
 		ranerr = np.std([simtds[i]-simttds[i] for i in np.arange(len(simtds))])
 		outest.tderr  = np.hypot(syserr, ranerr)
-		print '     error:  ',outest.tderr		
+		print '   systematic error:  ',syserr
+		print '       random error:  ',ranerr
+		print '        total error:  ',outest.tderr		
 
 	
 	return outests
