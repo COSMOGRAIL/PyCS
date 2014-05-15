@@ -72,7 +72,7 @@ def spl1(lcs, verbose=True):
 	
 	# The stab params, quite easy :
 	stabext = 300.0
-	stabgap = 30.0  # from 60.0 to 30.0, for consistency with spl2
+	stabgap = 6.0  # from 60.0 to 30.0, for consistency with spl2
 	stabstep = sampling
 	stabmagerr = -3.0
 	
@@ -159,7 +159,7 @@ def spl2(lcs, maxit=7, minchange=1.0, verbose=True):
 	
 	# The stab params, quite easy :
 	stabext = 300.0
-	stabgap = 30.0  ### WARNING !!! I changed here stabgap from 60 to 30. Thus every seasongaps should now be recognised, avoiding splines going nuts...
+	stabgap = 6.0  ### WARNING !!! I changed here stabgap from 60 to 6.0. Thus every seasongaps should now be recognised, avoiding splines going nuts...
 	stabstep = sampling
 	stabmagerr = -3.0
 	
@@ -206,7 +206,7 @@ def spl2(lcs, maxit=7, minchange=1.0, verbose=True):
 		print '-----Debugging block, decomment to get the normal behavior-----'
 		print '-----I am on pycs/tdc/splopt.py around line 207-----'
 		#print 'knots=',knots,', stabext=',stabext,', stabgap=',stabgap,', stabstep=',stabstep,' stabmagerr=',stabmagerr,' bokeps=',bokeps,' ,bokwindow=',bokwindow
-		return lcs,knots,stabext,stabgap,stabstep,stabmagerr,bokeps,bokwindow
+		return lcs,spline,knots,stabext,stabgap,stabstep,stabmagerr,bokeps,bokwindow
 
 	# And fit a spline through both curves
 	spline = pycs.gen.spl.fit(lcs, knots=knots,

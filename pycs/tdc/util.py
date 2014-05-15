@@ -8,6 +8,8 @@ import math
 import pycs.gen.lc
 
 
+
+
 def tdcfilepath(set, rung, pair, skipset=False):
 	"""
 	
@@ -86,9 +88,9 @@ def asinhmag(flux, fluxerr,  m0 = 22.5, f0=1.0, b=0.01):
 	return (mag, magerr)
 
 
-def read(filepath, mag="pog", verbose=True, shortlabel=True):
+def read(filepath, mag="asinh", verbose=True, shortlabel=True):
 	"""
-	Imports TDC light curves.
+	Imports TDC light curves, WITH ASINH MAGNITUDES 
 	So far we expect exactly 2 curves in each file, as TDC simulates only doubles.
 	Can be generalized later ...
 	"""

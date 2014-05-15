@@ -171,22 +171,30 @@ def importfromd3cs(filepath, set="tdc1"):
 		for line in lines]
 
 	print "Read %i D3CS estimates from %s" % (len(estimates), filepath)
+	
+	## WARNING !! Here, we have to remove the estimates made for the deleted quads...
+	estimates = [e for e in estimates if e.pair!=741 and e.pair!=742 and e.pair!=749 and e.pair!=750 and e.pair!=853 and e.pair!=854 and e.pair!=907 and e.pair!=908 and e.pair!=971 and e.pair!=972 and e.pair!=995 and e.pair!=996]
+		
 	return estimates
 	
 
-def select(estimates, sets=None, rungs=None, pairs=None):
+def select(estimates, sets=None, rungs=None, pairs=None, idlist=None):
 	"""
 	Returns a sublist of the estimates selected according to the specified arguments.
+	It can be sets/rungs/pairs values, or a list of ids
 	"""
-	if sets == None:
-		sets = [e.set for e in estimates]
-	if rungs == None:
-		rungs = [e.rung for e in estimates]
-	if pairs == None:
-		pairs = [e.pair for e in estimates]
-		
-	return [e for e in estimates if (e.set in sets) and (e.rung in rungs) and (e.pair in pairs)]
+	if idlist==None:
+		if sets == None:
+			sets = [e.set for e in estimates]
+		if rungs == None:
+			rungs = [e.rung for e in estimates]
+		if pairs == None:
+			pairs = [e.pair for e in estimates]
+
+		return [e for e in estimates if (e.set in sets) and (e.rung in rungs) and (e.pair in pairs)]
 	
+	else:
+		return [e for e in estimates if (e.id in idlist)]	
 
 def group(estimates, verbose=True):
 	"""

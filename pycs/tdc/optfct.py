@@ -55,8 +55,14 @@ def spldiff(lcs, verbose=True, magshift=False):
 	
 	(lca,lcb) = lcs
 	
-	stats = lca.samplingstats(seasongap=100)
+	stats = lca.samplingstats(seasongap=30)
 	sampling = stats["med"]
+
+	if not (hasattr(lca, "vario") and hasattr(lcb, "vario")):
+		lca.vario = pycs.tdc.vario.vario(lca, verbose=True)
+		lcb.vario = pycs.tdc.vario.vario(lcb, verbose=True)
+		print '---Vario Analysis Done---'
+
 	
 	knotstep = calcknotstep([lca.vario, lcb.vario])
 	bokeps = np.max([sampling, knotstep/3.0])
@@ -64,7 +70,7 @@ def spldiff(lcs, verbose=True, magshift=False):
 	
 	# The stab params, quite easy :
 	stabext = 300.0
-	stabgap = 60.0
+	stabgap = 6.0
 	stabstep = sampling
 	stabmagerr = -3.0
 	

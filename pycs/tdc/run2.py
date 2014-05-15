@@ -61,7 +61,7 @@ def createdir(estimates, path):
 			os.mkdir(subdirpath)	
 	
 
-def drawcopy(estimates, path, addmlfct=None, n=1):
+def drawcopy(estimates, path, addmlfct=None, n=1, maxrandomshift = None):
 	"""
 	Draw n times one single copy of lcs (the ones your esimate is about) into the path directory.
 	
@@ -72,6 +72,8 @@ def drawcopy(estimates, path, addmlfct=None, n=1):
 	:addmlfct	- If you want to add different microlensing to your obslcs
 	
 	:n		- Number of time you will run drawobs (each run produce new copycurves)
+	
+	:maxrandomshift	- Maximum range for the random time shift added to the copycurves
 	"""
 	
 
@@ -91,7 +93,15 @@ def drawcopy(estimates, path, addmlfct=None, n=1):
 	
 		lcspath = pycs.tdc.util.tdcfilepath(set=estimate.set, rung=estimate.rung, pair=estimate.pair)
 		(lca, lcb) = pycs.tdc.util.read(lcspath, shortlabel=False)
+		
 
+		# compute the vario analysis of these lcs
+		if not (hasattr(lca, "vario") and hasattr(lcb, "vario")):
+			lca.vario = pycs.tdc.vario.vario(lca, verbose=True)
+			lcb.vario = pycs.tdc.vario.vario(lcb, verbose=True)
+			print '---Vario Analysis Done---'
+			
+			
 		ind=0
 
 		while ind < n:
@@ -106,6 +116,7 @@ def drawcopy(estimates, path, addmlfct=None, n=1):
 			lcb.timeshift = 0.0
 			
 			
+			
 			lcs = [lca,lcb] 
 
 			# Add new ML
@@ -113,8 +124,13 @@ def drawcopy(estimates, path, addmlfct=None, n=1):
 				addmlfct(lcs)
 
 			# Time shift around the initial value		
-			tsr = np.max([3.0, estimate.tderr])
+			tsr = np.max([3.0, estimate.tderr]) ## NEED TO GIVE A MAXIMUM VALUE ON THIS (10?), otherwise optimizer fails
+			
+			if not maxrandomshift == None:
+				if tsr >= maxrandomshift:
+					tsr = maxrandomshift
 
+			
 			lca.shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 			lcb.shifttime(estimate.td +float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 			
@@ -137,7 +153,7 @@ def drawcopy(estimates, path, addmlfct=None, n=1):
 			ind += 1
 	
 	
-def drawsim(estimates, path, sploptfct, addmlfct=None, n=1) :
+def drawsim(estimates, path, sploptfct, addmlfct=None, n=1, maxrandomshift = None) :
 	"""
 	Draw n times one single sim curves of lcs (the ones your esimate is about) into the path directory.
 	
@@ -149,6 +165,7 @@ def drawsim(estimates, path, sploptfct, addmlfct=None, n=1) :
 	
 	:n		- Number of time you will run drawsim (each run produce new simcurves)	
 
+	:maxrandomshift	- Maximum range for the random "true" and "guessed" time shift added to the simcurves
 	"""
 
 	simdir = os.path.join(os.getcwd(),path)
@@ -177,6 +194,7 @@ def drawsim(estimates, path, sploptfct, addmlfct=None, n=1) :
 		# fit a spline on the data and save residuals
 		sourcespline = fitsourcespline([lca, lcb], sploptfct, addmlfct)
 		pycs.sim.draw.saveresiduals([lca, lcb], sourcespline)
+
 		
 		# define 'initial timeshifts', given by fitsourcespline
 		timeshifta = lca.timeshift
@@ -193,6 +211,10 @@ def drawsim(estimates, path, sploptfct, addmlfct=None, n=1) :
 						
 			# set  a random "true" delay 
 			truetsr = np.max([3.0, estimate.tderr])
+			if not maxrandomshift == None:
+				if truetsr >= maxrandomshift:
+					truetsr = maxrandomshift
+			
 			lca.timeshift = timeshifta + (float(np.random.uniform(low = -truetsr, high = truetsr, size=1)))
 			lcb.timeshift = timeshiftb + (float(np.random.uniform(low = -truetsr, high = truetsr, size=1))) 
 			
@@ -210,7 +232,10 @@ def drawsim(estimates, path, sploptfct, addmlfct=None, n=1) :
 				
 			lcssim = pycs.sim.draw.draw([lca, lcb], sourcespline, shotnoise="sigma")
 
-			print 'TRUE DELAY: ',lcssim[1].truetimeshift-lcssim[0].truetimeshift
+			# add the vario attribues from original lcs (instead of recomputing it everytime...)
+			lcssim[0].vario = lca.vario
+			lcssim[1].vario = lcb.vario
+
 			#pycs.gen.lc.display(lcssim)			
 			#sys.exit()
 
@@ -223,6 +248,9 @@ def drawsim(estimates, path, sploptfct, addmlfct=None, n=1) :
 				addmlfct(lcssim)	
 
 			tsr = np.max([3.0, estimate.tderr])
+			if not maxrandomshift == None:
+				if tsr>=maxrandomshift:
+					tsr=maxrandomshift
 
 			# Set some wrong "initial delays" for the analysis, around the "true delays".
 			lcssim[0].shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
