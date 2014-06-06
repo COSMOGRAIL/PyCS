@@ -8,6 +8,10 @@ import math
 import pycs.gen.lc
 
 
+"""
+A list of all pairs that are available in TDC1 v2 (useful, as some pairs have been removed...)
+"""
+#tdc1v2pairs = range(1, 1036)
 
 
 def tdcfilepath(set, rung, pair, skipset=False):
