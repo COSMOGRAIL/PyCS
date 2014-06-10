@@ -8,10 +8,10 @@ import math
 import pycs.gen.lc
 
 
-"""
-A list of all pairs that are available in TDC1 v2 (useful, as some pairs have been removed...)
-"""
 def listtdc1v2pairs():
+	"""
+	A list of all pairs that are available in TDC1 v2 (useful, as some pairs have been removed...)
+	"""
 	tdc1v2doubles = np.arange(1, 721)
 	tdc1v2quads = np.array(
 		[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 
