@@ -170,11 +170,7 @@ def importfromd3cs(filepath, set="tdc1"):
 			timetaken = float(line[10]))
 		for line in lines]
 
-	print "Read %i D3CS estimates from %s" % (len(estimates), filepath)
-	
-	## WARNING !! Here, we have to remove the estimates made for the deleted quads...
-	estimates = [e for e in estimates if e.pair!=741 and e.pair!=742 and e.pair!=749 and e.pair!=750 and e.pair!=853 and e.pair!=854 and e.pair!=907 and e.pair!=908 and e.pair!=971 and e.pair!=972 and e.pair!=995 and e.pair!=996]
-		
+	print "Read %i D3CS estimates from %s" % (len(estimates), filepath)	
 	return estimates
 	
 
