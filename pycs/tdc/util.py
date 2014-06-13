@@ -6,6 +6,8 @@ import os
 import numpy as np
 import math
 import pycs.gen.lc
+import pycs.tdc.est
+import datetime
 
 
 def listtdc1v2pairs():
@@ -129,6 +131,59 @@ def read(filepath, mag="asinh", verbose=True, shortlabel=True):
 			
 	return lcs
 
+
+
+def writesubmission(estimates, filepath, commentlist=None):
+	"""
+	Writes a list of estimates into a TDC1 submission
+	
+	Accordign to the doc, filepath should be something like pycs_tdc1_algorithm.dt
+
+	"""
+	
+	pycs.tdc.est.checkunique(estimates)
+	#est.sort(estimates) # We do not rely on this sorting anymore. We just go through all curves anyway...
+
+	
+	tdcfile = open(filepath, "w")
+	
+	tdcfile.write("# TDC submission written by PyCS\n")
+	tdcfile.write("# %s\n" % (datetime.datetime.now()))
+	tdcfile.write("# Orignial filename: %s\n" % (os.path.basename(filepath)))
+	tdcfile.write("# %i estimates have been selected\n" % (len(estimates)))
+	tdcfile.write("# Comments:\n")
+	for comment in commentlist:
+		tdcfile.write("#   %s\n" % comment)
+	tdcfile.write("# \n")
+	tdcfile.write("# datafile                         dt          dterr\n")
+	
+	
+	estids = [est.id for est in estimates]
+	notfound = 0
+	for rung in np.arange(5):
+		for pair in listtdc1v2pairs():	
+		
+			# We reconstruct the filename of this pair. Carefully.
+			name = tdcfilepath(set="tdc1", rung=rung, pair=pair)
+			name = os.path.basename(name)
+						
+			searchid = 'tdc1_%i_%i' % (rung, pair)
+						
+			try:				
+				ind = estids.index(searchid)
+				tdcfile.write("%s\t%8.2f\t%8.2f\n" % (name, -1.0 * estimates[ind].td, estimates[ind].tderr))
+				# --- WARNING --- The TDC convention for the delays is the inverse of PyCS, thus the "-" sign above				
+			except:	
+				notfound += 1			
+				tdcfile.write("%s\t%8.2f\t%8.2f\n" % (name, -99.0, -99.0))
+	
+	#tdcfile.write("\n")
+	tdcfile.close()	
+
+	print "Wrote %s" % (filepath)
+	print "Number of estimates: %i" % (len(estimates))
+	print "Number of light curve pairs that I could not find among your estimates: %i" % (notfound)
+	
 
 
 def setnicemagshift(lcs):

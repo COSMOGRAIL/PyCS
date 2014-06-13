@@ -4,8 +4,8 @@ This subpackage contains code more or less specific to the Time Delay Challenge 
 
 __all__ = ["util", "est", "run", "vario", "splopt", "optfct", "metrics", "run2", "stats"]
 
-import util
 import est
+import util
 import run
 import vario
 import splopt
