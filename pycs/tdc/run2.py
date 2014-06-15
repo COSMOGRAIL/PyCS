@@ -19,6 +19,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from copy import copy
 
+
 def fitsourcespline(lcs, sploptfct, addmlfct=None):
 	"""
 	Return a spline fitting the given lightcurves
@@ -61,7 +62,7 @@ def createdir(estimates, path):
 			os.mkdir(subdirpath)	
 	
 
-def drawcopy(estimates, path, addmlfct=None, n=1, maxrandomshift = None):
+def drawcopy(estimates, path, addmlfct=None, n=1, maxrandomshift = None, datadir=''):
 	"""
 	Draw n times one single copy of lcs (the ones your esimate is about) into the path directory.
 	
@@ -91,7 +92,7 @@ def drawcopy(estimates, path, addmlfct=None, n=1, maxrandomshift = None):
 	
 	for estimate in estimates:
 	
-		lcspath = pycs.tdc.util.tdcfilepath(set=estimate.set, rung=estimate.rung, pair=estimate.pair)
+		lcspath = os.path.join(datadir,pycs.tdc.util.tdcfilepath(set=estimate.set, rung=estimate.rung, pair=estimate.pair))
 		(lca, lcb) = pycs.tdc.util.read(lcspath, shortlabel=False)
 		
 
@@ -153,7 +154,7 @@ def drawcopy(estimates, path, addmlfct=None, n=1, maxrandomshift = None):
 			ind += 1
 	
 	
-def drawsim(estimates, path, sploptfct, addmlfct=None, n=1, maxrandomshift = None) :
+def drawsim(estimates, path, sploptfct, addmlfct=None, n=1, maxrandomshift = None, datadir='') :
 	"""
 	Draw n times one single sim curves of lcs (the ones your esimate is about) into the path directory.
 	
@@ -180,7 +181,7 @@ def drawsim(estimates, path, sploptfct, addmlfct=None, n=1, maxrandomshift = Non
 	for estimate in estimates:				
 	
 		# get the model lightcurves	
-		lcspath = pycs.tdc.util.tdcfilepath(set=estimate.set, rung=estimate.rung, pair=estimate.pair)
+		lcspath = os.path.join(datadir,pycs.tdc.util.tdcfilepath(set=estimate.set, rung=estimate.rung, pair=estimate.pair))
 		(lca, lcb) = pycs.tdc.util.read(lcspath, shortlabel=False)
 		#pycs.gen.lc.display([lca,lcb])
 		#sys.exit()
@@ -420,8 +421,11 @@ def runsim(estimates, path, optfct, n=1, slist=None):
 		
 
 def multirun(estimates, path, optfct, ncopy, nsim, clist=None, slist=None):
+
 	"""
 	Wrapper around runsim and runobs
+	Run the optimizer ncopy and nsim times on the copy and sim
+	Return the results in a list of estimates objects
 	"""
 	
 	# We start by creating Estimate objects that will contain our final result:
@@ -446,7 +450,7 @@ def multirun(estimates, path, optfct, ncopy, nsim, clist=None, slist=None):
 	
 
 	
-	# And we put the results in the output estimates
+	# And we put the results in the output estimates, and save each individual output estimate
 	
 	for outest,copytds,simtds,simttds in zip(outests,copytdslist,simtdslist,simttdslist):
 		print '='*30
@@ -459,7 +463,7 @@ def multirun(estimates, path, optfct, ncopy, nsim, clist=None, slist=None):
 		print '   systematic error:  ',syserr
 		print '       random error:  ',ranerr
 		print '        total error:  ',outest.tderr		
-
+		
 	
 	return outests
 	

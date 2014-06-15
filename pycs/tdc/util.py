@@ -292,6 +292,17 @@ def cutdb(filepath,newpath,season):
 	 	 
 	db.close()
 	newdb.close()
+
 		
+def goingon():
+	"""
+	Asks the user if he wants to proceed. If not, exits python.
+	"""
+	import sys
+	answer = raw_input("Tell me, do you want to go on ? (yes/no) ")
+	if answer[:3] != "yes":
+		sys.exit("Ok, bye.")
+	print ""	# to skip one line after the question.
+
 		
 	
