@@ -59,6 +59,7 @@ def combiconf2(estimates):
 	idconfs = [(est.id,est.confidence) for est in estimates]	
 	
 	hugefact = 0.4
+	sig = 3.0
 	
 	### First step, define "advanced" criterias
 	#
@@ -76,7 +77,7 @@ def combiconf2(estimates):
 				break
 			subests = [subest for subest in estimates if subest.methodpar != est.methodpar]
 			for subest in subests:
-				if est.td > subest.td-subest.tderr and est.td < subest.td+subest.tderr:
+				if est.td > subest.td-sig*subest.tderr and est.td < subest.td+sig*subest.tderr:
 					if min([subest.tderr/(subest.td+0.01) for subest in subests]) < hugefact:
 						combiconfcode = 10 # then, estimates agree
 						continue
@@ -91,7 +92,7 @@ def combiconf2(estimates):
 			if "mtewes" in (est.methodpar for est in estimates): 
 				mest = [est for est in estimates if est.methodpar == 'mtewes'][0]
 				vest = [est for est in estimates if est.methodpar == 'Vivien'][0]
-				if vest.td > mest.td-mest.tderr and vest.td < mest.td+mest.tderr and mest.td > vest.td-vest.tderr and mest.td < vest.td+vest.tderr:
+				if vest.td > mest.td-sig*mest.tderr and vest.td < mest.td+sig*mest.tderr and mest.td > vest.td-sig*vest.tderr and mest.td < vest.td+sig*vest.tderr:
 					combiconfcode = 12 # Malte and Vivien agree, someone else disagree
 				else:
 					combiconfcode = 13 # Malte and Vivien disagree		
@@ -108,7 +109,7 @@ def combiconf2(estimates):
 				break
 			subests = [subest for subest in estimates if subest.methodpar != est.methodpar]
 			for subest in subests:
-				if est.td > subest.td-subest.tderr and est.td < subest.td+subest.tderr:
+				if est.td > subest.td-sig*subest.tderr and est.td < subest.td+sig*subest.tderr:
 					if min([subest.tderr/(subest.td+0.01) for subest in subests]) < hugefact:
 						combiconfcode = 20 # then, estimates agree
 						continue
@@ -124,7 +125,7 @@ def combiconf2(estimates):
 			if "mtewes" in (est.methodpar for est in estimates): 
 				mest = [est for est in estimates if est.methodpar == 'mtewes'][0]
 				vest = [est for est in estimates if est.methodpar == 'Vivien'][0]
-				if vest.td > mest.td-mest.tderr and vest.td < mest.td+mest.tderr and mest.td > vest.td-vest.tderr and mest.td < vest.td+vest.tderr:
+				if vest.td > mest.td-sig*mest.tderr and vest.td < mest.td+sig*mest.tderr and mest.td > vest.td-sig*vest.tderr and mest.td < vest.td+sig*vest.tderr:
 					combiconfcode = 22 # Malte and Vivien agree, someone else disagree
 				else:
 					combiconfcode = 23 # Malte and Vivien disagree		
@@ -141,7 +142,7 @@ def combiconf2(estimates):
 				break
 			subests = [subest for subest in estimates if subest.methodpar != est.methodpar]
 			for subest in subests:
-				if est.td > subest.td-subest.tderr and est.td < subest.td+subest.tderr:
+				if est.td > subest.td-sig*subest.tderr and est.td < subest.td+sig*subest.tderr:
 					if min([subest.tderr/(subest.td+0.01) for subest in subests]) < hugefact:
 						combiconfcode = 30 # then, estimates agree
 						continue
@@ -158,7 +159,7 @@ def combiconf2(estimates):
 			if "mtewes" in (est.methodpar for est in estimates): 
 				mest = [est for est in estimates if est.methodpar == 'mtewes'][0]
 				vest = [est for est in estimates if est.methodpar == 'Vivien'][0]
-				if vest.td > mest.td-mest.tderr and vest.td < mest.td+mest.tderr and mest.td > vest.td-vest.tderr and mest.td < vest.td+vest.tderr:
+				if vest.td > mest.td-sig*mest.tderr and vest.td < mest.td+sig*mest.tderr and mest.td > vest.td-sig*vest.tderr and mest.td < vest.td+sig*vest.tderr:
 					combiconfcode = 32 # Malte and Vivien agree, someone else disagree
 				else:
 					combiconfcode = 33 # Malte and Vivien disagree		
@@ -173,7 +174,7 @@ def combiconf2(estimates):
 				break
 			subests = [subest for subest in estimates if subest.methodpar != est.methodpar]
 			for subest in subests:
-				if est.td > subest.td-subest.tderr and est.td < subest.td+subest.tderr:
+				if est.td > subest.td-sig*subest.tderr and est.td < subest.td+sig*subest.tderr:
 					if min([subest.tderr/(subest.td+0.01) for subest in subests]) < hugefact:
 						combiconfcode = 40 # then, estimates agree
 						continue
@@ -188,7 +189,7 @@ def combiconf2(estimates):
 			if "mtewes" in (est.methodpar for est in estimates): 
 				mest = [est for est in estimates if est.methodpar == 'mtewes'][0]
 				vest = [est for est in estimates if est.methodpar == 'Vivien'][0]
-				if vest.td > mest.td-mest.tderr and vest.td < mest.td+mest.tderr and mest.td > vest.td-vest.tderr and mest.td < vest.td+vest.tderr:
+				if vest.td > mest.td-sig*mest.tderr and vest.td < mest.td+sig*mest.tderr and mest.td > vest.td-sig*vest.tderr and mest.td < vest.td+sig*vest.tderr:
 					combiconfcode = 42 # Malte and Vivien agree, someone else disagree
 				else:
 					combiconfcode = 43 # Malte and Vivien disagree		
@@ -203,7 +204,7 @@ def combiconf2(estimates):
 				break
 			subests = [subest for subest in estimates if subest.methodpar != est.methodpar]
 			for subest in subests:
-				if est.td > subest.td-subest.tderr and est.td < subest.td+subest.tderr:
+				if est.td > subest.td-sig*subest.tderr and est.td < subest.td+sig*subest.tderr:
 					if min([subest.tderr/(subest.td+0.01) for subest in subests]) < hugefact:
 						combiconfcode = 50 # then, estimates agree
 						continue
@@ -219,7 +220,7 @@ def combiconf2(estimates):
 		 	vest = [est for est in estimates if est.methodpar == 'Vivien'][0]
 			if "mtewes" in (est.methodpar for est in estimates): 
 				mest = [est for est in estimates if est.methodpar == 'mtewes'][0]
-				if vest.td > mest.td-mest.tderr and vest.td < mest.td+mest.tderr and mest.td > vest.td-vest.tderr and mest.td < vest.td+vest.tderr:
+				if vest.td > mest.td-sig*mest.tderr and vest.td < mest.td+sig*mest.tderr and mest.td > vest.td-sig*vest.tderr and mest.td < vest.td+sig*vest.tderr:
 					if mest.confidence < 4 or vest.confidence < 4: 
 						combiconfcode = 52 # Malte or Vivien tagged plausible/doubtless and both agree
 					else:
