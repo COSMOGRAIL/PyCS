@@ -73,7 +73,7 @@ def combiconf2(estimates):
 	# doubtless, conflevels = 1 only.
 	if all(idconf[1]==1 for idconf in idconfs):
 		for est in estimates:
-			if combiconfcode == 11 or combiconfcode == 999:
+			if combiconfcode == 999:
 				break
 			subests = [subest for subest in estimates if subest.methodpar != est.methodpar]
 			for subest in subests:
@@ -103,7 +103,7 @@ def combiconf2(estimates):
 	# plausible, conflevels = 1 or 2. 
 	elif all(idconf[1]<=2 for idconf in idconfs):
 		for est in estimates:
-			if combiconfcode == 21 or combiconfcode == 999:
+			if combiconfcode == 999:
 				break
 			subests = [subest for subest in estimates if subest.methodpar != est.methodpar]
 			for subest in subests:
@@ -134,7 +134,7 @@ def combiconf2(estimates):
 	# doubless+multimodal
 	elif all(idconf[1]<=3 for idconf in idconfs) and 1 in (idconf[1] for idconf in idconfs):
 		for est in estimates:
-			if combiconfcode == 31 or combiconfcode == 999:
+			if combiconfcode == 999:
 				break
 			subests = [subest for subest in estimates if subest.methodpar != est.methodpar]
 			for subest in subests:
@@ -163,7 +163,7 @@ def combiconf2(estimates):
 	# plausible+multimodal, no doubtless
 	elif all(idconf[1]<=3 for idconf in idconfs):
 		for est in estimates:
-			if combiconfcode == 41 or combiconfcode == 999:
+			if combiconfcode == 999:
 				break
 			subests = [subest for subest in estimates if subest.methodpar != est.methodpar]
 			for subest in subests:
@@ -191,7 +191,7 @@ def combiconf2(estimates):
 	# uninformative+doubless/plausible
 	elif 1 in (idconf[1] for idconf in idconfs) or 2 in (idconf[1] for idconf in idconfs):
 		for est in estimates:
-			if combiconfcode == 51 or combiconfcode == 999:
+			if combiconfcode == 999:
 				break
 			subests = [subest for subest in estimates if subest.methodpar != est.methodpar]
 			for subest in subests:
@@ -242,13 +242,15 @@ def combiconf2(estimates):
 		
 	return {"code":combiconfcode, "set":tdcset, "rung":rung, "pair":pair}					
 					
-'''					
+					
 def reroll(estimates):
 	
 	"""
-	Give me a list of estimates. I remove all estimates not from Malte or Vivien, then compute 
+	Give me a list of estimates. I remove all estimates not from Malte or Vivien, then recompute the combiconfcode
+	Return the new combiconfcode, along with the id of the estimate
 	"""					
-'''					
+					
+	new_estimates = [est for est in estimates if est.methodpar == "Vivien" or est.methodpar == "mtewes"]
 					
 					
 					
