@@ -242,13 +242,13 @@ def combiconf2(estimates):
 		
 	return {"code":combiconfcode, "set":tdcset, "rung":rung, "pair":pair}					
 					
-					
+'''					
 def reroll(estimates):
 	
 	"""
 	Give me a list of estimates. I remove all estimates not from Malte or Vivien, then compute 
 	"""					
-					
+'''					
 					
 					
 					
