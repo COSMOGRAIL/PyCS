@@ -529,10 +529,12 @@ def d3cs(set,rung,pair):
 
 
 
-def interactivebigplot(estimates, shadedestimates = None, plotpath = None, interactive = True, minibox = False, groupbyrung = False, minradius=100):
+def interactivebigplot(estimates, shadedestimates = None, plotpath = None, interactive = True, minibox = False, groupests = False, minradius=100):
 
 
 	"""
+	WARNING !! No more TDC0-proof !!
+	
 	Large graphical representation of your estimates.
 	
 	:param minradius: Minimal half-width of the time delay axes, in day.
@@ -551,8 +553,8 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 		TODO : 	do the same implementation as shadedestimates, but with a list of different estimates
 			also add captions
 			
-	:param groupbyrung: interactive must be set to True. If groupbyrung is True, display a command center allowing the user
-		to navigate between the different rungs of the TDC0 (need an update when the TDC1 data will be available.		
+	:param groupests: interactive must be set to True. If groupests is True, display a command center allowing the user
+		to navigate between the different curves selected, displaying them 10 by 10.		
 	
 	
 	"""
@@ -563,24 +565,27 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 	
 	estids = sorted(list(set([est.id for est in estimates])))
 				
-	# Check that interactive is set on before allowing groupbyrung
-	if groupbyrung == True and interactive == False:
-		print 'WARNING : interactive option is set to False -- groupbyrung option is not allowed to be True'
-		print 'groupbyrung is set to False' 
-		groupbyrung = False
+	# Check that interactive is set on before allowing groupest
+	if groupests == True and interactive == False:
+		print 'WARNING : interactive option is set to False -- groupests option is not allowed to be True'
+		print 'groupests is set to False' 
+		groupests = False
 		
-	if groupbyrung:
+	if groupests:
 			
-		# grouping the estids by rung
+		# grouping the estimates by pack of 10, to display them
 		
 		groupestids=[]
-		for ind in np.arange(7):
+		
+		nests = len(estids)
+		ngroups = nests//10 +1  # integer division !
+	 
+		for ind in np.arange(ngroups):
 			groupestids.append([])
 		
-		for estid in estids: 
-			for ind in np.arange(7):
-				if estid[5] == str(ind):
-					groupestids[ind].append(estid)
+		for ind,estid in enumerate(estids): 
+			groupind = ind//10 # integer division !
+			groupestids[groupind].append(estid)
 															
 
 	def interactiveplot(estids, figname=None):
@@ -650,7 +655,7 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 				shadedests = [est for est in shadedestimates if est.id == estid]
 				for (i, shadedest) in enumerate(shadedests):
 					ax.axvspan(shadedest.td - shadedest.tderr, shadedest.td + shadedest.tderr, color=shadedest.getcolor(), alpha=0.2, zorder=-20)
-					ax.text(0.02, 0.8-i*0.15, "%s (%s): %s" % (shadedest.method, shadedest.methodpar, shadedest.valstr()), color=shadedest.getcolor(), va='center', ha='left', fontsize=6, transform=ax.transAxes)
+					ax.text(0.09, 0.8-i*0.15, "%s (%s): %s" % (shadedest.method, shadedest.methodpar, shadedest.valstr()), color=shadedest.getcolor(), va='center', ha='left', fontsize=6, transform=ax.transAxes)
 
 
 			ax.set_ylim(-1.3, n)
@@ -759,91 +764,59 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 	
 	# Control Panel
 	
-	if groupbyrung:	
-		class GotoRung():
+	if groupests:	
+		class GotoSubGroup():
 			ind = 0
 
-			def rung0(self, event):		
+			def first(self, event):		
 				self.ind = 0
-				print ' \t currently at rung %i' %self.ind			
-				interactiveplot(groupestids[self.ind], figname = 'rung 0')
+				print ' \t currently in subgroup %i' %self.ind			
+				interactiveplot(groupestids[self.ind], figname = 'first')
 
-			def rung1(self, event):		
-				self.ind = 1
-				print ' \t currently at rung %i' %self.ind
-				interactiveplot(groupestids[self.ind], figname = 'rung 1')			
+			def last(self, event):		
+				self.ind = ngroups-1
+				print ' \t currently in subgroup %i' %self.ind
+				interactiveplot(groupestids[self.ind], figname = 'last')			
 
-			def rung2(self, event):		
-				self.ind = 2
-				print ' \t currently at rung %i' %self.ind
-				interactiveplot(groupestids[self.ind], figname = 'rung 2')			
-
-			def rung3(self, event):		
-				self.ind = 3
-				print ' \t currently at rung %i' %self.ind
-				interactiveplot(groupestids[self.ind], figname = 'rung 3')
-
-			def rung4(self, event):		
-				self.ind = 4
-				print ' \t currently at rung %i' %self.ind
-				interactiveplot(groupestids[self.ind], figname = 'rung 4')
-
-			def rung5(self, event):		
-				self.ind = 5
-				print ' \t currently at rung %i' %self.ind
-				interactiveplot(groupestids[self.ind], figname = 'rung 5')
-
-			def rung6(self, event):		
-				self.ind = 6
-				print ' \t currently at rung %i' %self.ind
-				interactiveplot(groupestids[self.ind], figname = 'rung 6')	
+	
 
 			def next(self, event):
-				if self.ind <6:
+				if self.ind < ngroups-1:
 					self.ind += 1
 				else:
 					self.ind = 0 	
-				print ' \t currently at rung %i' %self.ind
-				figname = 'rung %i' % self.ind				
+				print ' \t currently in subgroup %i' %self.ind
+				figname = 'subgroup %i' % self.ind				
 				interactiveplot(groupestids[self.ind], figname = figname)
 
 			def prev(self, event):
 				if self.ind>0:
 					self.ind -= 1
 				else:
-					self.ind = 6	
-				print ' \t currently at rung %i' %self.ind
-				figname = 'rung %i' % self.ind		
+					self.ind = ngroups-1	
+				print ' \t currently in subgroup %i' %self.ind
+				figname = 'subgroup %i' % self.ind		
 				interactiveplot(groupestids[self.ind], figname = figname)	
 	
 				
-		fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(4.5, 3),num='control center')		
+		fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(3, 2),num='control center')		
 		fig.subplots_adjust(top=0.95, bottom=0.05, hspace=0.32)
 
 
 
-		buttontorung0 = Button(axes[0][0], 'Rung 0')
-		buttontorung1 = Button(axes[0][1], 'Rung 1')	
-		buttontorung2 = Button(axes[0][2], 'Rung 2')
-		buttontorung3 = Button(axes[1][0], 'Rung 3')	
-		buttontorung4 = Button(axes[1][1], 'Rung 4')
-		buttontorung5 = Button(axes[1][2], 'Rung 5')	
-		buttontorung6 = Button(axes[2][0], 'Rung 6')	
-		buttontonext = Button(axes[2][1],'Next Rung')
-		buttontoprev = Button(axes[2][2],'Prev. Rung')
+		buttontofirst = Button(axes[0][0], 'First')
+		buttontolast = Button(axes[0][1], 'Last')		
+		buttontonext = Button(axes[1][0],'Next ')
+		buttontoprev = Button(axes[1][1],'Prev')
 
 
-		gotorung = GotoRung()
+		gotosubgroup = GotoSubGroup()
 
-		buttontonext.on_clicked(gotorung.next)
-		buttontoprev.on_clicked(gotorung.prev)
-		buttontorung0.on_clicked(gotorung.rung0)
-		buttontorung1.on_clicked(gotorung.rung1)
-		buttontorung2.on_clicked(gotorung.rung2)
-		buttontorung3.on_clicked(gotorung.rung3)	
-		buttontorung4.on_clicked(gotorung.rung4)
-		buttontorung5.on_clicked(gotorung.rung5)	
-		buttontorung6.on_clicked(gotorung.rung6)			
+		buttontonext.on_clicked(gotosubgroup.next)
+		buttontoprev.on_clicked(gotosubgroup.prev)
+		buttontofirst.on_clicked(gotosubgroup.first)
+		buttontolast.on_clicked(gotosubgroup.last)
+			
 
 
 		plt.show()

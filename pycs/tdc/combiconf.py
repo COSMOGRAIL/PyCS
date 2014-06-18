@@ -205,22 +205,22 @@ def combiconf2(estimates):
 				mest = [est for est in estimates if est.methodpar == 'mtewes'][0]
 				if vest.td > mest.td-mest.tderr and vest.td < mest.td+mest.tderr and mest.td > vest.td-vest.tderr and mest.td < vest.td+vest.tderr:
 					if mest.confidence < 4 or vest.confidence < 4: 
-						combiconfcode = 51 # Malte or Vivien tagged plausible/doubtless and both agree
+						combiconfcode = 52 # Malte or Vivien tagged plausible/doubtless and both agree
 					else:
-						combiconfcode = 52 # Malte and Vivien tagged uninformative (but agreed...) 
+						combiconfcode = 53 # Malte and Vivien tagged uninformative (but agreed...) 
 				else:
 					if mest.confidence < 4 or vest.confidence < 4:
-						combiconfcode = 53 # Malte or Vivien tagged plausible/doubtless, but both disagree 
+						combiconfcode = 54 # Malte or Vivien tagged plausible/doubtless, but both disagree 
 					else:
-						combiconfcode = 54 # Malte and Vivien tagged uninformative and disagree				
+						combiconfcode = 55 # Malte and Vivien tagged uninformative and disagree				
 				
 				
 										
 			else:
 				if vest.confidence < 4:
-					combiconfcode = 55 # ests disagree, but Vivien flagged plausible/doubtless.
+					combiconfcode = 56 # ests disagree, but Vivien flagged plausible/doubtless.
 				else:
-					combiconfcode = 56 # ests disagree, Vivien flagged uninformative						
+					combiconfcode = 57 # ests disagree, Vivien flagged uninformative						
 					
 
 					
