@@ -78,12 +78,10 @@ def combiconf2(estimates):
 			subests = [subest for subest in estimates if subest.methodpar != est.methodpar]
 			for subest in subests:
 				if est.td > subest.td-sig*subest.tderr and est.td < subest.td+sig*subest.tderr:
-					if min([subest.tderr/(subest.td+0.01) for subest in subests]) < hugefact:
+					if min([subest.tderr/(subest.td+0.01) for subest in subests]) < hugefact and combiconfcode != 11:
 						combiconfcode = 10 # then, estimates agree
-						continue
 					else:
 						combiconfcode = 11 # they agree, but the errorbars are "huge"
-						break
 				else:
 					combiconfcode = 999
 					break														
@@ -110,13 +108,11 @@ def combiconf2(estimates):
 			subests = [subest for subest in estimates if subest.methodpar != est.methodpar]
 			for subest in subests:
 				if est.td > subest.td-sig*subest.tderr and est.td < subest.td+sig*subest.tderr:
-					if min([subest.tderr/(subest.td+0.01) for subest in subests]) < hugefact:
+					if min([subest.tderr/(subest.td+0.01) for subest in subests]) < hugefact and combiconfcode != 21:
 						combiconfcode = 20 # then, estimates agree
-						continue
 					else:
 						combiconfcode = 21 # they agree, but the errorbars are "huge"
-						break
-						
+
 				else:
 					combiconfcode = 999
 					break
@@ -143,17 +139,14 @@ def combiconf2(estimates):
 			subests = [subest for subest in estimates if subest.methodpar != est.methodpar]
 			for subest in subests:
 				if est.td > subest.td-sig*subest.tderr and est.td < subest.td+sig*subest.tderr:
-					if min([subest.tderr/(subest.td+0.01) for subest in subests]) < hugefact:
+					if min([subest.tderr/(subest.td+0.01) for subest in subests]) < hugefact and combiconfcode != 31:
 						combiconfcode = 30 # then, estimates agree
-						continue
 					else:
 						combiconfcode = 31 # they agree, but the errorbars are "huge"
-						break
 				else:
 					combiconfcode = 999
-					break						
-					
-					
+					break														
+						
 		if combiconfcode == 999:
 		 
 			if "mtewes" in (est.methodpar for est in estimates): 
@@ -175,16 +168,14 @@ def combiconf2(estimates):
 			subests = [subest for subest in estimates if subest.methodpar != est.methodpar]
 			for subest in subests:
 				if est.td > subest.td-sig*subest.tderr and est.td < subest.td+sig*subest.tderr:
-					if min([subest.tderr/(subest.td+0.01) for subest in subests]) < hugefact:
+					if min([subest.tderr/(subest.td+0.01) for subest in subests]) < hugefact and combiconfcode != 41:
 						combiconfcode = 40 # then, estimates agree
-						continue
 					else:
 						combiconfcode = 41 # they agree, but the errorbars are "huge"
-						break
 				else:
 					combiconfcode = 999
-					break			
-					
+					break														
+						
 		if combiconfcode == 999: 
 			if "mtewes" in (est.methodpar for est in estimates): 
 				mest = [est for est in estimates if est.methodpar == 'mtewes'][0]
@@ -205,17 +196,14 @@ def combiconf2(estimates):
 			subests = [subest for subest in estimates if subest.methodpar != est.methodpar]
 			for subest in subests:
 				if est.td > subest.td-sig*subest.tderr and est.td < subest.td+sig*subest.tderr:
-					if min([subest.tderr/(subest.td+0.01) for subest in subests]) < hugefact:
+					if min([subest.tderr/(subest.td+0.01) for subest in subests]) < hugefact and combiconfcode != 51:
 						combiconfcode = 50 # then, estimates agree
-						continue
 					else:
 						combiconfcode = 51 # they agree, but the errorbars are "huge"
-						break
 				else:
 					combiconfcode = 999
-					break							
-									
-					
+					break														
+						
 		if combiconfcode == 999:
 		 	vest = [est for est in estimates if est.methodpar == 'Vivien'][0]
 			if "mtewes" in (est.methodpar for est in estimates): 
@@ -255,7 +243,11 @@ def combiconf2(estimates):
 	return {"code":combiconfcode, "set":tdcset, "rung":rung, "pair":pair}					
 					
 					
-					
+def reroll(estimates):
+	
+	"""
+	Give me a list of estimates. I remove all estimates not from Malte or Vivien, then compute 
+	"""					
 					
 					
 					
