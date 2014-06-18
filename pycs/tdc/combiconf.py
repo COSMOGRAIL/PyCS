@@ -49,9 +49,7 @@ def combiconf1(estimates):
 	
 def combiconf2(estimates):
 	"""
-	Updated version of combiconf1, now with accordance criterias between the estimates, and more weight given to Vivien/Malte estimates
-	Return a new set of estimates "to be checked"
-	
+	Updated version of combiconf1, now with accordance criterias between the estimates, and weight given to Vivien/Malte estimates
 	"""	
 	(tdcset, rung, pair) = pycs.tdc.est.checkallsame(estimates)
 	
@@ -63,9 +61,15 @@ def combiconf2(estimates):
 	hugefact = 0.4
 	
 	### First step, define "advanced" criterias
+	#
+	# Idea:	see if estimates agree (they stay in each other's errorbars)
+	#	 	see if the errorbars are not too big compared to the delay
+	#	if not, if Malte has an estimate, see if it agrees with Vivien
+	#		if not, see if Vivien has a high confidence level (doubt/plaus)		  
+	
 
 	
-	# doubtless, conflevels = 1 only. They must agree between them (i.e td_i must be in td_j +- td_j_err for j!=i)
+	# doubtless, conflevels = 1 only.
 	if all(idconf[1]==1 for idconf in idconfs):
 		for est in estimates:
 			if combiconfcode == 11 or combiconfcode == 999:
@@ -83,14 +87,21 @@ def combiconf2(estimates):
 					combiconfcode = 999
 					break														
 								
-		if combiconfcode == 999: 
-			combiconfcode = 12 # they disagree	
+		if combiconfcode == 999: 	
+			if "mtewes" in (est.methodpar for est in estimates): 
+				mest = [est for est in estimates if est.methodpar == 'mtewes'][0]
+				vest = [est for est in estimates if est.methodpar == 'Vivien'][0]
+				if vest.td > mest.td-mest.tderr and vest.td < mest.td+mest.tderr and mest.td > vest.td-vest.tderr and mest.td < vest.td+vest.tderr:
+					combiconfcode = 12 # Malte and Vivien agree, someone else disagree
+				else:
+					combiconfcode = 13 # Malte and Vivien disagree		
+			else:
+				combiconfcode = 14 # No Malte, only Vivien, disagree with someone else	
 
 
 
 
-
-	# plausible, conflevels = 1 or 2. They must agree between them (i.e td_i must be in td_j +- td_j_err for j!=i)
+	# plausible, conflevels = 1 or 2. 
 	elif all(idconf[1]<=2 for idconf in idconfs):
 		for est in estimates:
 			if combiconfcode == 21 or combiconfcode == 999:
@@ -110,8 +121,15 @@ def combiconf2(estimates):
 					break
 									
 		if combiconfcode == 999: 
-			combiconfcode = 22 # they disagree 
-						
+			if "mtewes" in (est.methodpar for est in estimates): 
+				mest = [est for est in estimates if est.methodpar == 'mtewes'][0]
+				vest = [est for est in estimates if est.methodpar == 'Vivien'][0]
+				if vest.td > mest.td-mest.tderr and vest.td < mest.td+mest.tderr and mest.td > vest.td-vest.tderr and mest.td < vest.td+vest.tderr:
+					combiconfcode = 22 # Malte and Vivien agree, someone else disagree
+				else:
+					combiconfcode = 23 # Malte and Vivien disagree		
+			else:
+				combiconfcode = 24 # No Malte, only Vivien, disagree with someone else							
 
 
 	
@@ -195,9 +213,7 @@ def combiconf2(estimates):
 				else:
 					combiconfcode = 999
 					break							
-				
-
-					
+									
 					
 		if combiconfcode == 999:
 		 	vest = [est for est in estimates if est.methodpar == 'Vivien'][0]
@@ -223,8 +239,9 @@ def combiconf2(estimates):
 					combiconfcode = 57 # ests disagree, Vivien flagged uninformative						
 					
 
+
 					
-	# uninformative and/or multimodal
+	# uninformative and/or multimodal, to shoot
 	elif 3 in (idconf[1] for idconf in idconfs) or 4 in (idconf[1] for idconf in idconfs):
 		combiconfcode = 60					
 										
