@@ -59,7 +59,7 @@ def combiconf2(estimates):
 	idconfs = [(est.id,est.confidence) for est in estimates]	
 	
 	hugefact = 0.4
-	sig = 3.0
+	sig = 2.0
 	
 	### First step, define "advanced" criterias
 	#
@@ -242,17 +242,19 @@ def combiconf2(estimates):
 		
 	return {"code":combiconfcode, "set":tdcset, "rung":rung, "pair":pair}					
 					
+
 					
 def reroll(estimates):
-	
 	"""
 	Give me a list of estimates. I remove all estimates not from Malte or Vivien, then recompute the combiconfcode
 	Return the new combiconfcode, along with the id of the estimate
 	"""					
 					
 	new_estimates = [est for est in estimates if est.methodpar == "Vivien" or est.methodpar == "mtewes"]
-					
-					
+	
+	# we return the same parameters as combiconf2, and the new estimates that are to be taken into account
+	outcombiconf2 = combiconf2(new_estimates)				
+	return {"code":outcombiconf2["code"], "set":outcombiconf2["set"], "rung":outcombiconf2["rung"], "pair":outcombiconf2["pair"], "ests":new_estimates}				
 					
 													
 
