@@ -57,7 +57,7 @@ def createdir(estimate, path):
 	# 2) Create sub-directories
 	
 
-	subdirpath = os.path.join(dirpath,est.id)
+	subdirpath = os.path.join(dirpath,estimate.id)
 	if not os.path.isdir(subdirpath):
 		os.mkdir(subdirpath)	
 	
@@ -423,7 +423,7 @@ def multirun(estimate, path, optfct, ncopy, nsim, clist=None, slist=None):
 	
 	
 	outest = pycs.tdc.est.Estimate(set=estimate.set, rung=estimate.rung, pair=estimate.pair,
-		 				method = method, methodpar = methodpar))
+		 				method = method, methodpar = methodpar)
 
 	
 	
