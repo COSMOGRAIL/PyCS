@@ -884,7 +884,7 @@ class Spline():
 	
 	
 	
-	def r2(self, nostab=True):
+	def r2(self, nostab=True, nosquare=False):
 		"""
 		Evaluates the spline, compares it with the data points and returns a weighted sum of residuals r2.
 		
@@ -901,13 +901,19 @@ class Spline():
 			splinemags = self.eval(nostab = True, jds = None)
 			errs = self.datapoints.mags[self.datapoints.mask] - splinemags
 			werrs = errs/self.datapoints.magerrs[self.datapoints.mask]
-			r2 = np.sum(werrs * werrs)
+			if nosquare:
+				r2 = np.sum(np.fabs(werrs))
+			else:
+				r2 = np.sum(werrs * werrs)
 			self.lastr2nostab = r2
 		else :
 			splinemags = self.eval(nostab = False, jds = None)
 			errs = self.datapoints.mags - splinemags
 			werrs = errs/self.datapoints.magerrs
-			r2 = np.sum(werrs * werrs)
+			if nosquare:
+				r2 = np.sum(np.fabs(werrs))
+			else:
+				r2 = np.sum(werrs * werrs)
 			self.lastr2stab = r2
 			
 		return r2
@@ -1183,7 +1189,7 @@ def seasonknots(lcs, knotstep, ingap, seasongap=60.0):
 
 
 
-def r2(lcs, spline):
+def r2(lcs, spline, nosquare=False):
 	"""
 	I do not modify the spline (not even its datapoints) !
 	Just evaluate the quality of the match, returning an r2 (without any stab points, of course).
@@ -1199,7 +1205,7 @@ def r2(lcs, spline):
 	myspline = spline.copy()
 	newdp = pycs.gen.spl.merge(lcs, stab=False) # Indeed we do not care about stabilization points here.
 	myspline.updatedp(newdp, dpmethod="leave")
-	return myspline.r2(nostab=True)
+	return myspline.r2(nostab=True, nosquare=nosquare)
 
 
 
