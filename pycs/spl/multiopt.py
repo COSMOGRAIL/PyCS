@@ -35,6 +35,9 @@ def opt_magshift(lcs, sourcespline=None, verbose=False, trace=False):
 	
 	If you do give a sourcespline, I'll optimize the magshift of each curve one by one to match the spline.
 	New : I even touch the magshift of the first curve.
+	
+	We use the l1-norm of the residues, not a usual r2, to avoid local minima. Important !
+	This is done with the nosquare=True option to the call of r2 !
 	"""
 	
 	if sourcespline == None:
@@ -51,7 +54,7 @@ def opt_magshift(lcs, sourcespline=None, verbose=False, trace=False):
 	else:
 		
 		#for l in lcs[1:]: # We don't touch the first one.
-		for l in lcs: # We don't touch the first one.
+		for l in lcs:
 			
 			if verbose:
 				print "Magshift optimization on %s ..." % (l)
@@ -62,10 +65,12 @@ def opt_magshift(lcs, sourcespline=None, verbose=False, trace=False):
 			
 			def errorfct(p):	
 				setp(p)
-				return pycs.gen.spl.r2([l], sourcespline)
+				return pycs.gen.spl.r2([l], sourcespline, nosquare=True)
 			
 			minout = spopt.fmin(errorfct, inip, full_output=1, xtol=0.001, disp=verbose)			
-			popt = minout[0]	
+			popt = minout[0]
+			if verbose:
+				print "Optimal magshift: %.4f" % (popt)	
 			setp(popt)
 			if verbose:
 				print "Magshift optimization of %s done." % (l)
