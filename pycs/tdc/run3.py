@@ -1,13 +1,6 @@
 """
-Wrapper stuff to run PyCS on TDC data
+version3
 
-We change the philosophy here: we make a clear separation between functions that draw lcs,
-and functions that analyse them.
-
-The goal is to create "once and for all" a huge amount of simulated curves, and then 
-run the optimizer on a limited number of simulated curves, randomly chosen.
-
-The copied and simulated lcs are stored each into an individual pkl (one per lcs)
 
 """
 
@@ -20,6 +13,7 @@ import matplotlib.pyplot as plt
 from copy import copy
 
 
+'''
 def fitsourcespline(lcs, sploptfct, addmlfct=None):
 	"""
 	Return a spline fitting the given lightcurves
@@ -40,7 +34,7 @@ def fitsourcespline(lcs, sploptfct, addmlfct=None):
 	
 	
 	return sourcespline
-
+'''
 
 
 
@@ -62,7 +56,7 @@ def createdir(estimate, path):
 		os.mkdir(subdirpath)	
 	
 
-def drawcopy(estimate, path, addmlfct=None, n=1, maxrandomshift = None, datadir=''):
+def drawcopy(estimate, path, n=1, maxrandomshift = None, datadir=''):
 	"""
 	Draw n times one single copy of lcs (the ones your esimate is about) into the path directory.
 	
@@ -109,20 +103,12 @@ def drawcopy(estimate, path, addmlfct=None, n=1, maxrandomshift = None, datadir=
 
 
 		# Reset ML and shifts (get them "as read" from scratch...)
-		lca.rmml()
-		lcb.rmml()	
 		lca.magshift = 0.0
 		lcb.magshift = 0.0	
 		lca.timeshift = 0.0
 		lcb.timeshift = 0.0
 
-
-
 		lcs = [lca,lcb] 
-
-		# Add new ML
-		if addmlfct != None:
-			addmlfct(lcs)
 
 		# Time shift around the initial value		
 		tsr = np.max([3.0, estimate.tderr]) ## NEED TO GIVE A MAXIMUM VALUE ON THIS (10?), otherwise optimizer fails
@@ -154,7 +140,7 @@ def drawcopy(estimate, path, addmlfct=None, n=1, maxrandomshift = None, datadir=
 	
 
 	
-def drawsim(estimate, path, sploptfct, addmlfct=None, n=1, maxrandomshift = None, datadir='') :
+def drawsim(estimate, path, sploptfct, n=1, maxrandomshift = None, datadir='') :
 	"""
 	Draw n times one single sim curves of lcs (the ones your esimate is about) into the path directory.
 	
@@ -193,7 +179,7 @@ def drawsim(estimate, path, sploptfct, addmlfct=None, n=1, maxrandomshift = None
 	#sys.exit()
 
 	# fit a spline on the data and save residuals
-	sourcespline = fitsourcespline([lca, lcb], sploptfct, addmlfct)
+	sourcespline = sploptfct([lca, lcb])
 	pycs.sim.draw.saveresiduals([lca, lcb], sourcespline)
 
 
@@ -245,9 +231,7 @@ def drawsim(estimate, path, sploptfct, addmlfct=None, n=1, maxrandomshift = None
 		lcssim[1].magshift = 0.0
 		lcssim[0].rmml()
 		lcssim[1].rmml()
-		if addmlfct != None:
-			addmlfct(lcssim)	
-
+		
 		tsr = np.max([3.0, estimate.tderr])
 		if not maxrandomshift == None:
 			if tsr>=maxrandomshift:
@@ -324,12 +308,6 @@ def runcopy(estimate, path, optfct, n=1, clist=None):
 		#sys.exit()
 		out = optfct(lcs)
 
-		if hasattr(out, "bokeps"): # then its a spline !!
-			displaysplines = [out]
-		else:
-			displaysplines = []
-
-
 		copytds.append(lcs[1].timeshift-lcs[0].timeshift)
 		copymags.append(np.median(lcs[1].getmags() - lcs[1].mags) - np.median(lcs[0].getmags() - lcs[0].mags))
 
@@ -387,11 +365,7 @@ def runsim(estimate, path, optfct, n=1, slist=None):
 		print 'WRONG GUESSED DELAY: ',lcs[1].timeshift-lcs[0].timeshift			
 		#pycs.gen.lc.display(lcs)
 		#sys.exit()
-		if hasattr(out, "bokeps"): # then its a spline !!
-			displaysplines = [out]
-		else:
-			displaysplines = []
-
+		
 
 		simttds.append(lcs[1].truetimeshift-lcs[0].truetimeshift)
 		simtds.append(lcs[1].timeshift-lcs[0].timeshift)
@@ -432,7 +406,8 @@ def multirun(estimate, path, optfct, ncopy, nsim, clist=None, slist=None):
 	copytds,copymags = runcopy(estimate, path, optfct = optfct, n=ncopy, clist=clist)
 	simtds,simmags,simttds = runsim(estimate, path, optfct = optfct, n=nsim, slist=slist)
 	
-
+	
+	# 	BIG FUCKING SOFTWARE DESIGN ERROR : SAVE THE DETAILED OUTPUT...
 	
 	# And we put the results in the output estimates, and save each individual output estimate
 	
@@ -440,15 +415,49 @@ def multirun(estimate, path, optfct, ncopy, nsim, clist=None, slist=None):
 	print '='*30
 	print outest.niceid
 	outest.td = np.median(copytds)
+	outest.tdvarint = np.std(copytds)
 	print 'time delay:  ',outest.td
 	syserr = np.fabs(np.mean([simtds[i]-simttds[i] for i in np.arange(len(simtds))]))
 	ranerr = np.std([simtds[i]-simttds[i] for i in np.arange(len(simtds))])
 	outest.tderr  = np.hypot(syserr, ranerr)
+	outest.tdranerr = syserr
+	outest.tdsyserr = ranerr
 	print '   systematic error:  ',syserr
 	print '       random error:  ',ranerr
 	print '        total error:  ',outest.tderr		
-		
+
+
+	# We make a fig
 	
+	mind3cs = estimate.td - estimate.tderr
+	maxd3cs = estimate.td + estimate.tderr
+	minrange = estimate.td - 2.0*estimate.tderr
+	maxrange = estimate.td + 2.0*estimate.tderr
+	
+	plt.figure(figsize=(14, 5))
+	
+	plt.subplot(121)
+	plt.hist(np.array(copytds), bins=30) # Do not specify range, so that we see outliers !
+	plt.axvline(x=outest.td, color='r')
+	plt.axvline(x=mind3cs, color='g')
+	plt.axvline(x=maxd3cs, color='g')
+	plt.xlabel("copytds")
+	plt.title(estimate.id)
+	
+	plt.subplot(122)
+	plt.scatter(np.array(simttds), np.array(simtds)-np.array(simttds))
+	plt.xlabel("simttds")
+	plt.ylabel("simtds - simttds")
+	plt.xlim(minrange, maxrange)
+	plt.axhline(y=0, color='black')
+	plt.axhline(y=outest.tderr, color='red')
+	plt.axhline(y=-outest.tderr, color='red')
+	
+	plt.savefig(os.path.join(path, "copytds_%s.png" % estimate.id))
+
+
+		
+
 	return outest
 	
 					
