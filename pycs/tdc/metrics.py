@@ -29,14 +29,19 @@ def sortbyP(estimates):
 	return sorted(estimates, key = lambda e: np.fabs(e.tderr/e.td))[::-1]
 
 
-def maxPplot(estslist, N):
+def maxPplot(estslist, N, filepath=None):
 	"""
 	Give me a list of estimate-lists, I plot P as a function of f
 	N is the total number of curves (e.g. 56 for tdc0) (defines f=1)
 	"""
 	
 	for ests in estslist:
-		ests = sortbyP(ests)
+		estscp = ests[:] # Important, we work on a copy, do not modify the original !
+		for e in estscp:
+			if e.td == 0.0: # We want to avoid that...
+				#print e
+				e.td = 0.1
+		ests = sortbyP(estscp)
 		fs = []
 		Ps = []
 		for n in range(len(ests)):
@@ -46,12 +51,17 @@ def maxPplot(estslist, N):
 		plt.plot(fs, Ps, ".-", label=ests[0].method)
 	plt.xlabel("f")
 	plt.ylabel("Approximation of P")
-	plt.xlim(0.0, 0.6)
-	plt.ylim(0.0, 0.5)
+	plt.xlim(0.0, 0.8)
+	plt.ylim(0.0, 0.8)
 	plt.axvline(0.3, color="black")
 	plt.axhline(0.15, color="black")
-	plt.legend()
-	plt.show()
+	if len(estslist) > 1:
+		plt.legend()
+	plt.grid()
+	if filepath:
+		plt.savefig(filepath)
+	else:
+		plt.show()
 		
 
 	
