@@ -384,8 +384,9 @@ def spl3(lcs, knotstepfact=1.0, mlknotstep=365, maxit=7, minchange=1.0, verbose=
 	
 	
 	# And now iteratively optimize the shifts
-	print "Starting opt on initial delays :"
-	print pycs.gen.lc.getnicetimedelays(lcs, separator=" | ")
+	if verbose:
+		print "Starting opt on initial delays :"
+		print pycs.gen.lc.getnicetimedelays(lcs, separator=" | ")
 	previousr2 = spline.lastr2nostab
 
 	for it in range(maxit):
@@ -416,7 +417,8 @@ def spl3(lcs, knotstepfact=1.0, mlknotstep=365, maxit=7, minchange=1.0, verbose=
 			break
 	
 	
-	print "Timeshift stabilization:"
+	if verbose:
+		print "Timeshift stabilization:"
 	for it in range(10):
 		pycs.spl.multiopt.opt_ts_indi(lcs, spline, optml=True, mlsplflat=False, method="fmin", verbose = False, trace=False)
 		pycs.spl.multiopt.opt_source(lcs, spline, dpmethod="extadj", bokit = 0, verbose=False, trace=False)

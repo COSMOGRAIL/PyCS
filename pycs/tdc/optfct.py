@@ -13,6 +13,7 @@ def calcknotstep(varios):
 	"""
 	Give me some outputs of vario, I try to return a good knotstep, based on the highest vratio between the curves and the sampling.
 	"""
+	print "WHY THE FUCK IS THIS A COPY OF SPLOPT.CALCKNOTSTEP ??? FIX THIS IF USED..."
 	
 	vratios = np.array([out["vratio"] for out in varios])
 	samplings = np.array([out["sampling"] for out in varios])

@@ -9,7 +9,6 @@ import pycs
 import est
 import datetime
 import numpy as np
-import matplotlib.pyplot as plt
 from copy import copy
 
 
@@ -241,8 +240,8 @@ def drawsim(estimate, path, sploptfct, n=1, maxrandomshift = None, datadir='') :
 		lcssim[0].shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 		lcssim[1].shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 
-		print 'TRUE DELAY  : ',lcssim[1].truetimeshift-lcssim[0].truetimeshift
-		print 'INITIAL DELAY: ',lcssim[1].timeshift-lcssim[0].timeshift						
+		#print 'TRUE DELAY  : ',lcssim[1].truetimeshift-lcssim[0].truetimeshift
+		#print 'INITIAL DELAY: ',lcssim[1].timeshift-lcssim[0].timeshift						
 		#pycs.gen.lc.display(lcssim)
 		#sys.exit()
 
@@ -296,6 +295,8 @@ def runcopy(estimate, path, optfct, n=1, clist=None):
 
 	copytds  = []
 	copymags = []
+	optlcs = []
+	splines = []
 
 	for ind in index_list:
 
@@ -306,13 +307,16 @@ def runcopy(estimate, path, optfct, n=1, clist=None):
 
 		#pycs.gen.lc.display(lcs)
 		#sys.exit()
-		out = optfct(lcs)
+		spline = optfct(lcs)
 
 		copytds.append(lcs[1].timeshift-lcs[0].timeshift)
 		copymags.append(np.median(lcs[1].getmags() - lcs[1].mags) - np.median(lcs[0].getmags() - lcs[0].mags))
+		
+		optlcs.append(lcs)
+		splines.append(spline)
 
 
-	return copytds, copymags		
+	return (copytds, copymags, optlcs, splines)
 		
 		
 def runsim(estimate, path, optfct, n=1, slist=None):		
@@ -349,6 +353,9 @@ def runsim(estimate, path, optfct, n=1, slist=None):
 	simtds  = []
 	simttds = []
 	simmags = []
+	optlcs = []
+	inlcs = []
+	splines = []
 
 	# run the optimizer on each simcurve
 
@@ -358,11 +365,11 @@ def runsim(estimate, path, optfct, n=1, slist=None):
 		simpath = os.path.join(simdir,estimate.id,simfile)
 
 		lcs = pycs.gen.util.readpickle(simpath)
-
+		inlcs.append([lcs[0].copy(), lcs[1].copy()])
 
 		out = optfct(lcs)
 		print 'TRUE DELAY: ',lcs[1].truetimeshift-lcs[0].truetimeshift
-		print 'WRONG GUESSED DELAY: ',lcs[1].timeshift-lcs[0].timeshift			
+		print 'MEASURED DELAY: ',lcs[1].timeshift-lcs[0].timeshift			
 		#pycs.gen.lc.display(lcs)
 		#sys.exit()
 		
@@ -374,9 +381,11 @@ def runsim(estimate, path, optfct, n=1, slist=None):
 		#print "simtds",lcs[1].timeshift-lcs[0].timeshift
 		#sys.exit()
 
+		optlcs.append(lcs)
+		splines.append(out)
 
 		
-	return simtds,simmags,simttds
+	return (simtds, simmags, simttds, inlcs, optlcs, splines)
 		
 
 def multirun(estimate, path, optfct, ncopy, nsim, clist=None, slist=None):
@@ -387,31 +396,64 @@ def multirun(estimate, path, optfct, ncopy, nsim, clist=None, slist=None):
 	Return the results in a list of estimates objects
 	"""
 	
-	# We start by creating Estimate objects that will contain our final result:
 	
+	
+	# Then, we run the optimizers on the copy and the sims
+	# 	BIG FUCKING SOFTWARE DESIGN ERROR : SAVE THE DETAILED OUTPUT...
+	
+	#copytds,copymags = runcopy(estimate, path, optfct = optfct, n=ncopy, clist=clist)
+	#simtds,simmags,simttds = runsim(estimate, path, optfct = optfct, n=nsim, slist=slist)
+	
+	copyout = runcopy(estimate, path, optfct = optfct, n=ncopy, clist=clist)
+	pycs.gen.util.writepickle(copyout, os.path.join(path, "copyout_%s.pkl" % estimate.id))
+	
+	simout = runsim(estimate, path, optfct = optfct, n=nsim, slist=slist)
+	pycs.gen.util.writepickle(simout, os.path.join(path, "simout_%s.pkl" % estimate.id))
 	
 
-	method = 'PyCS-Run'
-	methodpar = str(optfct)
+
+def viz(estimate, path, datadir):
+	"""
+	Look at some light curves. change in place...
+	"""
+	
+	copytds,copymags,copyoptlcs,copyoptsplines = pycs.gen.util.readpickle(os.path.join(path, "copyout_%s.pkl" % estimate.id))
+	simtds,simmags,simttds,siminlcs, simoptlcs,simoptsplines = pycs.gen.util.readpickle(os.path.join(path, "simout_%s.pkl" % estimate.id))
+	
+	lcspath = os.path.join(datadir,pycs.tdc.util.tdcfilepath(set=estimate.set, rung=estimate.rung, pair=estimate.pair))
+	origlcs = pycs.tdc.util.read(lcspath, shortlabel=False)
+	for l in origlcs:
+		l.plotcolour = "black"
+	"""
+	for (spline, lcs) in zip(copyoptsplines, copyoptlcs):
+		pycs.gen.lc.display(origlcs + lcs, [spline])
+	"""
+	
+	for (spline, lcs) in zip(simoptsplines, simoptlcs):
+		pycs.gen.lc.display(lcs, [spline], figsize=(22, 10))
+
 	
 	
+	
+	
+def summarize(estimate, path, makefig=False):
+
+
+	# We start by creating Estimate objects that will contain our final result:
+
+	method = 'PyCS'
+	methodpar = 'PyCS'
 	
 	outest = pycs.tdc.est.Estimate(set=estimate.set, rung=estimate.rung, pair=estimate.pair,
 		 				method = method, methodpar = methodpar)
 
 	
+	copytds,copymags,copyoptlcs,copyoptsplines = pycs.gen.util.readpickle(os.path.join(path, "copyout_%s.pkl" % estimate.id))
+	simtds,simmags,simttds,siminlcs, simoptlcs,simoptsplines = pycs.gen.util.readpickle(os.path.join(path, "simout_%s.pkl" % estimate.id))
 	
-	# Then, we run the optimizers on the copy and the sims
-	
-	copytds,copymags = runcopy(estimate, path, optfct = optfct, n=ncopy, clist=clist)
-	simtds,simmags,simttds = runsim(estimate, path, optfct = optfct, n=nsim, slist=slist)
-	
-	
-	# 	BIG FUCKING SOFTWARE DESIGN ERROR : SAVE THE DETAILED OUTPUT...
 	
 	# And we put the results in the output estimates, and save each individual output estimate
 	
-
 	print '='*30
 	print outest.niceid
 	outest.td = np.median(copytds)
@@ -426,9 +468,21 @@ def multirun(estimate, path, optfct, ncopy, nsim, clist=None, slist=None):
 	print '       random error:  ',ranerr
 	print '        total error:  ',outest.tderr		
 
-
-	# We make a fig
 	
+	resultpklpath = os.path.join(path,'%s.pkl' % estimate.id)
+	pycs.gen.util.writepickle(outest,resultpklpath)
+	
+	# We are done.
+	if not makefig:	
+		return
+		
+	# If we can, we make a fig
+	try:
+		import matplotlib.pyplot as plt
+	except:
+		print "can't import matplotlib"
+		return
+
 	mind3cs = estimate.td - estimate.tderr
 	maxd3cs = estimate.td + estimate.tderr
 	minrange = estimate.td - 2.0*estimate.tderr
@@ -456,8 +510,15 @@ def multirun(estimate, path, optfct, ncopy, nsim, clist=None, slist=None):
 	plt.savefig(os.path.join(path, "copytds_%s.png" % estimate.id))
 
 
-		
-
-	return outest
+def collect(estimates, path):
 	
-					
+	outests = []
+	for estimate in estimates:
+		resultpklpath = os.path.join(path,'%s.pkl' % estimate.id)
+		outest = pycs.gen.util.readpickle(resultpklpath)
+		outests.append(outest)
+	
+	print "Collected %i estimates" % (len(outests))
+	return outests
+	
+	
