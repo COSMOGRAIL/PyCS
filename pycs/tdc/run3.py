@@ -418,20 +418,29 @@ def viz(estimate, path, datadir):
 	"""
 	
 	copytds,copymags,copyoptlcs,copyoptsplines = pycs.gen.util.readpickle(os.path.join(path, "copyout_%s.pkl" % estimate.id))
-	simtds,simmags,simttds,siminlcs, simoptlcs,simoptsplines = pycs.gen.util.readpickle(os.path.join(path, "simout_%s.pkl" % estimate.id))
+	simtds,simmags,simttds,siminlcs,simoptlcs,simoptsplines = pycs.gen.util.readpickle(os.path.join(path, "simout_%s.pkl" % estimate.id))
 	
 	lcspath = os.path.join(datadir,pycs.tdc.util.tdcfilepath(set=estimate.set, rung=estimate.rung, pair=estimate.pair))
 	origlcs = pycs.tdc.util.read(lcspath, shortlabel=False)
 	for l in origlcs:
 		l.plotcolour = "black"
+		
+	# See the fit on the copies, and compare copies with originial curve:	
 	"""
 	for (spline, lcs) in zip(copyoptsplines, copyoptlcs):
 		pycs.gen.lc.display(origlcs + lcs, [spline])
 	"""
 	
+	# Compare the sims to the data
+	for lcs in siminlcs:
+		pycs.gen.lc.display(lcs + origlcs, figsize=(22, 10))
+	
+	
+	# See the fit on the optimized sims:
+	"""
 	for (spline, lcs) in zip(simoptsplines, simoptlcs):
 		pycs.gen.lc.display(lcs, [spline], figsize=(22, 10))
-
+	"""
 	
 	
 	
@@ -449,7 +458,7 @@ def summarize(estimate, path, makefig=False):
 
 	
 	copytds,copymags,copyoptlcs,copyoptsplines = pycs.gen.util.readpickle(os.path.join(path, "copyout_%s.pkl" % estimate.id))
-	simtds,simmags,simttds,siminlcs, simoptlcs,simoptsplines = pycs.gen.util.readpickle(os.path.join(path, "simout_%s.pkl" % estimate.id))
+	simtds,simmags,simttds,siminlcs,simoptlcs,simoptsplines = pycs.gen.util.readpickle(os.path.join(path, "simout_%s.pkl" % estimate.id))
 	
 	
 	# And we put the results in the output estimates, and save each individual output estimate
@@ -462,8 +471,8 @@ def summarize(estimate, path, makefig=False):
 	syserr = np.fabs(np.mean([simtds[i]-simttds[i] for i in np.arange(len(simtds))]))
 	ranerr = np.std([simtds[i]-simttds[i] for i in np.arange(len(simtds))])
 	outest.tderr  = np.hypot(syserr, ranerr)
-	outest.tdranerr = syserr
-	outest.tdsyserr = ranerr
+	outest.tdranerr = ranerr
+	outest.tdsyserr = syserr
 	print '   systematic error:  ',syserr
 	print '       random error:  ',ranerr
 	print '        total error:  ',outest.tderr		
@@ -492,9 +501,9 @@ def summarize(estimate, path, makefig=False):
 	
 	plt.subplot(121)
 	plt.hist(np.array(copytds), bins=30) # Do not specify range, so that we see outliers !
-	plt.axvline(x=outest.td, color='r')
-	plt.axvline(x=mind3cs, color='g')
-	plt.axvline(x=maxd3cs, color='g')
+	plt.axvline(x=outest.td, linewidth=4, color='r')
+	plt.axvline(x=mind3cs, linewidth=4, color='g')
+	plt.axvline(x=maxd3cs, linewidth=4, color='g')
 	plt.xlabel("copytds")
 	plt.title(estimate.id)
 	
@@ -504,8 +513,16 @@ def summarize(estimate, path, makefig=False):
 	plt.ylabel("simtds - simttds")
 	plt.xlim(minrange, maxrange)
 	plt.axhline(y=0, color='black')
-	plt.axhline(y=outest.tderr, color='red')
-	plt.axhline(y=-outest.tderr, color='red')
+	plt.axhline(y=outest.tderr, linewidth=4, color='red')  # The output error
+	plt.axhline(y=-outest.tderr, linewidth=4, color='red')
+	plt.axhline(y=estimate.tderr, linewidth=4, color='g')  # The input error
+	plt.axhline(y=-estimate.tderr, linewidth=4, color='g')
+	plt.axvline(x=mind3cs, linewidth=4, color='g')  # The input interval
+	plt.axvline(x=maxd3cs, linewidth=4, color='g')
+	
+	
+	
+	plt.title("Uncertainty [d]: %.1f (%.1f ran, %.1f sys), varint: %.1f (%.0f %%)" % (outest.tderr, outest.tdranerr, outest.tdsyserr, outest.tdvarint, 100.0*outest.tdvarint/outest.tderr)  )
 	
 	plt.savefig(os.path.join(path, "copytds_%s.png" % estimate.id))
 
