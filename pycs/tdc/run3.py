@@ -10,6 +10,7 @@ import est
 import datetime
 import numpy as np
 from copy import copy
+import glob
 
 
 '''
@@ -420,7 +421,7 @@ def viz(estimate, path, datadir):
 	
 	lcspath = os.path.join(datadir,pycs.tdc.util.tdcfilepath(set=estimate.set, rung=estimate.rung, pair=estimate.pair))
 	origlcs = pycs.tdc.util.read(lcspath, shortlabel=False)
-	for l in origlcs:
+	for l in origlcs:  
 		l.plotcolour = "black"
 		
 	# See the fit on the copies, and compare copies with originial curve:	
@@ -443,8 +444,23 @@ def viz(estimate, path, datadir):
 	
 	
 	
-def summarize(estimate, path, makefig=False):
+def summarize(estimate, path, makefig=False, skipdone=True):
+	"""
+	I will silently skip non-yet-ready pairs.
+	If skipdone, I will silently skip those pairs that have already been summarized.
+	
+	"""
 
+	resultpklpath = os.path.join(path,'%s.pkl' % estimate.id)
+	if skipdone and os.path.exists(resultpklpath):
+		return
+	
+	copyoutpklpath = os.path.join(path, "copyout_%s.pkl" % estimate.id)
+	simoutpklpath = os.path.join(path, "simout_%s.pkl" % estimate.id)
+	if not os.path.exists(copyoutpklpath):
+		return
+	if not os.path.exists(simoutpklpath):
+		return
 
 	# We start by creating Estimate objects that will contain our final result:
 
@@ -455,8 +471,8 @@ def summarize(estimate, path, makefig=False):
 		 				method = method, methodpar = methodpar)
 
 	
-	copytds,copymags,copyoptlcs,copyoptsplines = pycs.gen.util.readpickle(os.path.join(path, "copyout_%s.pkl" % estimate.id))
-	simtds,simmags,simttds,siminlcs,simoptlcs,simoptsplines = pycs.gen.util.readpickle(os.path.join(path, "simout_%s.pkl" % estimate.id))
+	copytds,copymags,copyoptlcs,copyoptsplines = pycs.gen.util.readpickle(copyoutpklpath)
+	simtds,simmags,simttds,siminlcs,simoptlcs,simoptsplines = pycs.gen.util.readpickle(simoutpklpath)
 	
 	
 	# And we put the results in the output estimates, and save each individual output estimate
@@ -476,7 +492,6 @@ def summarize(estimate, path, makefig=False):
 	print '        total error:  ',outest.tderr		
 
 	
-	resultpklpath = os.path.join(path,'%s.pkl' % estimate.id)
 	pycs.gen.util.writepickle(outest,resultpklpath)
 	
 	# We are done.
@@ -517,23 +532,37 @@ def summarize(estimate, path, makefig=False):
 	plt.axhline(y=-estimate.tderr, linewidth=4, color='g')
 	plt.axvline(x=mind3cs, linewidth=4, color='g')  # The input interval
 	plt.axvline(x=maxd3cs, linewidth=4, color='g')
-	
-	
-	
 	plt.title("Uncertainty [d]: %.1f (%.1f ran, %.1f sys), varint: %.1f (%.0f %%)" % (outest.tderr, outest.tdranerr, outest.tdsyserr, outest.tdvarint, 100.0*outest.tdvarint/outest.tderr)  )
 	
 	plt.savefig(os.path.join(path, "copytds_%s.png" % estimate.id))
 
 
+
 def collect(estimates, path):
+	"""
+	I gather the estimates.
+	"""
+	
+	print "You ask me to search for %i estimates" % (len(estimates))
+	print "in %s" % (path)
+	
+	foundestimates = glob.glob(os.path.join(path, "tdc1*.pkl"))
+	
+	print "I have found %i files that look like estimates that are ready." % (len(foundestimates))
 	
 	outests = []
 	for estimate in estimates:
 		resultpklpath = os.path.join(path,'%s.pkl' % estimate.id)
-		outest = pycs.gen.util.readpickle(resultpklpath)
-		outests.append(outest)
+		if resultpklpath in foundestimates:
+			outest = pycs.gen.util.readpickle(resultpklpath, verbose=False)
+			outests.append(outest)
 	
 	print "Collected %i estimates" % (len(outests))
+	if len(outests) != len(estimates):
+		print "WARNING, some estimates are still missing, I'm returning only %i estimates." % len(outests)
+	else:
+		print "OK! I found every estimate."
+	
 	return outests
 	
 	
