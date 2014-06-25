@@ -117,7 +117,6 @@ def drawcopy(estimate, path, n=1, maxrandomshift = None, datadir=''):
 				tsr = maxrandomshift
 
 
-		lca.shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 		lcb.shifttime(estimate.td +float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 
 
@@ -201,7 +200,7 @@ def drawsim(estimate, path, sploptfct, n=1, maxrandomshift = None, datadir='') :
 			if truetsr >= maxrandomshift:
 				truetsr = maxrandomshift
 
-		lca.timeshift = timeshifta + (float(np.random.uniform(low = -truetsr, high = truetsr, size=1)))
+		lca.timeshift = timeshifta
 		lcb.timeshift = timeshiftb + (float(np.random.uniform(low = -truetsr, high = truetsr, size=1))) 
 
 
@@ -237,7 +236,6 @@ def drawsim(estimate, path, sploptfct, n=1, maxrandomshift = None, datadir='') :
 				tsr=maxrandomshift
 
 		# Set some wrong "initial delays" for the analysis, around the "true delays".
-		lcssim[0].shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 		lcssim[1].shifttime(float(np.random.uniform(low=-tsr, high=tsr, size=1)))
 
 		#print 'TRUE DELAY  : ',lcssim[1].truetimeshift-lcssim[0].truetimeshift
@@ -511,7 +509,7 @@ def summarize(estimate, path, makefig=False):
 	plt.scatter(np.array(simttds), np.array(simtds)-np.array(simttds))
 	plt.xlabel("simttds")
 	plt.ylabel("simtds - simttds")
-	plt.xlim(minrange, maxrange)
+	#plt.xlim(minrange, maxrange) # No, do not use xlim here -- we want to see all points, if something goes wrong.
 	plt.axhline(y=0, color='black')
 	plt.axhline(y=outest.tderr, linewidth=4, color='red')  # The output error
 	plt.axhline(y=-outest.tderr, linewidth=4, color='red')
