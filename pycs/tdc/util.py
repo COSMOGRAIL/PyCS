@@ -168,14 +168,31 @@ def writesubmission(estimates, filepath, commentlist=None):
 			name = os.path.basename(name)
 						
 			searchid = 'tdc1_%i_%i' % (rung, pair)
-						
-			try:				
-				ind = estids.index(searchid)
-				tdcfile.write("%s\t%8.2f\t%8.2f\n" % (name, -1.0 * estimates[ind].td, estimates[ind].tderr))
-				# --- WARNING --- The TDC convention for the delays is the inverse of PyCS, thus the "-" sign above				
-			except:	
-				notfound += 1			
-				tdcfile.write("%s\t%8.2f\t%8.2f\n" % (name, -99.0, -99.0))
+			
+			# WARNING ! Here, we replace 3,505 by a GOD value, hardcoded here...
+			if rung==3 and pair==505:
+				
+				try:
+					print 'WARNING ! We replace the tdc1_3_505 entry by a GOD value, in writesubmission function of pycs.tdc.util'				
+					ind = estids.index(searchid)
+					tdcfile.write("%s\t%8.2f\t%8.2f\n" % (name, -1.0 * 91.6, 2.9))
+					# --- WARNING --- The TDC convention for the delays is the inverse of PyCS, thus the "-" sign above				
+				except:	
+					notfound += 1			
+					tdcfile.write("%s\t%8.2f\t%8.2f\n" % (name, -99.0, -99.0))			
+			
+			else:			
+				try:				
+					ind = estids.index(searchid)
+					tdcfile.write("%s\t%8.2f\t%8.2f\n" % (name, -1.0 * estimates[ind].td, estimates[ind].tderr))
+					# --- WARNING --- The TDC convention for the delays is the inverse of PyCS, thus the "-" sign above				
+				except:	
+					notfound += 1			
+					tdcfile.write("%s\t%8.2f\t%8.2f\n" % (name, -99.0, -99.0))
+	
+	
+	
+	
 	
 	#tdcfile.write("\n")
 	tdcfile.close()	

@@ -518,6 +518,7 @@ def summarize(estimate, path, makefig=False, skipdone=True):
 	plt.axvline(x=mind3cs, linewidth=4, color='g')
 	plt.axvline(x=maxd3cs, linewidth=4, color='g')
 	plt.xlabel("copytds")
+	
 	plt.title(estimate.id)
 	
 	plt.subplot(122)
