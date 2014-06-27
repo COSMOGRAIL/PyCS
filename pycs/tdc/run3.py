@@ -429,11 +429,16 @@ def viz(estimate, path, datadir):
 	for (spline, lcs) in zip(copyoptsplines, copyoptlcs):
 		pycs.gen.lc.display(origlcs + lcs, [spline])
 	"""
+	for (spline, lcs) in zip(copyoptsplines, copyoptlcs):
+		pycs.gen.lc.display(lcs, [spline])
+	
+	
 	
 	# Compare the sims to the data
+	"""
 	for lcs in siminlcs:
 		pycs.gen.lc.display(lcs + origlcs, figsize=(22, 10))
-	
+	"""
 	
 	# See the fit on the optimized sims:
 	"""
