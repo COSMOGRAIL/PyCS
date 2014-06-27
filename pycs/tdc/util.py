@@ -133,11 +133,49 @@ def read(filepath, mag="asinh", verbose=True, shortlabel=True):
 
 
 
-def writesubmission(estimates, filepath, commentlist=None):
+def godtweak(estimates):
+	"""
+	I return a list of estimates in which I have modified some by divin inspiration.
+	This should be systematically done before writing a submission.
+	"""
+	
+	outestimates = estimates[:] # make a copy
+	pycs.tdc.est.checkunique(outestimates)
+	
+	print "#"*80
+	print "This is god speaking, I am fixing your estimates..."
+	print "#"*80
+	
+	for est in outestimates:
+		
+		# The doubtless ones with Thibault going mad:
+		if (est.rung, est.pair) == (3, 505):
+			est.td = 91.6
+			est.tderr = 2.9
+			print "Fixed", est		
+		if (est.rung, est.pair) == (3, 593):
+			est.tderr = 4.0
+			print "Fixed", est	
+		if (est.rung, est.pair) == (0, 557):
+			est.tderr = 3.5
+			print "Fixed", est
+		if (est.rung, est.pair) == (3, 612):
+			est.tderr = 3.0
+			print "Fixed", est
+	
+	
+	
+	return outestimates
+	
+
+
+def writesubmission(estimates, filepath, commentlist=None, theseonly=False):
 	"""
 	Writes a list of estimates into a TDC1 submission
 	
 	Accordign to the doc, filepath should be something like pycs_tdc1_algorithm.dt
+	
+	if theseonly is set to True, I will not write -99 flags for those estimates that are missing in your list !
 
 	"""
 	
@@ -173,30 +211,20 @@ def writesubmission(estimates, filepath, commentlist=None):
 			name = os.path.basename(name)
 						
 			searchid = 'tdc1_%i_%i' % (rung, pair)
-			
-			# WARNING ! Here, we replace 3,505 by a GOD value, hardcoded here...
-			if rung==3 and pair==505:
+					
+			try:				
+				ind = estids.index(searchid)
+				tdcfile.write("%s\t%8.2f\t%8.2f\n" % (name, -1.0 * estimates[ind].td, estimates[ind].tderr))
+				# --- WARNING --- The TDC convention for the delays is the inverse of PyCS, thus the "-" sign above
 				
-				try:
-					print 'WARNING ! We replace the tdc1_3_505 entry by a GOD value, in writesubmission function of pycs.tdc.util'				
-					ind = estids.index(searchid)
-					tdcfile.write("%s\t%8.2f\t%8.2f\n" % (name, -1.0 * 91.6, 2.9))
-					# --- WARNING --- The TDC convention for the delays is the inverse of PyCS, thus the "-" sign above				
-				except:	
-					notfound += 1			
-					tdcfile.write("%s\t%8.2f\t%8.2f\n" % (name, -99.0, -99.0))			
+				# Just a little check to make Vivien happy: 
+				if rung==3 and pair==505:
+					assert estimates[ind].td == 91.6 and estimates[ind].tderr == 2.9
 			
-			else:			
-				try:				
-					ind = estids.index(searchid)
-					tdcfile.write("%s\t%8.2f\t%8.2f\n" % (name, -1.0 * estimates[ind].td, estimates[ind].tderr))
-					# --- WARNING --- The TDC convention for the delays is the inverse of PyCS, thus the "-" sign above				
-				except:	
-					notfound += 1			
+			except ValueError:	
+				notfound += 1
+				if not theseonly:
 					tdcfile.write("%s\t%8.2f\t%8.2f\n" % (name, -99.0, -99.0))
-	
-	
-	
 	
 	
 	#tdcfile.write("\n")
@@ -205,6 +233,8 @@ def writesubmission(estimates, filepath, commentlist=None):
 	print "Wrote %s" % (filepath)
 	print "Number of estimates: %i" % (len(estimates))
 	print "Number of light curve pairs that I could not find among your estimates: %i" % (notfound)
+	if theseonly:
+		print "WARNING, I did not write -99 flags for the missing estimates !"
 	
 
 
@@ -221,6 +251,7 @@ def setnicemagshift(lcs):
 		l.shiftmag(bottom-top)
 		bottom = np.max(l.getmags())
 
+'''
 def cutlcs(lcs, nseasons=3.0,overlapfrac=0.2):
 
 	# APPARENTLY UNUSED, TO BE DELETED...? (10.01.2014)
@@ -288,8 +319,8 @@ def cutlcs(lcs, nseasons=3.0,overlapfrac=0.2):
 		
 	return map(None,*cuts)
 
-
-
+'''
+'''
 def cutdb(filepath,newpath,season):
 
 	import sys	
@@ -314,7 +345,7 @@ def cutdb(filepath,newpath,season):
 	 	 
 	db.close()
 	newdb.close()
-
+'''
 		
 def goingon():
 	"""
