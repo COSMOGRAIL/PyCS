@@ -149,6 +149,11 @@ def writesubmission(estimates, filepath, commentlist=None):
 	
 	tdcfile.write("# TDC submission written by PyCS\n")
 	tdcfile.write("# %s\n" % (datetime.datetime.now()))
+	tdcfile.write("# \n")
+	tdcfile.write("# Malte Tewes <mtewes@astro.uni-bonn.de>, Uni Bonn\n")
+	tdcfile.write("# Vivien Bonvin <vivien.bonvin@epfl.ch>, EPFL\n")
+	tdcfile.write("# Frederic Courbin <frederic.courbin@epfl.ch>, EPFL\n")
+	tdcfile.write("# \n")
 	tdcfile.write("# Orignial filename: %s\n" % (os.path.basename(filepath)))
 	tdcfile.write("# %i estimates have been selected\n" % (len(estimates)))
 	tdcfile.write("# Comments:\n")
