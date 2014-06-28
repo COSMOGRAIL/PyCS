@@ -24,9 +24,17 @@ def P(estimates):
 def sortbyP(estimates):
 	"""
 	I sort your estimates according to their claimed precision
-	lowest precision first
+	lowest "precision" (== highest tderr/td) first -> select from end !
 	"""
 	return sorted(estimates, key = lambda e: np.fabs(e.tderr/e.td))[::-1]
+
+def sortbyabstd(estimates):
+	"""
+	I sort your estimates according to the absolute value of their time delay.
+	lowest "precision" (== lowest delays) first -> select from end !
+	"""
+	return sorted(estimates, key = lambda e: abs(e.td))
+
 
 
 def maxPplot(estslist, N, filepath=None):
