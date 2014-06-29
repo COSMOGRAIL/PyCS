@@ -373,6 +373,26 @@ def combine(estimates,method='meanstd',methodcl=None):
 				confidence = 4
 
 
+	if method == "d3cscombi1-keepbestconf":
+		"""
+		To get combined estimates from a D3CS sample.
+		"""	
+		# The easy things :
+		td = np.median(np.array([est.td for est in estimates]))
+		ms = np.median(np.array([est.ms for est in estimates]))
+		timetaken = np.sum(np.array([est.timetaken for est in estimates]))
+		
+		# The error on the delay should not be smaller then any of these :
+		tderr1 = np.median(np.array([est.tderr for est in estimates]))
+		tderr2 = np.std(np.array([est.td for est in estimates]))
+		tderr = max([tderr1, tderr2])
+				
+		# And the confidence is propagated according to this arbitrary definition :
+		confidence = min([est.confidence for est in estimates])
+
+
+
+
 	if method == "scatter":
 		"""
 		Simple median and formal error on median, usign only the scatter of estimates
