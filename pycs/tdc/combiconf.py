@@ -258,4 +258,96 @@ def reroll(estimates):
 					
 													
 
+def combiquads(estimates):
+	"""
+	Give me a list of already combined estimates (i.e. one per pair only).
+	I compute for each quad pair the best td and tderr among the corresponding rungs (which is an exploit !)
+	I return the whole entry list, with all the quads modified
+	
+	# BIG WARNING !!! This function (pycs.tdc.combiconf.combiquads) actually modify estimates, we DO NOT want that ! 
+	"""
+
+	print 'BIG WARNING !!! This function actually modify estimates, we DO NOT want that ! '
+	
+	# Check unicity
+	pycs.tdc.est.checkunique(estimates)
+	
+	# Split double and quads
+	doubleests = pycs.tdc.est.select(estimates, pairs = np.arange(1037)[:720])
+	quadests = pycs.tdc.est.select(estimates, pairs = np.arange(1037)[720:])
+	
+	
+	# Now, give all the quadests a fake id, to ease their combination
+	for est in quadests:
+		est.method = 'exploit'
+		est.methodpar = 'rung_%s' % est.rung
+		est.originalid = est.id # brutally added field, for later recomposition of the full sample
+		est.id = 'tdc1_exploit_%i' % est.pair
+	
+	
+	groupests = pycs.tdc.est.group(quadests) # group function group the estimates according to their id...which explain the id tweak above
+	
+	
+	# Compute the mean td and tderr according to confidence criterias from the wiki page (here, a simple version for testing)
+	for groupest in groupests:
+		
+		# two or more estimates have a doubtless/plausible confidence level
+		if sum(est.confidence == 1 or est.confidence == 2 for est in groupest)	>= 2:
+			td = np.median([est.td for est in groupest if est.confidence in [1,2]])
+			tderr = np.median([est.tderr for est in groupest if est.confidence in [1,2]])/sum(est.confidence == 1 or est.confidence == 2 for est in groupest)
+			confidence = 1
+	
+		# one estimate at least have a doubtless or plausible confidence level
+		elif 1 in (est.confidence for est in groupest) or 2 in (est.confidence for est in groupest):
+			td = np.median([est.td for est in groupest if est.confidence in [1,2]]) 
+			tderr = np.median([est.tderr for est in groupest if est.confidence in [1,2]])/sum(est.confidence == 1 or est.confidence == 2 for est in groupest)
+			confidence = 2
+			
+		# at least one multimodal...
+		elif 3 in (est.confidence for est in groupest):
+			td = np.median([est.td for est in groupest if est.confidence in [3]])
+			tderr = np.median([est.tderr for est in groupest if est.confidence in [3]])/sum(est.confidence == 3 for est in groupest)
+			confidence = 3			
+					
+		elif 4 in (est.confidence for est in groupest):
+			td = 99.00
+			tderr = -99.00
+			confidence = 4	
+	
+		else:
+			print est.confidence
+			raise RuntimeError("WARNING -- I didn't catch %s, should not happen !" % est.originalid)
+			
+		
+		
+		for est in groupest:
+			est.td = td
+			est.tderr = tderr
+			est.confidence = confidence
+			est.id = est.originalid # get back to normal...ouf !
+	
+	
+	# Rebuild the list of estimates to return
+	
+	exploitests = []
+	
+	for est in doubleests:
+		exploitests.append(est)
+	for groupest in groupests:
+		for est in groupest:
+			exploitests.append(est)	
+	
+	return exploitests
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
