@@ -267,7 +267,7 @@ def combiquads(estimates):
 	# BIG WARNING !!! This function (pycs.tdc.combiconf.combiquads) actually modify estimates, we DO NOT want that ! 
 	"""
 
-	print 'BIG WARNING !!! This function actually modify estimates, we DO NOT want that ! '
+	print 'BIG WARNING !!! This function (pycs.tdc.combiconf.combiquads) actually modify estimates, we DO NOT want that ! '
 	
 	# Check unicity
 	pycs.tdc.est.checkunique(estimates)
@@ -294,19 +294,19 @@ def combiquads(estimates):
 		# two or more estimates have a doubtless/plausible confidence level
 		if sum(est.confidence == 1 or est.confidence == 2 for est in groupest)	>= 2:
 			td = np.median([est.td for est in groupest if est.confidence in [1,2]])
-			tderr = np.median([est.tderr for est in groupest if est.confidence in [1,2]])/sum(est.confidence == 1 or est.confidence == 2 for est in groupest)
+			tderr = np.median([est.tderr for est in groupest if est.confidence in [1,2]])/np.sqrt(sum(est.confidence == 1 or est.confidence == 2 for est in groupest))
 			confidence = 1
 	
 		# one estimate at least have a doubtless or plausible confidence level
 		elif 1 in (est.confidence for est in groupest) or 2 in (est.confidence for est in groupest):
 			td = np.median([est.td for est in groupest if est.confidence in [1,2]]) 
-			tderr = np.median([est.tderr for est in groupest if est.confidence in [1,2]])/sum(est.confidence == 1 or est.confidence == 2 for est in groupest)
+			tderr = np.median([est.tderr for est in groupest if est.confidence in [1,2]])/np.sqrt(sum(est.confidence == 1 or est.confidence == 2 for est in groupest))
 			confidence = 2
 			
 		# at least one multimodal...
 		elif 3 in (est.confidence for est in groupest):
 			td = np.median([est.td for est in groupest if est.confidence in [3]])
-			tderr = np.median([est.tderr for est in groupest if est.confidence in [3]])/sum(est.confidence == 3 for est in groupest)
+			tderr = np.median([est.tderr for est in groupest if est.confidence in [3]])/np.sqrt(sum(est.confidence == 3 for est in groupest))
 			confidence = 3			
 					
 		elif 4 in (est.confidence for est in groupest):
