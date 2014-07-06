@@ -10,7 +10,7 @@ import pycs.gen.lc
 import numpy as np
 import os
 import time
-import pycs.sim.frk
+#import pycs.sim.frk
 import copy as pythoncopy
 
 from glob import glob
