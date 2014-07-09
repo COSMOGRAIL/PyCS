@@ -5,6 +5,7 @@ Stuff related to the TDC metrics
 
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 
 ############## Here, we work with estimates objects ##############
@@ -93,7 +94,7 @@ def getA(db,method):
 	Compute A for a given method stored in the database
 	"""	
 	subdb = [item for item in db if "%s_A" %(method) in item]
-	print 'I RETURN: ',sum([item["%s_A" %(method)] for item in subdb]) / float(len(subdb))
+	#print 'I RETURN: ',sum([item["%s_A" %(method)] for item in subdb]) / float(len(subdb))
 	return sum([item["%s_A" %(method)] for item in subdb]) / float(len(subdb))	
 	
 def getchi2(db,method):
@@ -136,7 +137,7 @@ def Pplot(db,method,N):
 		
 	plt.xlabel("f")
 	plt.ylabel("P")
-	plt.xlim(0.0, 0.8)
+	plt.xlim(0.0, max(Ps))
 	plt.ylim(0.0, 0.3)
 	plt.axvline(0.5, color="black")
 	plt.axhline(0.03, color="black")
@@ -161,9 +162,11 @@ def Aplot(db,method,N):
 
 	
 	db_A = [item for item in db if "%s_A" %(method) in item]	
-	
 
 	sorted_db_A = sorted(db_A, key = lambda item: item["%s_A" % method] )[::-1]
+	for elt in sorted_db_A:
+		print elt["%s_A" %(method)]
+	sys.exit()
 
 	fs = []
 	As = []
@@ -190,3 +193,102 @@ def Aplot(db,method,N):
 	else:
 		plt.show()	
 	'''
+
+
+def chi2plot(db,method,N):
+	'''
+	give me the db and a method, I plot chi2 vs f for that method
+	
+	Do it for one method only, then adapt to a list of methods...
+	'''
+
+	
+	db_chi2 = [item for item in db if "%s_chi2" %(method) in item]	
+
+	sorted_db_chi2 = sorted(db_chi2, key = lambda item: item["%s_chi2" % method] )[::-1]
+
+	fs = []
+	chi2s = []
+	
+	for n in range(len(sorted_db_chi2)):
+		subdb = sorted_db_chi2[n:]
+		fs.append(getf(subdb,method=method,N=N))
+		chi2s.append(getchi2(subdb,method=method))
+	plt.plot(fs, chi2s, ".-", label=method)
+		
+	plt.xlabel("f")
+	plt.ylabel("chi2")
+	plt.xlim(0.0, 0.8)
+	plt.ylim(0.0, 2.0)
+	plt.axvline(0.5, color="black")
+	plt.axhline(0.5, color="black")
+	plt.axhline(1.5, color="black")
+	plt.show()
+	'''
+	if len(estslist) > 1:
+		plt.legend()
+	plt.grid()
+	if filepath:
+		plt.savefig(filepath)
+	else:
+		plt.show()	
+	'''
+
+def Pplotall(db,method,N):
+	'''
+	give me the db and a method, I plot P vs f for that method
+	and chi2 vs f, A vs f for the same arrangement according to P
+	Do it for one method only, then adapt to a list of methods...
+	'''
+
+	
+	db_P = [item for item in db if "%s_P" %(method) in item]	
+	
+
+	sorted_db_P = sorted(db_P, key = lambda item: item["%s_P" % method] )[::-1]
+
+	fs = []
+	Ps = []
+	As = []
+	chi2s = []
+	for n in range(len(sorted_db_P)):
+		subdb = sorted_db_P[n:]
+		fs.append(getf(subdb,method=method,N=N))
+		Ps.append(getP(subdb,method=method))
+		As.append(getA(subdb,method=method))
+		chi2s.append(getchi2(subdb,method=method))
+	plt.subplot(3,1,1)
+	plt.plot(fs, Ps, ".-", label=method,color='indigo')		
+	plt.xlabel("f")
+	plt.ylabel("P")
+	plt.xlim(0.0, 0.8)
+	plt.ylim(0.0, max(Ps))
+	plt.axvline(0.5, color="black")
+	plt.axhline(0.03, color="black")
+
+	plt.subplot(3,1,2)
+	plt.plot(fs, chi2s, ".-", label=method,color='chartreuse')		
+	plt.xlabel("f")
+	plt.ylabel("chi2")
+	plt.xlim(0.0, 0.8)
+	plt.ylim(0.0, max(chi2s))
+	plt.axvline(0.5, color="black")
+	plt.axhline(0.5, color="black")
+	plt.axhline(1.5, color="black")
+
+	plt.subplot(3,1,3)
+	plt.plot(fs, As, ".-", label=method,color='crimson')
+	plt.xlabel("f")
+	plt.ylabel("A")
+	plt.xlim(0.0, 0.8)
+	plt.ylim(min(As), max(As))
+	plt.axvline(0.5, color="black")
+	plt.axhline(0.03, color="black")
+	plt.axhline(-0.03, color="black")
+	plt.show()
+
+
+
+
+
+
