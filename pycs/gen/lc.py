@@ -1733,7 +1733,7 @@ def multidisplay(setlist=[],
 				ytxtcoord = [0.995,0.826, 0.655,  0.48, 0.31, 0.14]								
 				
 			# you want more subplots ? Feel free to add ytxtcoord...				
-			
+			'''
 			plt.text(0.01, ytxtcoord[ind], txt,
 				horizontalalignment='left', verticalalignment='top',
 				transform = axes.transAxes)
@@ -1745,7 +1745,7 @@ def multidisplay(setlist=[],
 			if verbose:
 				print "Delays between plotted curves :"
 				print txt
-		
+			'''
 				
 
 		if showlegend and (len(lclist) > 0 or len(splist) > 0):

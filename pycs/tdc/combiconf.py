@@ -262,7 +262,7 @@ def combiquads(estimates):
 	"""
 	Give me a list of already combined estimates (i.e. one per pair only).
 	I compute for each quad pair the best td and tderr among the corresponding rungs (which is an exploit !)
-	I return the whole entry list, with all the quads modified
+	I return the modified entry list, with all the quads modified, and with only the doubtless double
 	
 	# BIG WARNING !!! This function (pycs.tdc.combiconf.combiquads) actually modify estimates, we DO NOT want that ! 
 	"""
@@ -274,6 +274,7 @@ def combiquads(estimates):
 	
 	# Split double and quads
 	doubleests = pycs.tdc.est.select(estimates, pairs = np.arange(1037)[:720])
+	doubleests = [est for est in doubleests if est.confidence == 1] # we keep only the doubless double !
 	quadests = pycs.tdc.est.select(estimates, pairs = np.arange(1037)[720:])
 	
 	

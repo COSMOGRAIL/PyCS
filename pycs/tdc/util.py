@@ -218,10 +218,11 @@ def writesubmission(estimates, filepath, commentlist=None, theseonly=False):
 				# --- WARNING --- The TDC convention for the delays is the inverse of PyCS, thus the "-" sign above
 				
 				# Just a little check to make Vivien happy: **Woohoo** !
-				'''
+				# Warningue : you may want to comment this when dealing with personal D3CS submissions
+				
 				if rung==3 and pair==505:
 					assert estimates[ind].td == 91.6 and estimates[ind].tderr == 2.9
-				'''
+				
 			except ValueError:	
 				notfound += 1
 				if not theseonly:
@@ -252,101 +253,6 @@ def setnicemagshift(lcs):
 		l.shiftmag(bottom-top)
 		bottom = np.max(l.getmags())
 
-'''
-def cutlcs(lcs, nseasons=3.0,overlapfrac=0.2):
-
-	# APPARENTLY UNUSED, TO BE DELETED...? (10.01.2014)
-
-	"""
-	From a given set of lcs, return cutted lcs, only part of the original lcs
-	The goal is then to run the optimisation on these cutted lcs to estimate the error
-	by taking the scatter between these estimations (not very smart, but fast)
-	Generalised to n lightcurves in lcs, but only 3 cutted lcs returned (should be generalised later)
-	
-	This function return 3 cutted lcs for each lc 
-	
-	"""
-	import sys
-	
-	
-	# some inits...
-	
-	n = len(lcs)
-	
-	jds=[]
-	for j in lcs[0].jds:
-		jds.append(j)
-		
-	lseason = len(jds)/nseasons
-	noverlap = int(overlapfrac*lseason)
-
-	# we define the jds range...
-			
-	sinit  = [int(0) , int(lseason+noverlap)]
-	smid   = [int(lseason-noverlap/2) , int(2*lseason+noverlap/2)]
-	sfinal = [int(len(jds)-lseason-noverlap) , int(len(jds))] 
-	
-	# now, let's create the truncated lightcurves
-
-	cuts=[]
-	
-	for l in lcs:
-	
-		jd1 = jds[sinit[0]:sinit[1]]
-		jd2 = jds[smid[0]:smid[1]]
-		jd3 = jds[sfinal[0]:sfinal[1]]
-		
-		mags = l.getmags()
-		mag1 = mags[sinit[0]: sinit[1]]
-		mag2 = mags[smid[0]: smid[1]]
-		mag3 = mags[sfinal[0]:sfinal[1]]		
-		
-		magerrs = l.getmagerrs()
-		magerr1 = magerrs[sinit[0]: sinit[1]]
-		magerr2 = magerrs[smid[0]: smid[1]]
-		magerr3 = magerrs[sfinal[0]:sfinal[1]]		
-		
-		lc1 = pycs.gen.lc.factory(jd1,mag1,magerr1)
-		lc1.plotcolour='blue'
-		lc2 = pycs.gen.lc.factory(jd2,mag2,magerr2)
-		lc2.plotcolour='black'
-		lc3 = pycs.gen.lc.factory(jd3,mag3,magerr3)
-		lc3.plotcolour='red'		
-		
-		cuts.append([lc1,lc2,lc3])
-
-	# Ok, now the cutted lcs are created. We want to return something like
-	# [lcA_1, lcB_1] (first season),[lcA_2, lcB_2] (second season)... 
-		
-	return map(None,*cuts)
-
-'''
-'''
-def cutdb(filepath,newpath,season):
-
-	import sys	
-	"""
-	small hand-tuned function to cut the d3cs database in two
-	"""
-
-	db=open(filepath,'r')
-	newdb=open(newpath,'w')
-	
-	
-	lines = db.readlines()
-
-	#for ind,line in enumerate(lines):
-		#print ind,line
-		
-	if season == 2:
-		cut = 7518 
-	
-	for line in lines[cut:]:
-		newdb.write(line)	
-	 	 
-	db.close()
-	newdb.close()
-'''
 		
 def goingon():
 	"""
@@ -360,3 +266,57 @@ def goingon():
 
 		
 	
+def readsubmission(filepath):
+	"""
+	Read a TDC1 submission file, and return its values in PyCS standards
+	"""
+	
+	subinfos = []
+
+	# we read the submission file and remove the comments
+	lines = open(filepath,'r').xreadlines()
+	cleanlines = [line for line in lines if line[0] != '#']
+	
+	# now, we extract the values we are interested in (id, td, tderr)	
+	# Typical line of a .dt submission file : 	tdc1_rung0_double_pair1.txt	  -70.45	   11.70
+	#						tdc1_rung4_quad_pair142A.txt	   17.55	    5.70
+
+	for line in cleanlines:
+	
+		infos = [info for info in line.split(' ') if info != '']
+		
+		# get the id
+		filename = infos[0].split('\t')[0]
+		
+		rung	 = filename.split('rung')[1].split('_')[0]
+		pair_tdc = filename.split('pair')[1].split('.txt')[0]
+		
+		
+		if 'A' in pair_tdc or 'B' in pair_tdc: # then it's a quad
+		
+			quadcode  = pair_tdc[-1] # get the A or B
+			quadadd	  = -1 if quadcode == 'A' else 0
+			pair_tdc  = pair_tdc.split('A')[0].split('B')[0]
+			pair_pycs = 2*int(pair_tdc) + 720 + quadadd
+		
+		else: # then it's a double
+			pair_pycs = pair_tdc
+		
+		
+		estid   = 'tdc1_%s_%s' % (rung,pair_pycs)
+		
+		
+		# get the delay td and the error tderr
+		try:
+			td    = infos[1].split('\t')[0]
+			tderr = infos[2].split('\n')[0]
+		except:
+			print infos
+			sys.exit()	
+		
+
+		if td != '-99.00' and tderr != '-99.00':
+			subinfos.append((estid,-float(td),float(tderr))) # The - sign is as conventions change between tdc and pycs 
+	
+	return subinfos		
+		

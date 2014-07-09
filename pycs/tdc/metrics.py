@@ -7,6 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+############## Here, we work with estimates objects ##############
+
 def fN(estimates):
 	return float(len(estimates))
 
@@ -70,13 +72,121 @@ def maxPplot(estslist, N, filepath=None):
 		plt.savefig(filepath)
 	else:
 		plt.show()
+
+
 		
+############## Here, we work with the database from analyse_results ##############
+
+
+def getP(db,method):
+	"""
+	Compute P for a given method stored in the database
+	"""	
+	subdb = [item for item in db if "%s_P" %(method) in item]
+	#key = "%s_P" %method
+	#print 'I RETURN: ',sum([item["%s_P" %(method)] for item in subdb]) / float(len(subdb))
+	return sum([item["%s_P" %(method)] for item in subdb]) / float(len(subdb))
+	
+	
+def getA(db,method):
+	"""
+	Compute A for a given method stored in the database
+	"""	
+	subdb = [item for item in db if "%s_A" %(method) in item]
+	print 'I RETURN: ',sum([item["%s_A" %(method)] for item in subdb]) / float(len(subdb))
+	return sum([item["%s_A" %(method)] for item in subdb]) / float(len(subdb))	
+	
+def getchi2(db,method):
+	"""
+	Compute chi2 for a given method stored in the database
+	"""	
+	subdb = [item for item in db if "%s_chi2" %(method) in item]
+	return sum([item["%s_chi2" %(method)] for item in subdb]) / float(len(subdb))
+	
+def getf(db,method,N):
+	"""
+	Compute f for a given method stored in the database
+	N is the total number of curves	
+	"""
+	
+	subdb = [item for item in db if "%s_td" %(method) in item]	
+	return  float(len(subdb))/N
+
+def Pplot(db,method,N):
+	'''
+	give me the db and a method, I plot P vs f for that method
+	
+	Do it for one method only, then adapt to a list of methods...
+	'''
 
 	
-	
-	
-	
-
+	db_P = [item for item in db if "%s_P" %(method) in item]	
 	
 
+	sorted_db_P = sorted(db_P, key = lambda item: item["%s_P" % method] )[::-1]
+
+	fs = []
+	Ps = []
 	
+	for n in range(len(sorted_db_P)):
+		subdb = sorted_db_P[n:]
+		fs.append(getf(subdb,method=method,N=N))
+		Ps.append(getP(subdb,method=method))
+	plt.plot(fs, Ps, ".-", label=method)
+		
+	plt.xlabel("f")
+	plt.ylabel("P")
+	plt.xlim(0.0, 0.8)
+	plt.ylim(0.0, 0.3)
+	plt.axvline(0.5, color="black")
+	plt.axhline(0.03, color="black")
+	plt.show()
+	'''
+	if len(estslist) > 1:
+		plt.legend()
+	plt.grid()
+	if filepath:
+		plt.savefig(filepath)
+	else:
+		plt.show()	
+	'''
+
+
+def Aplot(db,method,N):
+	'''
+	give me the db and a method, I plot A vs f for that method
+	
+	Do it for one method only, then adapt to a list of methods...
+	'''
+
+	
+	db_A = [item for item in db if "%s_A" %(method) in item]	
+	
+
+	sorted_db_A = sorted(db_A, key = lambda item: item["%s_A" % method] )[::-1]
+
+	fs = []
+	As = []
+	
+	for n in range(len(sorted_db_A)):
+		subdb = sorted_db_A[n:]
+		fs.append(getf(subdb,method=method,N=N))
+		As.append(getA(subdb,method=method))
+	plt.plot(fs, As, ".-", label=method)
+		
+	plt.xlabel("f")
+	plt.ylabel("A")
+	plt.xlim(0.0, 0.8)
+	plt.ylim(0.0, 0.3)
+	plt.axvline(0.5, color="black")
+	plt.axhline(0.03, color="black")
+	plt.show()
+	'''
+	if len(estslist) > 1:
+		plt.legend()
+	plt.grid()
+	if filepath:
+		plt.savefig(filepath)
+	else:
+		plt.show()	
+	'''
