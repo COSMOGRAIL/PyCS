@@ -126,67 +126,113 @@ def getf(db,method,N):
 def Pplotall(db,methods,N):
 	'''
 	give me the db and a method, I plot P vs f for that method
-	and chi2 vs f, A vs f for the same arrangement according to P
-	Do it for one method only, then adapt to a list of methods...
+	and chi2 vs f, A vs f... for the same arrangement according to P
+
 	'''
 
 
 	lfs =[]
 	lPs=[]
 	lAs=[]
+	lAmods=[]
 	lchi2s=[]
+	labels = []
+
 
 	for method in methods:	
 		db_P = [item for item in db if "%s_P" %(method) in item]	
 		sorted_db_P = sorted(db_P, key = lambda item: item["%s_P" % method] )[::-1]
-
+		
 		fs = []
 		Ps = []
 		As = []
+		Amods= []
 		chi2s = []
 		for n in range(len(sorted_db_P)):
 			subdb = sorted_db_P[n:]
 			fs.append(getf(subdb,method=method,N=N))
 			Ps.append(getP(subdb,method=method))
 			As.append(getA(subdb,method=method))
+			Amods.append(getAmod(subdb,method=method))
 			chi2s.append(getchi2(subdb,method=method))
 		
 		lfs.append(fs)
 		lPs.append(Ps)
 		lAs.append(As)
+		lAmods.append(Amods)
 		lchi2s.append(chi2s)
-			
-	plt.subplot(3,1,1)
+		labels.append(method)
+
+	
+	# And now, the plot
+	
+	
+	colors = ["blue","green","red","chartreuse","crimson","black","magenta"]
+	
+	plt.figure('metrics vs f',(10,15))
+
+	plt.subplot(4,1,1)
 	for fs,Ps in zip(lfs,lPs):
-		plt.plot(fs, Ps, ".-", label=method,color='indigo')
-	plt.ylabel("P")
-	plt.xlim(0.0, 0.8)
-	plt.ylim(0.0, 0.1)
+		plt.plot(fs, Ps, ".-", label=labels[lfs.index(fs)], color=colors[lfs.index(fs)])
+	plt.ylabel(r"$P$")
+	plt.xlim(0.0, 0.7)
+	plt.ylim(min([min(Ps) for Ps in lPs]),max([max(Ps) for Ps in lPs]))
 	plt.axvline(0.5, color="black")
 	plt.axhline(0.03, color="black")
-
-	plt.subplot(3,1,2)
+	
+	s = r"$ P = \frac{1}{fN} \sum_i \left( \frac{\sigma_i}{|\Delta t_i|} \right)$" 
+	#s = 'P = 1/fN * sum(tderr_i/|td_i|)'
+	plt.annotate(s=s, xy = (0.73,0.75), xycoords='axes fraction',
+         		textcoords='axes fraction',size=18)	
+	plt.legend(fontsize= 12,loc=2)
+	
+	
+	plt.subplot(4,1,2)
 	for fs,chi2s in zip(lfs,lchi2s):		
-		plt.plot(fs, chi2s, ".-", label=method,color='chartreuse')				
-	plt.ylabel("chi2")
-	plt.xlim(0.0, 0.8)
-	plt.ylim(0.0, 20)
+		plt.plot(fs, chi2s, ".-", label=labels[lfs.index(fs)],color=colors[lfs.index(fs)])				
+	plt.ylabel(r"$\chi^2$")
+	plt.xlim(0.0, 0.7)
+	plt.ylim(min([min(chi2s) for chi2s in lchi2s]),max([max(chi2s) for chi2s in lchi2s]))
 	plt.axvline(0.5, color="black")
 	plt.axhline(0.5, color="black")
 	plt.axhline(1.5, color="black")
+	s = r"$ \chi^2 =\frac{1}{fN} \sum_i \left( \frac{\overline{\Delta} t_i - \Delta t_i}{\sigma_i} \right)$"
 
-	plt.subplot(3,1,3)
+	plt.annotate(s=s, xy = (0.73,0.75), xycoords='axes fraction',
+         		textcoords='axes fraction',size=18)
+
+	plt.subplot(4,1,3)
 	for fs,As in zip(lfs,lAs):
-		plt.plot(fs, As, ".-", label=method,color='crimson')
-	plt.xlabel("f")
-	plt.ylabel("A")
-	plt.xlim(0.0, 0.8)
-	plt.ylim(-0.003, 0.003)
+		plt.plot(fs, As, ".-", label=labels[lfs.index(fs)],color=colors[lfs.index(fs)])
+
+	plt.ylabel(r"$A$")
+	plt.xlim(0.0, 0.7)
+	plt.ylim(min([min(As) for As in lAs]),max([max(As) for As in lAs]))
 	plt.axvline(0.5, color="black")
 	plt.axhline(0.03, color="black")
 	plt.axhline(-0.03, color="black")
-		
-		
+	
+	s = r"$ A =\frac{1}{fN} \sum_i \left( \frac{\overline{\Delta} t_i - \Delta t_i}{|\Delta t_i|} \right)$"
+
+	plt.annotate(s=s, xy = (0.73,0.75), xycoords='axes fraction',
+         		textcoords='axes fraction',size=18)
+	
+	
+	plt.subplot(4,1,4)
+	for fs,Amods in zip(lfs,lAmods):
+		plt.plot(fs, Amods, ".-", label=labels[lfs.index(fs)],color=colors[lfs.index(fs)])
+	plt.xlabel(r"$f$")
+	plt.ylabel(r"$A_{mod}$")
+	plt.xlim(0.0, 0.7)
+	plt.ylim(min([min(Amods) for Amods in lAmods]),max([max(Amods) for Amods in lAmods]))
+	plt.axvline(0.5, color="black")
+	plt.axhline(0.03, color="black")
+	plt.axhline(-0.03, color="black")		
+	s = r"$ A =\frac{1}{fN} \sum_i \left( \frac{\overline{\Delta} t_i - \Delta t_i}{\Delta t_i} \right)$"
+
+	plt.annotate(s=s, xy = (0.73,0.75), xycoords='axes fraction',
+         		textcoords='axes fraction',size=18)
+			
 	plt.show()
 
 
