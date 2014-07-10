@@ -95,7 +95,16 @@ def getA(db,method):
 	"""	
 	subdb = [item for item in db if "%s_A" %(method) in item]
 	#print 'I RETURN: ',sum([item["%s_A" %(method)] for item in subdb]) / float(len(subdb))
-	return sum([item["%s_A" %(method)] for item in subdb]) / float(len(subdb))	
+	return sum([item["%s_A" %(method)] for item in subdb]) / float(len(subdb))
+	
+	
+def getAmod(db,method):
+	"""
+	Compute A for a given method stored in the database
+	"""	
+	subdb = [item for item in db if "%s_Amod" %(method) in item]
+	#print 'I RETURN: ',sum([item["%s_A" %(method)] for item in subdb]) / float(len(subdb))
+	return sum([item["%s_Amod" %(method)] for item in subdb]) / float(len(subdb))		
 	
 def getchi2(db,method):
 	"""
@@ -113,178 +122,71 @@ def getf(db,method,N):
 	subdb = [item for item in db if "%s_td" %(method) in item]	
 	return  float(len(subdb))/N
 
-def Pplot(db,method,N):
-	'''
-	give me the db and a method, I plot P vs f for that method
-	
-	Do it for one method only, then adapt to a list of methods...
-	'''
 
-	
-	db_P = [item for item in db if "%s_P" %(method) in item]	
-	
-
-	sorted_db_P = sorted(db_P, key = lambda item: item["%s_P" % method] )[::-1]
-
-	fs = []
-	Ps = []
-	
-	for n in range(len(sorted_db_P)):
-		subdb = sorted_db_P[n:]
-		fs.append(getf(subdb,method=method,N=N))
-		Ps.append(getP(subdb,method=method))
-	plt.plot(fs, Ps, ".-", label=method)
-		
-	plt.xlabel("f")
-	plt.ylabel("P")
-	plt.xlim(0.0, max(Ps))
-	plt.ylim(0.0, 0.3)
-	plt.axvline(0.5, color="black")
-	plt.axhline(0.03, color="black")
-	plt.show()
-	'''
-	if len(estslist) > 1:
-		plt.legend()
-	plt.grid()
-	if filepath:
-		plt.savefig(filepath)
-	else:
-		plt.show()	
-	'''
-
-
-def Aplot(db,method,N):
-	'''
-	give me the db and a method, I plot A vs f for that method
-	
-	Do it for one method only, then adapt to a list of methods...
-	'''
-
-	
-	db_A = [item for item in db if "%s_A" %(method) in item]	
-
-	sorted_db_A = sorted(db_A, key = lambda item: item["%s_A" % method] )[::-1]
-	for elt in sorted_db_A:
-		print elt["%s_A" %(method)]
-	sys.exit()
-
-	fs = []
-	As = []
-	
-	for n in range(len(sorted_db_A)):
-		subdb = sorted_db_A[n:]
-		fs.append(getf(subdb,method=method,N=N))
-		As.append(getA(subdb,method=method))
-	plt.plot(fs, As, ".-", label=method)
-		
-	plt.xlabel("f")
-	plt.ylabel("A")
-	plt.xlim(0.0, 0.8)
-	plt.ylim(0.0, 0.3)
-	plt.axvline(0.5, color="black")
-	plt.axhline(0.03, color="black")
-	plt.show()
-	'''
-	if len(estslist) > 1:
-		plt.legend()
-	plt.grid()
-	if filepath:
-		plt.savefig(filepath)
-	else:
-		plt.show()	
-	'''
-
-
-def chi2plot(db,method,N):
-	'''
-	give me the db and a method, I plot chi2 vs f for that method
-	
-	Do it for one method only, then adapt to a list of methods...
-	'''
-
-	
-	db_chi2 = [item for item in db if "%s_chi2" %(method) in item]	
-
-	sorted_db_chi2 = sorted(db_chi2, key = lambda item: item["%s_chi2" % method] )[::-1]
-
-	fs = []
-	chi2s = []
-	
-	for n in range(len(sorted_db_chi2)):
-		subdb = sorted_db_chi2[n:]
-		fs.append(getf(subdb,method=method,N=N))
-		chi2s.append(getchi2(subdb,method=method))
-	plt.plot(fs, chi2s, ".-", label=method)
-		
-	plt.xlabel("f")
-	plt.ylabel("chi2")
-	plt.xlim(0.0, 0.8)
-	plt.ylim(0.0, 2.0)
-	plt.axvline(0.5, color="black")
-	plt.axhline(0.5, color="black")
-	plt.axhline(1.5, color="black")
-	plt.show()
-	'''
-	if len(estslist) > 1:
-		plt.legend()
-	plt.grid()
-	if filepath:
-		plt.savefig(filepath)
-	else:
-		plt.show()	
-	'''
-
-def Pplotall(db,method,N):
+def Pplotall(db,methods,N):
 	'''
 	give me the db and a method, I plot P vs f for that method
 	and chi2 vs f, A vs f for the same arrangement according to P
 	Do it for one method only, then adapt to a list of methods...
 	'''
 
-	
-	db_P = [item for item in db if "%s_P" %(method) in item]	
-	
 
-	sorted_db_P = sorted(db_P, key = lambda item: item["%s_P" % method] )[::-1]
+	lfs =[]
+	lPs=[]
+	lAs=[]
+	lchi2s=[]
 
-	fs = []
-	Ps = []
-	As = []
-	chi2s = []
-	for n in range(len(sorted_db_P)):
-		subdb = sorted_db_P[n:]
-		fs.append(getf(subdb,method=method,N=N))
-		Ps.append(getP(subdb,method=method))
-		As.append(getA(subdb,method=method))
-		chi2s.append(getchi2(subdb,method=method))
+	for method in methods:	
+		db_P = [item for item in db if "%s_P" %(method) in item]	
+		sorted_db_P = sorted(db_P, key = lambda item: item["%s_P" % method] )[::-1]
+
+		fs = []
+		Ps = []
+		As = []
+		chi2s = []
+		for n in range(len(sorted_db_P)):
+			subdb = sorted_db_P[n:]
+			fs.append(getf(subdb,method=method,N=N))
+			Ps.append(getP(subdb,method=method))
+			As.append(getA(subdb,method=method))
+			chi2s.append(getchi2(subdb,method=method))
+		
+		lfs.append(fs)
+		lPs.append(Ps)
+		lAs.append(As)
+		lchi2s.append(chi2s)
+			
 	plt.subplot(3,1,1)
-	plt.plot(fs, Ps, ".-", label=method,color='indigo')		
-	plt.xlabel("f")
+	for fs,Ps in zip(lfs,lPs):
+		plt.plot(fs, Ps, ".-", label=method,color='indigo')
 	plt.ylabel("P")
 	plt.xlim(0.0, 0.8)
-	plt.ylim(0.0, max(Ps))
+	plt.ylim(0.0, 0.1)
 	plt.axvline(0.5, color="black")
 	plt.axhline(0.03, color="black")
 
 	plt.subplot(3,1,2)
-	plt.plot(fs, chi2s, ".-", label=method,color='chartreuse')		
-	plt.xlabel("f")
+	for fs,chi2s in zip(lfs,lchi2s):		
+		plt.plot(fs, chi2s, ".-", label=method,color='chartreuse')				
 	plt.ylabel("chi2")
 	plt.xlim(0.0, 0.8)
-	plt.ylim(0.0, max(chi2s))
+	plt.ylim(0.0, 20)
 	plt.axvline(0.5, color="black")
 	plt.axhline(0.5, color="black")
 	plt.axhline(1.5, color="black")
 
 	plt.subplot(3,1,3)
-	plt.plot(fs, As, ".-", label=method,color='crimson')
+	for fs,As in zip(lfs,lAs):
+		plt.plot(fs, As, ".-", label=method,color='crimson')
 	plt.xlabel("f")
 	plt.ylabel("A")
 	plt.xlim(0.0, 0.8)
-	plt.ylim(min(As), max(As))
+	plt.ylim(-0.003, 0.003)
 	plt.axvline(0.5, color="black")
 	plt.axhline(0.03, color="black")
 	plt.axhline(-0.03, color="black")
+		
+		
 	plt.show()
 
 
