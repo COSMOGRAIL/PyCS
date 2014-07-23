@@ -237,6 +237,39 @@ def Pplotall(db,methods,N):
 
 
 
+###### Towards a combined metric (experimental)
+
+
+
+
+def combigauss(subtds, subtderrs, truetds, lensmodelsigma = 0.0):
+	"""
+	Give me submission delays and error bars, as well as the corresponding true delays, in form of numpy arrays.
+	I compute the mean and sigma of the combined posterior on the fractional time delay distance error.
+	"""
+	
+	subtdoffs = subtds - truetds
+	centers = subtdoffs/truetds
+	sigmas = subtderrs/np.fabs(truetds)
+	
+	# We convolve with the lensmodelsigma:
+	sigmas = np.sqrt(sigmas**2 + lensmodelsigma**2)
+	
+	sigma_combi = 1.0 / np.sqrt(np.sum(1.0 / (sigmas**2)))
+	center_combi = sigma_combi**2 * np.sum( centers/sigmas**2 )
+	
+	return (center_combi, sigma_combi)
+	
+	# To plot this you could do:
+	#plt.plot(x, norm.pdf(x, center_combi, sigma_combi), ls="--", color="black")
+	
+
+
+
+
+
+
+
 
 
 
