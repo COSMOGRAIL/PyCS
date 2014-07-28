@@ -175,14 +175,14 @@ def Pplotall(db,methods,N):
 	for fs,Ps in zip(lfs,lPs):
 		plt.plot(fs, Ps, ".-", label=labels[lfs.index(fs)], color=colors[lfs.index(fs)])
 	plt.ylabel(r"$P$")
-	plt.xlim(0.0, 0.7)
+	plt.xlim(0.0, 0.5)
 	plt.ylim(min([min(Ps) for Ps in lPs]),max([max(Ps) for Ps in lPs]))
 	plt.axvline(0.5, color="black")
 	plt.axhline(0.03, color="black")
 	
 	s = r"$ P = \frac{1}{fN} \sum_i \left( \frac{\sigma_i}{|\Delta t_i|} \right)$" 
 	#s = 'P = 1/fN * sum(tderr_i/|td_i|)'
-	plt.annotate(s=s, xy = (0.73,0.75), xycoords='axes fraction',
+	plt.annotate(s=s, xy = (0.73,0.65), xycoords='axes fraction',
          		textcoords='axes fraction',size=18)	
 	plt.legend(fontsize= 12,loc=2)
 	
@@ -191,7 +191,7 @@ def Pplotall(db,methods,N):
 	for fs,chi2s in zip(lfs,lchi2s):		
 		plt.plot(fs, chi2s, ".-", label=labels[lfs.index(fs)],color=colors[lfs.index(fs)])				
 	plt.ylabel(r"$\chi^2$")
-	plt.xlim(0.0, 0.7)
+	plt.xlim(0.0, 0.5)
 	plt.ylim(min([min(chi2s) for chi2s in lchi2s]),max([max(chi2s) for chi2s in lchi2s]))
 	plt.axvline(0.5, color="black")
 	plt.axhline(0.5, color="black")
@@ -206,7 +206,7 @@ def Pplotall(db,methods,N):
 		plt.plot(fs, As, ".-", label=labels[lfs.index(fs)],color=colors[lfs.index(fs)])
 
 	plt.ylabel(r"$A$")
-	plt.xlim(0.0, 0.7)
+	plt.xlim(0.0, 0.5)
 	plt.ylim(min([min(As) for As in lAs]),max([max(As) for As in lAs]))
 	plt.axvline(0.5, color="black")
 	plt.axhline(0.03, color="black")
@@ -223,7 +223,7 @@ def Pplotall(db,methods,N):
 		plt.plot(fs, Amods, ".-", label=labels[lfs.index(fs)],color=colors[lfs.index(fs)])
 	plt.xlabel(r"$f$")
 	plt.ylabel(r"$A_{mod}$")
-	plt.xlim(0.0, 0.7)
+	plt.xlim(0.0, 0.5)
 	plt.ylim(min([min(Amods) for Amods in lAmods]),max([max(Amods) for Amods in lAmods]))
 	plt.axvline(0.5, color="black")
 	plt.axhline(0.03, color="black")
@@ -247,7 +247,7 @@ def combigauss(subtds, subtderrs, truetds, lensmodelsigma = 0.0):
 	Give me submission delays and error bars, as well as the corresponding true delays, in form of numpy arrays.
 	I compute the mean and sigma of the combined posterior on the fractional time delay distance error.
 	"""
-	
+
 	from scipy.stats import norm
 
 	subtdoffs = subtds - truetds
@@ -270,9 +270,129 @@ def combigauss(subtds, subtderrs, truetds, lensmodelsigma = 0.0):
 
 
 
+def Pplotcombi(db,methods,N,lensmodelsigma = 0.0):
+	'''
+	give me the db and a list of methods, I plot combigauss params (center, sigma, zerovalue) vs f
+	f is selected according to bestP
+	'''
 
 
+	lfs =[]
+	lcs=[]
+	lss=[]
+	lzs=[]
+	labels = []
 
+
+	for method in methods:	
+		db_P = [item for item in db if "%s_P" %(method) in item]	
+		sorted_db_P = sorted(db_P, key = lambda item: item["%s_P" % method] )[::-1]
+		
+		fs = []
+		cs = []
+		ss= []
+		zs = []
+		for n in range(len(sorted_db_P)):
+			subdb = sorted_db_P[n:]
+			fs.append(getf(subdb,method=method,N=N))
+
+			subtds = []
+			subtderrs = []
+			truetds = []
+			for entry in subdb:
+				subtds.append(entry["%s_td" % method])
+				subtderrs.append(entry["%s_tderr" % method])
+				truetds.append(entry["truetd"])
+			(c, s, z) = combigauss(np.array(subtds), np.array(subtderrs), np.array(truetds), lensmodelsigma = lensmodelsigma) 
+			cs.append(c)
+			ss.append(s)
+			zs.append(z)
+
+
+		lfs.append(fs)
+		lcs.append(cs)
+		lss.append(ss)
+		lzs.append(zs)
+		labels.append(method)
+
+	
+	# And now, the plot
+	
+	
+	colors = ["blue","green","red","chartreuse","crimson","black","magenta"]
+	
+	plt.figure('combigauss vs f',(10,15))
+
+	plt.subplot(3,1,1)
+	for fs,cs in zip(lfs,lcs):
+		plt.plot(fs, cs, ".-", label=labels[lfs.index(fs)], color=colors[lfs.index(fs)])
+	plt.ylabel(r"$center_combi$")
+	plt.xlim(0.0, 0.5)
+	plt.ylim(min([min(cs) for cs in lcs]),max([max(cs) for cs in lcs]))
+	#plt.axvline(0.5, color="black")
+	#plt.axhline(0.03, color="black")
+	
+	'''
+	s = r"$ P = \frac{1}{fN} \sum_i \left( \frac{\sigma_i}{|\Delta t_i|} \right)$" 
+	#s = 'P = 1/fN * sum(tderr_i/|td_i|)'
+	plt.annotate(s=s, xy = (0.73,0.65), xycoords='axes fraction',
+         		textcoords='axes fraction',size=18)
+	'''
+				
+	plt.legend(fontsize= 12,loc=2)
+	
+	
+	plt.subplot(3,1,2)
+	for fs,ss in zip(lfs,lss):		
+		plt.plot(fs, ss, ".-", label=labels[lfs.index(fs)],color=colors[lfs.index(fs)])				
+	plt.ylabel(r"$sigma_combi$")
+	plt.xlim(0.0, 0.5)
+	plt.ylim(min([min(ss) for ss in lss]),max([max(ss) for ss in lss]))
+	#plt.axvline(0.5, color="black")
+	#plt.axhline(0.5, color="black")
+	#plt.axhline(1.5, color="black")
+	'''
+	s = r"$ \chi^2 =\frac{1}{fN} \sum_i \left( \frac{\overline{\Delta} t_i - \Delta t_i}{\sigma_i} \right)$"
+
+	plt.annotate(s=s, xy = (0.73,0.75), xycoords='axes fraction',
+         		textcoords='axes fraction',size=18)
+	'''
+	
+	plt.subplot(3,1,3)
+	for fs,zs in zip(lfs,lzs):
+		plt.plot(fs, zs, ".-", label=labels[lfs.index(fs)],color=colors[lfs.index(fs)])
+
+	plt.ylabel(r"$probazero_combi$")
+	plt.xlim(0.0, 0.5)
+	plt.ylim(min([min(zs) for zs in lzs]),max([max(zs) for zs in lzs]))
+	#plt.axvline(0.5, color="black")
+	#plt.axhline(0.03, color="black")
+	#plt.axhline(-0.03, color="black")
+	'''
+	s = r"$ A =\frac{1}{fN} \sum_i \left( \frac{\overline{\Delta} t_i - \Delta t_i}{|\Delta t_i|} \right)$"
+
+	plt.annotate(s=s, xy = (0.73,0.75), xycoords='axes fraction',
+         		textcoords='axes fraction',size=18)
+	
+	'''
+	
+	'''
+	plt.subplot(4,1,4)
+	for fs,Amods in zip(lfs,lAmods):
+		plt.plot(fs, Amods, ".-", label=labels[lfs.index(fs)],color=colors[lfs.index(fs)])
+	plt.xlabel(r"$f$")
+	plt.ylabel(r"$A_{mod}$")
+	plt.xlim(0.0, 0.5)
+	plt.ylim(min([min(Amods) for Amods in lAmods]),max([max(Amods) for Amods in lAmods]))
+	plt.axvline(0.5, color="black")
+	plt.axhline(0.03, color="black")
+	plt.axhline(-0.03, color="black")		
+	s = r"$ A =\frac{1}{fN} \sum_i \left( \frac{\overline{\Delta} t_i - \Delta t_i}{\Delta t_i} \right)$"
+
+	plt.annotate(s=s, xy = (0.73,0.75), xycoords='axes fraction',
+         		textcoords='axes fraction',size=18)
+	'''		
+	plt.show()
 
 
 
