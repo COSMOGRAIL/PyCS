@@ -212,7 +212,7 @@ def Pplotall(db,methods,N):
 	plt.axhline(0.03, color="black")
 	plt.axhline(-0.03, color="black")
 	
-	s = r"$ A =\frac{1}{fN} \sum_i \left( \frac{\overline{\Delta} t_i - \Delta t_i}{|\Delta t_i|} \right)$"
+	s = r"$ A =\frac{1}{fN} \sum_i \left( \frac{\overline{\Delta} t_i - \Delta t_i}{\Delta t_i} \right)$"
 
 	plt.annotate(s=s, xy = (0.73,0.75), xycoords='axes fraction',
          		textcoords='axes fraction',size=18)
@@ -228,7 +228,7 @@ def Pplotall(db,methods,N):
 	plt.axvline(0.5, color="black")
 	plt.axhline(0.03, color="black")
 	plt.axhline(-0.03, color="black")		
-	s = r"$ A =\frac{1}{fN} \sum_i \left( \frac{\overline{\Delta} t_i - \Delta t_i}{\Delta t_i} \right)$"
+	s = r"$ A =\frac{1}{fN} \sum_i \left( \frac{\overline{\Delta} t_i - \Delta t_i}{|\Delta t_i|} \right)$"
 
 	plt.annotate(s=s, xy = (0.73,0.75), xycoords='axes fraction',
          		textcoords='axes fraction',size=18)
