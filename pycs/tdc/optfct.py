@@ -13,7 +13,7 @@ def calcknotstep(varios):
 	"""
 	Give me some outputs of vario, I try to return a good knotstep, based on the highest vratio between the curves and the sampling.
 	"""
-	print "WHY THE FUCK IS THIS A COPY OF SPLOPT.CALCKNOTSTEP ??? FIX THIS IF USED..."
+	print "WHY THE FUCK IS THIS A COPY OF SPLOPT.CALCKNOTSTEP ??? FIX THIS IF USED... - \n Hey, stop using fuck in the comments !"
 	
 	vratios = np.array([out["vratio"] for out in varios])
 	samplings = np.array([out["sampling"] for out in varios])
@@ -48,8 +48,7 @@ def calcknotstep(varios):
 def spldiff(lcs, verbose=True, magshift=False):
 
 	"""
-	Custom spldiff optimizer for TDC
-	
+	Custom spldiff optimizer for TDC	
 	"""
 	
 	# We start by computing some statistics on the lcs:
@@ -57,7 +56,7 @@ def spldiff(lcs, verbose=True, magshift=False):
 	(lca,lcb) = lcs
 	
 	stats = lca.samplingstats(seasongap=30)
-	sampling = stats["med"]
+	sampling = stats["med"]*3.0
 
 	if not (hasattr(lca, "vario") and hasattr(lcb, "vario")):
 		lca.vario = pycs.tdc.vario.vario(lca, verbose=True)

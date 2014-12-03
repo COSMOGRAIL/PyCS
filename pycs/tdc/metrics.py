@@ -127,7 +127,6 @@ def Pplotall(db,methods,N):
 	'''
 	give me the db and a method, I plot P vs f for that method
 	and chi2 vs f, A vs f... for the same arrangement according to P
-
 	'''
 
 
@@ -137,7 +136,6 @@ def Pplotall(db,methods,N):
 	lAmods=[]
 	lchi2s=[]
 	labels = []
-
 
 	for method in methods:	
 		db_P = [item for item in db if "%s_P" %(method) in item]	
@@ -162,7 +160,6 @@ def Pplotall(db,methods,N):
 		lAmods.append(Amods)
 		lchi2s.append(chi2s)
 		labels.append(method)
-
 	
 	# And now, the plot
 	
@@ -172,8 +169,11 @@ def Pplotall(db,methods,N):
 	plt.figure('metrics vs f',(10,15))
 
 	plt.subplot(4,1,1)
+
 	for fs,Ps in zip(lfs,lPs):
-		plt.plot(fs, Ps, ".-", label=labels[lfs.index(fs)], color=colors[lfs.index(fs)])
+		plt.plot(fs, Ps, ".-", label=labels[lPs.index(Ps)], color=colors[lPs.index(Ps)])
+		print lPs.index(Ps)
+
 	plt.ylabel(r"$P$")
 	plt.xlim(0.0, 0.5)
 	plt.ylim(min([min(Ps) for Ps in lPs]),max([max(Ps) for Ps in lPs]))
@@ -189,7 +189,7 @@ def Pplotall(db,methods,N):
 	
 	plt.subplot(4,1,2)
 	for fs,chi2s in zip(lfs,lchi2s):		
-		plt.plot(fs, chi2s, ".-", label=labels[lfs.index(fs)],color=colors[lfs.index(fs)])				
+		plt.plot(fs, chi2s, ".-", label=labels[lchi2s.index(chi2s)],color=colors[lchi2s.index(chi2s)])				
 	plt.ylabel(r"$\chi^2$")
 	plt.xlim(0.0, 0.5)
 	plt.ylim(min([min(chi2s) for chi2s in lchi2s]),max([max(chi2s) for chi2s in lchi2s]))
@@ -203,7 +203,7 @@ def Pplotall(db,methods,N):
 
 	plt.subplot(4,1,3)
 	for fs,As in zip(lfs,lAs):
-		plt.plot(fs, As, ".-", label=labels[lfs.index(fs)],color=colors[lfs.index(fs)])
+		plt.plot(fs, As, ".-", label=labels[lAs.index(As)],color=colors[lAs.index(As)])
 
 	plt.ylabel(r"$A$")
 	plt.xlim(0.0, 0.5)
@@ -220,7 +220,7 @@ def Pplotall(db,methods,N):
 	
 	plt.subplot(4,1,4)
 	for fs,Amods in zip(lfs,lAmods):
-		plt.plot(fs, Amods, ".-", label=labels[lfs.index(fs)],color=colors[lfs.index(fs)])
+		plt.plot(fs, Amods, ".-", label=labels[lAmods.index(Amods)],color=colors[lAmods.index(Amods)])
 	plt.xlabel(r"$f$")
 	plt.ylabel(r"$A_{mod}$")
 	plt.xlim(0.0, 0.5)
@@ -315,7 +315,6 @@ def Pplotcombi(db,methods,N,lensmodelsigma = 0.0):
 		lzs.append(zs)
 		labels.append(method)
 
-	
 	# And now, the plot
 	
 	
