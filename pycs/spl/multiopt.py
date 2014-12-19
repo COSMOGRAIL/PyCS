@@ -222,7 +222,7 @@ def opt_ml(lcs, sourcespline, bokit = 0, bokmethod="BF", splflat = False, verbos
 			
 			# We go through the curve season by season :
 			for m in l.ml.mllist:
-				#print m.getparams(), m.season
+				#print m.getparams(), m.season, m.season.indices
 				
 				nparams = m.nfree
 				
