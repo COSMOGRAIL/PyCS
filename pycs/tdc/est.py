@@ -15,6 +15,8 @@ import copy as pythoncopy
 class Estimate:
 	"""
 	Class to hold delay estimates for TDC curves, as obtained by various delay estimators.
+
+
 	"""
 	
 	def __init__(self, set="tdc0", rung=0, pair=1, method="None", methodpar="None", td=0.0, tderr=0.0, ms=0.0, confidence=0, timetaken=0.0):
@@ -63,7 +65,6 @@ class Estimate:
 		return [self.set, self.rung, self.pair, self.method, self.methodpar, self.td, self.tderr, self.ms, self.confidence, self.timetaken]
 	
 	def check(self):
-		
 		#assert self.tderr >= 0.0
 		if self.tderr < 0.0:
 			raise RuntimeError("Negative error...")
@@ -80,9 +81,14 @@ class Estimate:
 		else: return "purple"	
 
 	def setid(self):
-		self.id = "%s_%i_%i" % (self.set, self.rung, self.pair)
-		self.niceid = "(%s, %i, %i)" % (self.set, self.rung, self.pair)
-		self.fullid = "%s_rung%i_pair%i.txt" % (self.set, self.rung, self.pair)
+		if self.set in ['tdc0', 'tdc1']:
+			self.id = "%s_%i_%i" % (self.set, self.rung, self.pair)
+			self.niceid = "(%s, %i, %i)" % (self.set, self.rung, self.pair)
+			self.fullid = "%s_rung%i_pair%i.txt" % (self.set, self.rung, self.pair)
+		else:
+			self.id = "%s_%s_%s" % (self.set, self.rung, self.pair)
+			self.niceid = "(%s, %s, %s)" % (self.set, self.rung, self.pair)
+			self.fullid = "%s_rung%s_pair%s.txt" % (self.set, self.rung, self.pair)
 	
 	def applytolcpair(lca, lcb):
 		lca.timeshift = 0.0

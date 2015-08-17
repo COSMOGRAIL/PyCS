@@ -261,7 +261,7 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 	Not flexible but very high level function to analyse the spline-fit-residuals of drawn curves and comparing them to the
 	real observations.
 	This can be used to tune the parameters of the "drawing".
-	.. warning:: The simset must have been optimized using spline fits, with option keepopt=True !
+	.. warning:: The simset must have been optimized using spline fits, with option keepopt=True ! WELL COULDN'T YOU HAVE SAID IT EARLIER ?
 	
 	:param optoriglcs: optimized original curves
 	
@@ -289,9 +289,11 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 	
 	# We read all the optimized mock curves :
 	pkls = sorted(glob.glob("sims_%s_opt_%s/*_opt.pkl" % (simset, optset)))
+
+
 	optmocksplinelist = []
 	optmocklcslist = []
-	
+
 	for (i, pkl) in enumerate(pkls):
 		if i >= npkl:
 			break

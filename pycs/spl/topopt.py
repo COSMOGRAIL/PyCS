@@ -15,7 +15,7 @@ import pycs.gen.lc
 import pycs.gen.splml
 import pycs.gen.spl
 import pycs.spl.multiopt
-
+import numpy as np
 
 def opt_rough(lcs, nit = 5, shifttime=True, crit="r2", 
 	knotstep=100, stabext=300.0, stabgap=20.0, stabstep=4.0, stabmagerr=-2.0,
@@ -52,7 +52,7 @@ def opt_rough(lcs, nit = 5, shifttime=True, crit="r2",
 		spline = pycs.gen.spl.fit(nomllcs, knotstep = knotstep, stab=True, stabext=stabext, 
 			stabgap=stabgap, stabstep=stabstep, stabmagerr=stabmagerr, bokit = 0, verbose=False)
 
-	pycs.spl.multiopt.opt_ml(lcs, spline, bokit=0, splflat=True, verbose=False)
+	pycs.spl.multiopt.opt_ml(lcs, spline, bokit=0, splflat=True, verbose=True)
 	
 	# Spline to go through all curves :
 	spline = pycs.gen.spl.fit(lcs, knotstep = knotstep, stab=True, stabext=stabext, 
@@ -103,8 +103,7 @@ def opt_fine(lcs, spline=None, nit=10, shifttime=True, crit="r2",
 	if verbose:
 		print "Starting opt_fine on initial delays :"
 		print pycs.gen.lc.getnicetimedelays(lcs, separator=" | ")
-	
-	
+
 	if spline == None:
 		spline = pycs.gen.spl.fit(lcs, knotstep = knotstep,
 			stab=True, stabext=stabext, stabgap=stabgap, stabstep=stabstep, stabmagerr=stabmagerr,
@@ -175,3 +174,166 @@ def opt_fine(lcs, spline=None, nit=10, shifttime=True, crit="r2",
 	return spline
 
 
+
+def opt_fine2(lcs, knotstepfact=1.0, maxit=10, minchange=1.0, verbose=True):
+	"""
+	Version 2
+	Generalisation of pycs.tdc.splotp.spl3, but for a random number of lcs.
+	Assumes a really good initial time shift, does not care about inital magshift.
+
+	ML is added inside this function to lcs[i] for i in mllist.
+	The ML signal should not get strong if it is not required.
+
+	:param maxit: maximum number of iterations
+
+	:param minchange: minimum decrease in percent of the r2. I stop if the decrease gets smaller.
+
+	:param mltype: choose between spline microlensing using the mlknotstep parameter, or polynomial microlensing, using the nparams and autoseasongap parameters
+
+	"""
+
+	"""
+	for lc in lcs:
+		#assert lc.ml == None
+		lc.rmml()
+	"""
+
+
+	stats = lcs[0].samplingstats(seasongap=30)
+	sampling = stats["med"]
+
+	for lc in lcs:
+		if not (hasattr(lc, "vario")):
+			lc.vario = pycs.tdc.vario.vario(lc, verbose=verbose)
+
+		if verbose:
+			print '---Vario Analysis Done---'
+
+	knotstep = knotstepfact*pycs.tdc.splopt.calcknotstep([lc.vario for lc in lcs])
+	bokeps = np.max([sampling, knotstep/3.0])
+	print '='*40
+	print 'knotstep: ',knotstep, ' | bokeps: ', bokeps
+	print '='*40
+
+	bokwindow = None
+
+	# The stab params, quite easy :
+	stabext = 300.0
+	stabgap = 10.0 # I put it back to 30. If still a pain, go back to 6.
+	stabstep = sampling
+	stabmagerr = -3.0
+
+	knots = pycs.gen.spl.seasonknots(lcs, knotstep, ingap=1)
+	if verbose:
+		print "I prepared %i knots" % (len(knots))
+
+	# Check which lc have a microlensing model and which don't
+	lcmls = [lc for lc in lcs if lc.ml != None]
+	lcnomls = [lc for lc in lcs if lc not in lcmls]
+
+	# We fit a spline through the curves without ML
+	spline = pycs.gen.spl.fit(lcnomls, knots=knots,
+		stab=True, stabext=stabext, stabgap=stabgap, stabstep=stabstep, stabmagerr=stabmagerr,
+		bokit=0, bokeps=bokeps, boktests=5, bokwindow=bokwindow, verbose=False)
+
+	if verbose:
+		print "Single spline fit done"
+
+	# We optimize the mag shift, moving all lcs.
+	pycs.spl.multiopt.opt_magshift(lcs, sourcespline=spline, verbose=False, trace=False)
+
+
+	# We do a first optimization of the ML
+	pycs.spl.multiopt.opt_ml(lcs, sourcespline=spline, bokit=0, splflat=False, verbose=False)
+
+
+	# And fit a spline through all curves
+	spline = pycs.gen.spl.fit(lcs, knots=knots,
+		stab=True, stabext=stabext, stabgap=stabgap, stabstep=stabstep, stabmagerr=stabmagerr,
+		bokit=0, bokeps=bokeps, boktests=5, bokwindow=bokwindow, verbose=False)
+	if verbose:
+		print "Multi spline fit done"
+
+
+	# Without moving the delay, we iteratively fit the intrinsic spline and the ML:
+	# Important to do many iterations, so that ML and intrinsic spline can both move towards the better solution.
+	# No bok iterations here !
+	for it in range(20):
+
+		pycs.spl.multiopt.opt_ml(lcs, sourcespline=spline, bokit=0, splflat=False, verbose=False)
+		pycs.spl.multiopt.opt_source(lcs, spline, dpmethod="extadj", bokit = 0, verbose=False)
+		if verbose:
+			print "Initial iteration %i done, r2 = %8.1f" % (it + 1, spline.lastr2nostab)
+
+
+	# Curves should now overlap, except where fast ML is required.
+	# If no ML is required, ML curve is flat...
+	# No bok has been done so far.
+
+	for it in range(3):
+
+		pycs.spl.multiopt.opt_ml(lcs, sourcespline=spline, bokit=5, splflat=False, verbose=False)
+		pycs.spl.multiopt.opt_source(lcs, spline, dpmethod="extadj", bokit = 1, verbose=False)
+		if verbose:
+			print "BOK iteration %i done, r2 = %8.1f" % (it + 1, spline.lastr2nostab)
+
+
+	"""
+	# Now we add a finer ML
+	lcml.rmml()
+	mlknotstep = 250.0
+	mlbokeps = 100.0
+	pycs.gen.splml.addtolc(lcml, knotstep=mlknotstep, bokeps=mlbokeps)
+
+	# Do a first BOK optimization of the ML
+	pycs.spl.multiopt.opt_ml(lcs, sourcespline=spline, bokit=3, splflat=False, verbose=False)
+	"""
+
+
+	# And now iteratively optimize the shifts
+	if verbose:
+		print "Starting opt on initial delays :"
+		print pycs.gen.lc.getnicetimedelays(lcs, separator=" | ")
+	previousr2 = spline.lastr2nostab
+
+	for it in range(maxit):
+
+		#pycs.spl.multiopt.opt_ts_brute(lcs, spline, movefirst=False, optml=False, r=10, step=1.0, verbose=False)
+
+		pycs.spl.multiopt.opt_ts_indi(lcs, spline, method="brute", brutestep=0.2, bruter=20, verbose = False)
+		pycs.spl.multiopt.opt_ts_indi(lcs, spline, method="fmin", verbose=False)
+		pycs.spl.multiopt.opt_magshift(lcs, spline, verbose=False)
+
+		pycs.spl.multiopt.opt_source(lcs, spline, dpmethod="extadj", bokit = 1, verbose=False)
+		pycs.spl.multiopt.opt_ml(lcs, spline, bokit=1, splflat=False, verbose=False)
+
+		#print "opt_ts_brute brute done"
+		#print pycs.gen.lc.getnicetimedelays(lcs, separator=" | ")
+
+		pycs.spl.multiopt.opt_source(lcs, spline, dpmethod="extadj", bokit = 0, verbose=False)
+
+		r2changepercent = 100.0 * (spline.lastr2nostab - previousr2) / previousr2
+		if verbose:
+			print "Iteration %i done, r2 = %8.1f (%+.2f%%)" % (it+1, spline.lastr2nostab, r2changepercent)
+			print pycs.gen.lc.getnicetimedelays(lcs, separator=" | ")
+		previousr2 = spline.lastr2nostab
+
+		if r2changepercent < 0.0 and np.fabs(r2changepercent) < minchange:
+			if verbose:
+				print "I stop, minchange reached !"
+			break
+
+
+	if verbose:
+		print "Timeshift stabilization:"
+	for it in range(10):
+		pycs.spl.multiopt.opt_ts_indi(lcs, spline, optml=True, mlsplflat=False, method="fmin", verbose = False, trace=False)
+		pycs.spl.multiopt.opt_source(lcs, spline, dpmethod="extadj", bokit = 0, verbose=False, trace=False)
+		r2changepercent = 100.0 * (spline.lastr2nostab - previousr2) / previousr2
+		if verbose:
+			print "Iteration %i done, r2 = %8.1f (%+.2f%%)" % (it+1, spline.lastr2nostab, r2changepercent)
+			print pycs.gen.lc.getnicetimedelays(lcs, separator=" | ")
+		previousr2 = spline.lastr2nostab
+
+
+	return spline

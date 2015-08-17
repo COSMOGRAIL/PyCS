@@ -160,7 +160,7 @@ def opt_fluxshift(lcs, sourcespline, verbose = True, trace=False):
 def opt_ml(lcs, sourcespline, bokit = 0, bokmethod="BF", splflat = False, verbose = True, trace=False):
 	"""
 	Optimizes the microlensing of the lcs (one curve after the other) so that they fit to the spline.
-	I work with both polynomial and spline microlensing.
+	I work with both polynomial and spline microlensing. NO YOU DONT !!!
 	For spline micorlensing, I can do BOK iterations to move the knots.
 	
 	.. note:: Does not touch the sourcespline  at all !
@@ -222,11 +222,19 @@ def opt_ml(lcs, sourcespline, bokit = 0, bokmethod="BF", splflat = False, verbos
 			
 			# We go through the curve season by season :
 			for m in l.ml.mllist:
-				#print m.getparams(), m.season, m.season.indices
-				
+
+				#print m.getparams(), m.season, len(m.season.indices)
+				#print len(l.jds)
+				#continue
+				#sys.exit()
 				nparams = m.nfree
-				
+
 				mlseasjds = l.jds[m.season.indices]
+				#print m.season.indices
+				#print ''
+				#print len(m.season.indices)
+				#print len(l.jds)
+				#sys.exit()
 				mlseasjds -= np.mean(mlseasjds) # Convention for polyml, jds are "centered".
 				nomlmags = l.getmags(noml = True)[m.season.indices]
 				magerrs = l.magerrs[m.season.indices]
@@ -236,8 +244,7 @@ def opt_ml(lcs, sourcespline, bokit = 0, bokmethod="BF", splflat = False, verbos
 	
 				polyparams = pycs.gen.polyml.polyfit(mlseasjds, targetmags - nomlmags, magerrs, nparams)
 
-				m.setparams(polyparams)			
-
+				m.setparams(polyparams)
 	if verbose:
 		print "Done !"
 	

@@ -230,7 +230,8 @@ def draw(lcs, spline, shotnoise=None, shotnoisefrac=1.0, tweakml=None, scaletwea
 				
 			tweakresis = l.mags - lorigml.mags
 			#print np.std(tweakresis)
-			
+
+
 			# We scale them using previously saved residuals :
 			if not hasattr(l, 'residuals'):
 				raise RuntimeError("Save the residuals first !")

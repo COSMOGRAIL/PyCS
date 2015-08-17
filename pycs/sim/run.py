@@ -294,7 +294,7 @@ def multirun(simset, lcs, optfct, optset="multirun", tsrand=10.0, analyse = True
 	It is perfectly ok to launch several instances of myself on the same simset, to go faster.
 	I will process every pkl of the simset only once, and prevent other instances from processing the same files.
 	
-	You can use me for a lot of different tasks.	
+	You can use me for a lot of different tasks. (note from VB : not to make coffee apparently)
 	
 	:param simset: The name of the simulations to run on. Those are in a directory called ``sims_name``.
 	
@@ -319,10 +319,10 @@ def multirun(simset, lcs, optfct, optset="multirun", tsrand=10.0, analyse = True
 	
 	"""
 	
-	# We look for the sims directory
+	# We look for the sims directory OH GOD THIS IS SO UGLY !
 	simdir = "sims_%s" % (simset)
 	if not os.path.isdir(simdir):
-		raise RuntimeError("Sorry, I cannot find the directory %s" % simset)
+		raise RuntimeError("Sorry, I cannot find the directory %s" % simset) # well, fuck you then.
 		
 	simpkls = sorted(glob(os.path.join(simdir, "*.pkl")))
 	if verbose:

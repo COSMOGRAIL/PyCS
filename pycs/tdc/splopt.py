@@ -36,9 +36,9 @@ def calcknotstep(varios):
 	vratio = np.max(vratios)
 	sampling = np.min(samplings)
 	vratio = np.clip(vratio, 1.2, 5) # OK to lower this min value, but do not allow 1.0. OK to increase max value.
-	ks = 14.0/(vratio - 1.0)
+	ks = 14.0/(vratio - 1.0) # This is some kind of arbitrary, but worked on TDC...
 	ks = np.clip(ks, 2.0*sampling, 100.0)
-	
+
 	return float(ks)
 	
 
@@ -289,6 +289,9 @@ def spl3(lcs, knotstepfact=1.0, mlknotstep=365, maxit=7, minchange=1.0, verbose=
 	
 	knotstep = knotstepfact*calcknotstep([lca.vario, lcb.vario])
 	bokeps = np.max([sampling, knotstep/3.0])
+	print '='*40
+	print 'knotstep: ',knotstep, ' | bokeps: ', bokeps
+	print '='*40
 	"""
 	if len(lca) > 1000.0:
 		knotstep = 20.

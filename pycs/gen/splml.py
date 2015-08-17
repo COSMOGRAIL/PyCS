@@ -163,7 +163,7 @@ class SplineML():
 		self.spline = newspline.copy()
 		# And now we want to update the splines datapoints, by principle. Even if typically you will not fit this spline
 		# anymore, we need at least to be able to evaluate it !
-		self.spline.updatedp(olddp, method="extadj")
+		self.spline.updatedp(olddp, dpmethod="extadj")
 		#print olddp.jds[0], self.spline.datapoints.jds[0]
 		#print olddp.jds[-1], self.spline.datapoints.jds[-1]
 		

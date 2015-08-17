@@ -14,7 +14,6 @@ def tweakml(lcs, beta=-2.0, sigma=0.05, fmin=1/500.0, fmax=None, psplot=False, s
 	
 	
 	"""
-	
 	for l in lcs:
 		if l.ml == None:
 			print "WARNING, curve %s has no ML to tweak !" % (str(l))

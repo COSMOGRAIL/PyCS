@@ -1328,7 +1328,7 @@ def multidisplay(setlist=[],
 	title=None, style=None, showlegend=True, showlogo=False, logopos="left", showdates=False, showdelays=False, nicefont=False, text=None, 
 	jdrange=None, magrange=None, initfigsize=(12,8), plotsize=(0.08, 0.96, 0.09, 0.95), showgrid=False,
 	markersize=6, showerrorbars=True, errorbarcolour = "#BBBBBB", capsize=3, knotsize=0.015,
-	legendloc = "best", showspldp=False, colourprop=None, hidecolourbar=False,
+	legendloc = "best", showspldp=False, colourprop=None, hidecolourbar=False, transparent=False,
 	collapseref=False, jdmintickstep=100, magmintickstep=0.2, filename="screen", verbose=False):
 	"""
 	Function that uses matplotlib to plot a **list** of lightcurves/splines/GPRs, either on screen or into a file.
@@ -1436,6 +1436,9 @@ def multidisplay(setlist=[],
 	
 	:param hidecolourbar: Set to True to hide the colourbar for the colourprop
 	:type hidecolourbar: boolean
+
+	:param transparent: Set transparency for the plot, if saved using filename
+	:type transparent: boolean
 
 	:param collapseref: Plot one single dashed line as the reference for the microlensing.
 		Use this if you would otherwise get ugly overplotted dashed lines nearly at the same level ...
@@ -1837,7 +1840,7 @@ def multidisplay(setlist=[],
 	if filename == "screen":
 		plt.show()
 	else:
-		plt.savefig(filename)
+		plt.savefig(filename, transparent=transparent)
 		print "Plot written to %s" % filename
 		plt.close() # this seems important so that the plot is not displayed when a next plt.show() is called.
 	
@@ -1849,7 +1852,7 @@ def display(lclist=[], splist=[],
 	title=None, style=None, showlegend=True, showlogo=False, logopos="left", showdates=False, showdelays=False, nicefont=False, text=None, 
 	jdrange=None, magrange=None, figsize=(12,8), plotsize=(0.08, 0.96, 0.09, 0.95), showgrid=False,
 	markersize=6, showerrorbars=True, errorbarcolour = "#BBBBBB", capsize=3, knotsize=0.015,
-	legendloc = "best", showspldp=False, colourprop=None, hidecolourbar=False,
+	legendloc = "best", showspldp=False, colourprop=None, hidecolourbar=False, transparent=False,
 	collapseref=False, jdmintickstep=100, magmintickstep=0.2, filename="screen", verbose=False):
 	"""
 	Function that uses matplotlib to plot a **list** of lightcurves/splines/GPRs, either on screen or into a file.
@@ -1939,6 +1942,8 @@ def display(lclist=[], splist=[],
 			* lower left	3
 			* lower right	4
 			* right	5
+
+
 			* center left	6
 			* center right	7
 			* lower center	8
@@ -1957,6 +1962,9 @@ def display(lclist=[], splist=[],
 	
 	:param hidecolourbar: Set to True to hide the colourbar for the colourprop
 	:type hidecolourbar: boolean
+
+	:param transparent: Set transparency for the plot, if saved using filename
+	:type transparent: boolean
 
 	:param collapseref: Plot one single dashed line as the reference for the microlensing.
 		Use this if you would otherwise get ugly overplotted dashed lines nearly at the same level ...
@@ -1990,7 +1998,7 @@ def display(lclist=[], splist=[],
 	elif style=="homepagepdf":
 		figsize=(10,5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
-		showlogo=True
+		showlogo=False
 		nicefont=False
 		showdelays=False
 		showlegend=False
@@ -2001,6 +2009,43 @@ def display(lclist=[], splist=[],
 		jdmintickstep=50
 		magmintickstep=0.2
 		showgrid=True
+		transparent=False
+
+	elif style=="posterpdf":
+		figsize=(10,5.5)
+		plotsize=(0.09, 0.97, 0.10, 0.95)
+		showlogo=False
+		nicefont=True
+		showdelays=False
+		showlegend=False
+		showdates=True
+		errorbarcolour="#777777"
+		markersize=4.0
+		capsize=0
+		jdmintickstep=50
+		magmintickstep=0.2
+		showgrid=False
+		transparent=True
+		title=None
+
+	elif style=="internal":
+		figsize=(10,5.5)
+		plotsize=(0.09, 0.97, 0.10, 0.95)
+		showlogo=False
+		nicefont=True
+		showdelays=False
+		showlegend=True
+		showdates=True
+		errorbarcolour="#777777"
+		markersize=5.0
+		capsize=0
+		jdmintickstep=50
+		magmintickstep=0.2
+		showgrid=True
+		transparent=False
+
+
+
 	else:
 		raise RuntimeError("I do not know the style %s" % (style))
 	
@@ -2323,7 +2368,7 @@ def display(lclist=[], splist=[],
 	if filename == "screen":
 		plt.show()
 	else:
-		plt.savefig(filename)
+		plt.savefig(filename, transparent=transparent)
 		#if verbose:
 		print "Plot written to %s" % filename
 		plt.close() # this seems important so that the plot is not displayed when a next plt.show() is called.

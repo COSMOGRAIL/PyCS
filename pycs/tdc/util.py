@@ -38,7 +38,7 @@ def tdcfilepath(set, rung, pair, skipset=False):
 		return "%s/rung%i/%s_rung%i_pair%i.txt" % (set, rung, set, rung, pair)
 
 
-	if set=='tdc1':
+	elif set=='tdc1':
 	
 		if pair<=720:
 			if skipset == False:	
@@ -64,6 +64,9 @@ def tdcfilepath(set, rung, pair, skipset=False):
 				return "%s/rung%i/%s_rung%i_quad_pair%s%s.txt" % (set, rung, set, rung, quadpair, quadcode)	
 			else:
 				return "rung%i/%s_rung%i_quad_pair%s%s.txt" % (rung, set, rung, quadpair, quadcode)
+
+	else: # if this is a cosmograil target
+		return "%s/%s_%s.rdb" % (set, set, rung)
 
 
 
@@ -103,34 +106,53 @@ def asinhmag(flux, fluxerr,  m0 = 22.5, f0=1.0, b=0.01):
 	return (mag, magerr)
 
 
-def read(filepath, mag="asinh", verbose=True, shortlabel=True):
+def read(filepath, mag="asinh", verbose=True, shortlabel=True, pair=None):
 	"""
 	Imports TDC light curves, WITH ASINH MAGNITUDES 
 	So far we expect exactly 2 curves in each file, as TDC simulates only doubles.
 	Can be generalized later ...
+	NEW : also import cosmograil lcs if pair is not None
 	"""
-	
-	tdcid = os.path.splitext(os.path.basename(filepath))[0]
-	
-	if shortlabel == False:
-		lc1 = pycs.gen.lc.flexibleimport(filepath, magcol=2, errcol=3, telescopename="TDC", object=tdcid+"_A", plotcolour="red", verbose = verbose)
-		lc2 = pycs.gen.lc.flexibleimport(filepath, magcol=4, errcol=5, telescopename="TDC", object=tdcid+"_B", plotcolour="blue", verbose = verbose)
-	else:
-		lc1 = pycs.gen.lc.flexibleimport(filepath, magcol=2, errcol=3, telescopename="TDC", object="A", plotcolour="red", verbose = verbose)
-		lc2 = pycs.gen.lc.flexibleimport(filepath, magcol=4, errcol=5, telescopename="TDC", object="B", plotcolour="blue", verbose = verbose)			
 
-	lcs = [lc1, lc2]
 
-	for l in lcs:
-		#l.jds += 56586.0 # Starts on 21 October 2013 :)
-		
-		if mag == "pog":
-			(l.mags, l.magerrs) = pogmag(l.mags, l.magerrs, m0 = 22.5)
-		if mag == "asinh":
-			(l.mags, l.magerrs) = asinhmag(l.mags, l.magerrs, m0 = 22.5, b=0.01)
-			
+	if pair == None:
+
+		tdcid = os.path.splitext(os.path.basename(filepath))[0]
+
+		if shortlabel == False:
+			lc1 = pycs.gen.lc.flexibleimport(filepath, magcol=2, errcol=3, telescopename="TDC", object=tdcid+"_A", plotcolour="red", verbose = verbose)
+			lc2 = pycs.gen.lc.flexibleimport(filepath, magcol=4, errcol=5, telescopename="TDC", object=tdcid+"_B", plotcolour="blue", verbose = verbose)
+		else:
+			lc1 = pycs.gen.lc.flexibleimport(filepath, magcol=2, errcol=3, telescopename="TDC", object="A", plotcolour="red", verbose = verbose)
+			lc2 = pycs.gen.lc.flexibleimport(filepath, magcol=4, errcol=5, telescopename="TDC", object="B", plotcolour="blue", verbose = verbose)
+
+		lcs = [lc1, lc2]
+
+		for l in lcs:
+			#l.jds += 56586.0 # Starts on 21 October 2013 :)
+
+			if mag == "pog":
+				(l.mags, l.magerrs) = pogmag(l.mags, l.magerrs, m0 = 22.5)
+			if mag == "asinh":
+				(l.mags, l.magerrs) = asinhmag(l.mags, l.magerrs, m0 = 22.5, b=0.01)
+
+	else: # This is for COSMOGRAIL lcs.
+		"""
+		For now, we use only magerr_4. This should be generalised.
+		"""
+
+		if len(pair) == 2:
+			ids = [pair[0],pair[1]]
+		else:
+			print "One image's name is longer than 1 character (i.e. AD). I don't know how to handle this !"
+			sys.exit()
+
+		lc1 = pycs.gen.lc.rdbimport(filepath, '%s' %ids[0], 'mag_%s' %ids[0], 'magerr_%s' %ids[0], "ECAM", plotcolour='red')
+		lc2 = pycs.gen.lc.rdbimport(filepath, '%s' %ids[1], 'mag_%s' %ids[1], 'magerr_%s' %ids[1], "ECAM", plotcolour='blue')
+
+		lcs = [lc1, lc2]
+
 	return lcs
-
 
 
 def godtweak(estimates):
@@ -317,6 +339,7 @@ def readsubmission(filepath):
 
 		if td != '-99.00' and tderr != '-99.00':
 			subinfos.append((estid,-float(td),float(tderr))) # The - sign is as conventions change between tdc and pycs 
-	
+
+	print "I read submission %s, with %i entries" %(os.path.basename(filepath), len(subinfos))
 	return subinfos		
 		
