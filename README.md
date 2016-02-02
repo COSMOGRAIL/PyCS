@@ -1,5 +1,8 @@
-Welcome !
-=========
+# PyCS
+Python Curve Shifting
+
+We're right in the progress of migrating to github.
+
 PyCS is a software toolbox to estimate time delays between COSMOGRAIL light curves, developed at EPFL’s LASTRO.
 Please see the documentation available at http://www.cosmograil.org for installation instructions and further info.
 
@@ -16,9 +19,9 @@ http://docs.python.org/distutils/
 
 
 
-License
-=======
-Copyright (©) 2011-2013 EPFL (Ecole Polytechnique Fédérale de Lausanne)
+# License
+
+Copyright (©) 2011-2016 EPFL (Ecole Polytechnique Fédérale de Lausanne)
 Laboratory of Astrophysics (LASTRO)
 
 PyCS is free software ; you can redistribute it and/or modify it under the terms of the 
@@ -31,8 +34,5 @@ General Public License for more details (LICENSE.txt).
 
 You should have received a copy of the GNU General Public License along with PyCS ; if not, 
 write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
-
-Author : Malte TEWES (malte.tewes[at]epfl.ch)
-Web site : http://www.cosmograil.org
 
 
