@@ -322,7 +322,7 @@ def multirun(simset, lcs, optfct, optset="multirun", tsrand=10.0, analyse = True
 	# We look for the sims directory OH GOD THIS IS SO UGLY !
 	simdir = "sims_%s" % (simset)
 	if not os.path.isdir(simdir):
-		raise RuntimeError("Sorry, I cannot find the directory %s" % simset) # well, fuck you then.
+		raise RuntimeError("Sorry, I cannot find the directory %s" % simset)
 		
 	simpkls = sorted(glob(os.path.join(simdir, "*.pkl")))
 	if verbose:
