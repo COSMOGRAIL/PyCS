@@ -1,5 +1,6 @@
 # PyCS
 Python Curve Shifting
+Still the best tool around to shift light curves !
 
 ## About
 
