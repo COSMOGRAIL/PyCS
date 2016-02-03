@@ -48,7 +48,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'pycs'
-copyright = u'2013, COSMOGRAIL'
+copyright = u'2016, COSMOGRAIL'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -71,7 +71,7 @@ release = '2.0'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+#exclude_patterns = ['_build']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -104,9 +104,11 @@ html_theme = 'default'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #html_theme_options = {"stickysidebar":True, "externalrefs":True, "sidebarbgcolor":"#555555"}
-html_theme_options = {"nosidebar":False, "sidebarwidth":250,
-	"stickysidebar":True, "externalrefs":True,
-	"sidebarbgcolor":"#555555"}
+
+# Was there before moving to git:
+#html_theme_options = {"nosidebar":False, "sidebarwidth":250,
+#	"stickysidebar":True, "externalrefs":True,
+#	"sidebarbgcolor":"#555555"}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -224,3 +226,10 @@ man_pages = [
     ('index', 'pycs', u'pycs Documentation',
      [u'Malte Tewes'], 1)
 ]
+
+
+# Additional stuff:
+autodoc_member_order = "bysource"
+autodoc_default_flags = ["members", 'undoc-members', 'private-members', 'special-members'] # We also want to document __str__ etc
+autoclass_content = ["both"] # this includes both class and __init__ docstrings, great !
+
