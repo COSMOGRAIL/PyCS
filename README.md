@@ -1,5 +1,6 @@
 # PyCS
 Python Curve Shifting
+[![Documentation Status](https://readthedocs.org/projects/pycs/badge/?version=latest)](http://pycs.readthedocs.org/en/latest/?badge=latest)
 
 ## About
 
