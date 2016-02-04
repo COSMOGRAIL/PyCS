@@ -9,7 +9,7 @@ Proceed to the [documentation](http://pycs.readthedocs.org) to get further infor
 
 ## License
 
-If you use this code, please cite the papers indicated in the [documentation](http://pycs.readthedocs.org).
+If you use this code, please cite [the papers](http://pycs.readthedocs.org/en/latest/citing.html) indicated in the documentation.
 
 Copyright (©) 2011-2016 EPFL (Ecole Polytechnique Fédérale de Lausanne)
 Laboratory of Astrophysics (LASTRO)
