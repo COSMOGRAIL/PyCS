@@ -1,7 +1,14 @@
-Building this documentation
-===========================
+About this documentation
+========================
 
-We have now switched to Sphinx : `<http://sphinx.pocoo.org/>`_.
+The documentation is build using Sphinx : `<http://sphinx.pocoo.org/>`_.
+
+Some of it (e.g., tutorials) is written in form of plain .rst files, and other parts are created by ``sphinx-apidoc``
+
+
+Try to stick to their recommendations about documenting code in your docstrings. And make use of the described way to add links to the documentation
+
+
 
 To build the documentation by yourself (assuming you have the latest version of sphinx) :
 

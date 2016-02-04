@@ -10,7 +10,6 @@ About
 
 PyCS is a software toolbox to estimate time delays between multiple images of strongly lensed quasars, from resolved light curves such as obtained by the `COSMOGRAIL <http://www.cosmograil.org/>`_ monitoring program. The methods implemented in PyCS are described in our paper `COSMOGRAIL XI: Techniques for time delay measurement in presence of microlensing (Tewes et al. 2013) <http://arxiv.org/abs/1208.5598>`_.
 
-.. .. warning:: Hi there, dear astro-ph readers ! Our paper is now submitted to A&A (30 July 2012). The present website is already online as a placeholder, but we will upload the code/tutorial and better documentation once the paper is published.
 
 PyCS is not a standalone program; it comes in the form of a python package called ``pycs``, and heavily depends on ``numpy``, ``scipy``, and ``matplotlib``. The ``pycs`` package defines a collection of classes and high level functions, that you can *script* in a flexible way. PyCS makes it easy to compare different point estimators (including your own) without much code integration.
 
