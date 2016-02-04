@@ -1,28 +1,15 @@
-# PyCS
-Python Curve Shifting
+# Python Curve Shifting
+
+PyCS is a software toolbox to estimate time delays between multiple images of gravitationally lensed quasars, developed within the [COSMOGRAIL](http://www.cosmograil.org) collaboration. It might be a bit of a mess, but hey, at least it's public.
+
+Proceed to the [documentation](http://pycs.readthedocs.org) for further information. 
+
 [![Documentation Status](https://readthedocs.org/projects/pycs/badge/?version=latest)](http://pycs.readthedocs.org/en/latest/?badge=latest)
-
-## About
-
-We're right in the progress of migrating to github.
-
-PyCS is a software toolbox to estimate time delays between COSMOGRAIL light curves, developed at EPFL’s LASTRO.
-Please see the documentation available at http://www.cosmograil.org for installation instructions and further info.
-
-Quick :
-python setup.py install
-
-However, read the section about installation on the website. You might prefer to simply add the PyCS directory to your python path.
-
-To create a source distribution :
-python setup.py sdist
-
-More info :
-http://docs.python.org/distutils/
-
 
 
 ## License
+
+If you use this code, please cite the papers indicated in the [documentation](http://pycs.readthedocs.org).
 
 Copyright (©) 2011-2016 EPFL (Ecole Polytechnique Fédérale de Lausanne)
 Laboratory of Astrophysics (LASTRO)
