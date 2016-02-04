@@ -51,6 +51,7 @@ coverage.xml
 
 # Sphinx build and apidoc:
 sphinx/build/
-sphinx/source/apidoc/
+#sphinx/source/apidoc/ # No, we now include the apidoc into git, for easier processing by readthedocs.org
 
+# Mac OS X:
 .DS_Store
