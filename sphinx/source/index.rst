@@ -8,7 +8,7 @@ PyCS : Python Curve Shifting
 About
 -----
 
-PyCS is a software toolbox to estimate time delays between multiple images of strongly lensed quasars, from resolved light curves such as obtained by the `COSMOGRAIL <http://www.cosmograil.org/>`_ monitoring program. It comes in the form of a python package, and heavily depends on ``numpy``, ``scipy``, and ``matplotlib`` for its core functionality.
+PyCS is a software toolbox to estimate time delays between multiple images of strongly lensed quasars, from resolved light curves such as obtained by the `COSMOGRAIL <http://www.cosmograil.org/>`_ monitoring program. It comes in the form of a python package, and heavily depends on ``numpy``, ``scipy``, and ``matplotlib`` for its core functionality. The `repository is on GitHub <https://github.com/COSMOGRAIL/PyCS>`_.
 
 To measure time delays with ``pycs``, you'll typically write a script calling some high-level functions provided by the package. PyCS allows you to compare different point estimators (including your own), without much code integration.
 
