@@ -33,7 +33,7 @@ Installation
 ------------
 
 PyCS is not exactly "production level code", and you might want to update or tweak the sources.
-So keep this simple, we suggest to just add your cloned repository to your ``PYTHONPATH``.
+So to keep this simple, we suggest to just add your cloned repository to your ``PYTHONPATH``.
 
 For **tcsh**, add for instance something like this to your .tcshrc ::
 
