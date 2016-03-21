@@ -251,20 +251,25 @@ def opt_ts_mix(lcs, rawdispersionmethod, movefirst=False, verbose=True):
 
 	# Raw work with annealing :
 	
-	res = spopt.anneal(errorfct, initshifts, schedule='fast', lower=-20, upper=20, dwell=10, learn_rate=0.2, T0 = 1.0e-5, Tf = 1.0e-7, feps=0.0, boltzmann = 0.1,full_output = 1)
-	ann_res = res[0]
+	# Anneal no longer exists in scipy
+	#res = spopt.anneal(errorfct, initshifts, schedule='fast', lower=-20, upper=20, dwell=10, learn_rate=0.2, T0 = 1.0e-5, Tf = 1.0e-7, feps=0.0, boltzmann = 0.1,full_output = 1)
+	# Replacing it with 
+	res = spopt.basinhopping(errorfct, initshifts, niter=100, T=1.0, stepsize=10.0, interval=50, disp=False, niter_success=10)
+	# It could be that we want less iterations to be faster. For now I keep it like this, has to be investigated with a special case.
+	
+	ann_res = res.x # The optimal parameters
 	
 	if verbose:
-		print "Annealing timeshifts : %s" % res[0]
-		print "Dispersion value : %7.3f" % res[1]
-		print "Final temperature : %.3g" % res[2]
-		print "Dispersion calls on couples : %i" % res[3]
-		if res[6] == 0:
-			print "Cooled to global minimum."
-		elif res[6] == 1:
-			print "Cooled to minimum temperature."
-		else:	
-			print "### WARNING : %i ###" % res[6]
+		print "Rough optimization timeshifts : %s" % res.x
+		print "Dispersion value : %7.3f" % res.fun
+		#print "Final temperature : %.3g" % res[2]
+		#print "Dispersion calls on couples : %i" % res[3]
+		#if res[6] == 0:
+		#	print "Cooled to global minimum."
+		#elif res[6] == 1:
+		#	print "Cooled to minimum temperature."
+		#else:	
+		#	print "### WARNING : %i ###" % res[6]
 	
 
 	# Medium work with iterative brute force :
