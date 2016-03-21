@@ -1011,7 +1011,7 @@ class Spline():
 		By default, we exclude the stabilization points !
 		If jds is not None, we use them instead of our own jds (in this case excludestab makes no sense)
 		"""
-		if jds == None:
+		if jds is None:
 			if nostab:
 				jds = self.datapoints.jds[self.datapoints.mask]
 			else:
