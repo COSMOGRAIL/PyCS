@@ -1,6 +1,5 @@
-Getting time delay histograms
-=============================
-
+Getting delay histograms and results
+====================================
 
 
 Generalities
