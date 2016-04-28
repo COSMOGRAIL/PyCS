@@ -2,14 +2,14 @@
 
 PyCS is a software toolbox to estimate time delays between multiple images of gravitationally lensed quasars, developed within the [COSMOGRAIL](http://www.cosmograil.org) collaboration. It might be a bit of a mess, but hey, at least it's public.
 
-Proceed to the [documentation](http://pycs.readthedocs.org) to get further information. In case of questions, feel free to open an issue here on GitHub.
+Proceed to the [documentation](http://pycs.readthedocs.io) to get further information. In case of questions, feel free to open an issue here on GitHub.
 
-[![Documentation Status](https://readthedocs.org/projects/pycs/badge/?version=latest)](http://pycs.readthedocs.org/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.io/projects/pycs/badge/?version=latest)](http://pycs.readthedocs.io/en/latest/?badge=latest)
 
 
 ## License
 
-If you use this code, please cite [the papers](http://pycs.readthedocs.org/en/latest/citing.html) indicated in the documentation.
+If you use this code, please cite [the papers](http://pycs.readthedocs.io/en/latest/citing.html) indicated in the documentation.
 
 Copyright (©) 2011-2016 EPFL (Ecole Polytechnique Fédérale de Lausanne)
 Laboratory of Astrophysics (LASTRO)
