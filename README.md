@@ -4,7 +4,7 @@ PyCS is a software toolbox to estimate time delays between multiple images of gr
 
 Proceed to the [documentation](http://pycs.readthedocs.io) to get further information. In case of questions, feel free to open an issue here on GitHub.
 
-[![Documentation Status](https://readthedocs.io/projects/pycs/badge/?version=latest)](http://pycs.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/pycs/badge/?version=latest)](http://pycs.readthedocs.org/en/latest/?badge=latest)
 
 
 ## License
