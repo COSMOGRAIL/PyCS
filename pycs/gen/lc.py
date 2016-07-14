@@ -464,8 +464,8 @@ class lightcurve:
 				return self.mags + self.magshift + self.ml.calcmlmags(self)
 			else:
 				return self.mags + self.magshift	
-		
-	
+
+
 #	def getflux(self):
 # 		"""
 # 		For debugging ...
@@ -604,7 +604,7 @@ class lightcurve:
 		self.labels = ["%.1f" % (jd) for jd in self.jds]
 		#self.showlabels = True
 	
-	def maskskiplist(self, filepath, searchrange=0.2, verbose=True):
+	def maskskiplist(self, filepath, searchrange=0.2, ignore_warnings=False, verbose=True):
 		"""
 		I mask points according to a skiplist. I do not modify the mask for points that are not on the skiplist,
 		i.e. I do not reset the mask in any way.
@@ -637,6 +637,15 @@ class lightcurve:
 			elif len(indices) > 1:
 				if verbose:
 					print "Warning, multiple matches for epoch %s from skiplist !" % (skippoint[0])
+				if ignore_warnings:
+					if verbose:
+						print "I mask all of them..."
+					for index in indices:
+						if self.mask[index] == False:
+							if verbose:
+								print "Epoch %s is already masked." % (skippoint[0])
+						else:
+							self.mask[index] = False
 			elif len(indices) == 1:
 				index = indices[0]
 				if self.mask[index] == False:
@@ -1843,17 +1852,17 @@ def multidisplay(setlist=[],
 		plt.savefig(filename, transparent=transparent)
 		print "Plot written to %s" % filename
 		plt.close() # this seems important so that the plot is not displayed when a next plt.show() is called.
-	
-	
-	
+
+
+
 
 
 def display(lclist=[], splist=[],
-	title=None, style=None, showlegend=True, showlogo=False, logopos="left", showdates=False, showdelays=False, nicefont=False, text=None, 
+	title=None, style=None, showlegend=True, showlogo=False, logopos="left", showdates=False, showdelays=False, nicefont=False, text=None, keeponlygrid=False,
 	jdrange=None, magrange=None, figsize=(12,8), plotsize=(0.08, 0.96, 0.09, 0.95), showgrid=False,
-	markersize=6, showerrorbars=True, errorbarcolour = "#BBBBBB", capsize=3, knotsize=0.015,
+	markersize=6, showerrorbars=True, showdatapoints=True, errorbarcolour = "#BBBBBB", capsize=3, knotsize=0.015,
 	legendloc = "best", showspldp=False, colourprop=None, hidecolourbar=False, transparent=False,
-	collapseref=False, jdmintickstep=100, magmintickstep=0.2, filename="screen", verbose=False):
+	collapseref=False, jdmintickstep=100, magmintickstep=0.2, filename="screen", showinsert=None, insertname=None, verbose=False, ax=None):
 	"""
 	Function that uses matplotlib to plot a **list** of lightcurves/splines/GPRs, either on screen or into a file.
 	It uses lightcurve attributes such as ``lc.plotcolour`` and ``lc.showlabels``, and displays masked points
@@ -1924,7 +1933,19 @@ def display(lclist=[], splist=[],
 	
 	:param showerrorbars: If False, the ploterrorbar settings of the lightcurves are disregared and no error bars are shown.
 	:type showerrorbars: boolean
-	
+
+	:param showdatapoints: If False, no data points are shown. Useful if you want e.g. to plot only the microlensing
+	:type showerrorbars: boolean
+
+	:param keeponlygrid: If True, keeps the yearly grid from showdates but do not display the dates above the plot.
+	:type keeponlygrid: boolean
+
+	:param showinsert: If True, display the insertname image in the top-right corner of the main image
+	:type showinsert: boolean
+
+	:param insertname: path to the image you want to insert
+	:type instername: string
+
 	:param errorbarcolour: Color for the error bars
 	:type errorbarcolour: string
 	
@@ -1979,6 +2000,9 @@ def display(lclist=[], splist=[],
 	
 	:param filename: If this is not "screen", I will save the plot to a file instead of displaying it. Try e.g. "test.png" or "test.pdf". Success depends on your matplotlib backend.
 	:type filename: string
+
+	:param ax: if not None, I will return what I plot in the given matplotlib axe you provide me with instead of plotting it.
+	:type ax: matplotlib axes
 
 	:param verbose: Set to True if you want me to print some details while I process the curves
 	:type verbose: boolean
@@ -2065,11 +2089,14 @@ def display(lclist=[], splist=[],
 	else:
 		labelfontsize = 14
 
-	
-	fig = plt.figure(figsize=figsize)	# sets figure size
-	fig.subplots_adjust(left = plotsize[0], right=plotsize[1], bottom=plotsize[2], top=plotsize[3])
+	if ax == None:
+		fig = plt.figure(figsize=figsize)	# sets figure size
+		fig.subplots_adjust(left = plotsize[0], right=plotsize[1], bottom=plotsize[2], top=plotsize[3])
+		axes = plt.gca()
 
-	axes = plt.gca()
+	else:
+		ihaveax = True
+		axes = ax
 	
 	if verbose : print "Plotting %i lightcurves and %i splines ..." % (len(lclist), len(splist))
 
@@ -2077,51 +2104,51 @@ def display(lclist=[], splist=[],
 
 	# The lightcurves :
 	for curve in lclist :
-		
-		if type(curve).__name__ == 'tuple': # then we have both a lightcurve and a season to plot
-		
-			actualcurve = curve[0]
-			curveseasons = curve[1]
-			
-			if not isinstance(curveseasons, list):
-				raise TypeError, "lc.display wants LISTs of seasons, not individual seasons !"
-			for curveseason in curveseasons:
-				# the x lims :
-				(x1, x2) = curveseason.getjdlims(actualcurve)
-				# for y, lets take the median of that season
-				y = np.median(actualcurve.getmags()[curveseason.indices])
-				
-				# we make this robust even with old versions of matplotlib, so no fancy arrows here.
-				plt.plot([x1, x2], [y, y], color = actualcurve.plotcolour, dashes = (1,1))
-				axes.annotate(str(curveseason), ((x1 + x2)/2.0, y), xytext=(-50, -15), textcoords='offset points', size=10, color = actualcurve.plotcolour)
-				#plt.axvline(seasonjdlims[0], color = curve[0].plotcolour, dashes = (5,5))
-				#plt.axvline(seasonjdlims[1], color = curve[0].plotcolour, dashes = (5,5))
-			
-			curve = curve[0] # for the rest of this loop, curve is now only the lightcurve.
-	
+		if showdatapoints:
+			if type(curve).__name__ == 'tuple': # then we have both a lightcurve and a season to plot
 
-		if verbose: print "#   %s -> %s\n\t%s" % (curve, str(curve.plotcolour), "\n\t".join(curve.commentlist))
-		#if verbose and (curve.ml != None):
-		#	print curve.ml.longinfo()
-		
-		tmpjds = curve.getjds()
-		tmpmags = curve.getmags() # to avoid calculating the microlensing each time we need it
-		
-		if colourprop != None:
-			scattervalues = np.array([float(propertydict[colourpropname]) for propertydict in curve.properties])
-			plt.scatter(tmpjds, tmpmags, s=markersize, c=scattervalues, vmin=colourminval, vmax=colourmaxval, edgecolors="None")
-		else:
-		
-			if curve.ploterrorbars and showerrorbars:
-				plt.errorbar(tmpjds, tmpmags, curve.magerrs, fmt=".", markersize = markersize, markeredgecolor=curve.plotcolour, color=curve.plotcolour, ecolor=errorbarcolour, capsize=capsize, label=str(curve), elinewidth=0.5)
-				#plt.errorbar(tmpjds, tmpmags, curve.magerrs, linestyle="-", marker=".", color=curve.plotcolour, ecolor="#BBBBBB", label=str(curve))
-				#
-			else :
-				plt.plot(tmpjds, tmpmags, marker=".", markersize = markersize, linestyle="None", markeredgecolor=curve.plotcolour, color=curve.plotcolour, label=str(curve))
-			
-		# We plot little round circles around masked points.
-		plt.plot(tmpjds[curve.mask == False], tmpmags[curve.mask == False], linestyle="None", marker="o", markersize=8., markeredgecolor="black", markerfacecolor="None", color="black")
-		
+				actualcurve = curve[0]
+				curveseasons = curve[1]
+
+				if not isinstance(curveseasons, list):
+					raise TypeError, "lc.display wants LISTs of seasons, not individual seasons !"
+				for curveseason in curveseasons:
+					# the x lims :
+					(x1, x2) = curveseason.getjdlims(actualcurve)
+					# for y, lets take the median of that season
+					y = np.median(actualcurve.getmags()[curveseason.indices])
+
+					# we make this robust even with old versions of matplotlib, so no fancy arrows here.
+					axes.plot([x1, x2], [y, y], color = actualcurve.plotcolour, dashes = (1,1))
+					axes.annotate(str(curveseason), ((x1 + x2)/2.0, y), xytext=(-50, -15), textcoords='offset points', size=10, color = actualcurve.plotcolour)
+					#plt.axvline(seasonjdlims[0], color = curve[0].plotcolour, dashes = (5,5))
+					#plt.axvline(seasonjdlims[1], color = curve[0].plotcolour, dashes = (5,5))
+
+				curve = curve[0] # for the rest of this loop, curve is now only the lightcurve.
+
+
+			if verbose: print "#   %s -> %s\n\t%s" % (curve, str(curve.plotcolour), "\n\t".join(curve.commentlist))
+			#if verbose and (curve.ml != None):
+			#	print curve.ml.longinfo()
+
+			tmpjds = curve.getjds()
+			tmpmags = curve.getmags() # to avoid calculating the microlensing each time we need it
+
+			if colourprop != None:
+				scattervalues = np.array([float(propertydict[colourpropname]) for propertydict in curve.properties])
+				axes.scatter(tmpjds, tmpmags, s=markersize, c=scattervalues, vmin=colourminval, vmax=colourmaxval, edgecolors="None")
+			else:
+
+				if curve.ploterrorbars and showerrorbars:
+					axes.errorbar(tmpjds, tmpmags, curve.magerrs, fmt=".", markersize = markersize, markeredgecolor=curve.plotcolour, color=curve.plotcolour, ecolor=errorbarcolour, capsize=capsize, label=str(curve), elinewidth=0.5)
+					#plt.errorbar(tmpjds, tmpmags, curve.magerrs, linestyle="-", marker=".", color=curve.plotcolour, ecolor="#BBBBBB", label=str(curve))
+					#
+				else :
+					axes.plot(tmpjds, tmpmags, marker=".", markersize = markersize, linestyle="None", markeredgecolor=curve.plotcolour, color=curve.plotcolour, label=str(curve))
+
+			# We plot little round circles around masked points.
+			axes.plot(tmpjds[curve.mask == False], tmpmags[curve.mask == False], linestyle="None", marker="o", markersize=8., markeredgecolor="black", markerfacecolor="None", color="black")
+
 		# And now we want to graphically display the microlensing in a nice way. This costs some cpu but anyway
 		# for a display it's fine.
 		#if curve.ml != None and curve.hideml == False:
@@ -2130,24 +2157,33 @@ def display(lclist=[], splist=[],
 				for sfct in curve.ml.mllist:
 					smoothml = sfct.smooth(curve)
 					if not collapseref:
-						plt.plot(smoothml['jds'], smoothml['refmags'], color=curve.plotcolour, dashes = ((3,3))) # the new ref
+						axes.plot(smoothml['jds'], smoothml['refmags'], color=curve.plotcolour, dashes = ((3,3))) # the new ref
 					else:
 						reflevels.append(np.mean(smoothml['refmags']))
-					plt.plot(smoothml['jds'], smoothml['refmags'] + smoothml['ml'], color=curve.plotcolour)
+					axes.plot(smoothml['jds'], smoothml['refmags'] + smoothml['ml'], color=curve.plotcolour)
 			if curve.ml.mltype == "spline":
 				smoothml = curve.ml.smooth(curve)
-				
+
 				if not collapseref:
-					plt.plot(smoothml['jds'], np.zeros(smoothml["n"]) + smoothml['refmag'], color=curve.plotcolour, dashes = ((3,3))) # the new ref
+					axes.plot(smoothml['jds'], np.zeros(smoothml["n"]) + smoothml['refmag'], color=curve.plotcolour, dashes = ((3,3))) # the new ref
 				else:
 					reflevels.append(smoothml['refmag'])
-				
-				plt.plot(smoothml['jds'], smoothml['refmag'] + smoothml['ml'], color=curve.plotcolour)
+
+				if hasattr(curve, "hideml"):
+					if not curve.hideml:
+						axes.plot(smoothml['jds'], smoothml['refmag'] + smoothml['ml'], color=curve.plotcolour)
+				else:
+					axes.plot(smoothml['jds'], smoothml['refmag'] + smoothml['ml'], color=curve.plotcolour)
 				# We want to overplot the knots
-				#plt.plot(smoothml['knotjds'], smoothml['knotmags'] + smoothml["refmag"], color=curve.plotcolour, linestyle="none", marker=".")
-				if getattr(curve.ml.spline, "showknots", True) == True:
-					plt.errorbar(smoothml['knotjds'], smoothml['knotmags'] + smoothml["refmag"], knotsize*np.ones(len(smoothml['knotjds'])), capsize=0, ecolor=curve.plotcolour, linestyle="none", marker="", elinewidth=1.5)
-		
+				if hasattr(curve, "hideml"):
+					if not curve.hideml:
+						if getattr(curve.ml.spline, "showknots", True) == True:
+							axes.errorbar(smoothml['knotjds'], smoothml['knotmags'] + smoothml["refmag"], knotsize*np.ones(len(smoothml['knotjds'])), capsize=0, ecolor=curve.plotcolour, linestyle="none", marker="", elinewidth=1.5)
+				else:
+					if getattr(curve.ml.spline, "showknots", True) == True:
+						axes.errorbar(smoothml['knotjds'], smoothml['knotmags'] + smoothml["refmag"], knotsize*np.ones(len(smoothml['knotjds'])), capsize=0, ecolor=curve.plotcolour, linestyle="none", marker="", elinewidth=1.5)
+
+
 		# Labels if wanted :
 		if curve.showlabels:
 			for i, label in enumerate(curve.labels):
@@ -2156,11 +2192,11 @@ def display(lclist=[], splist=[],
 					if len(label) > 4: # Probably jd labels, we write vertically :
 						axes.annotate(label, (tmpjds[i], tmpmags[i]), xytext=(-3, -70), textcoords='offset points',size=12, color = curve.plotcolour, rotation = 90)
 					else:	# horizontal writing
-						axes.annotate(label, (tmpjds[i], tmpmags[i]), xytext=(7, -6), textcoords='offset points',size=12, color = curve.plotcolour)	
+						axes.annotate(label, (tmpjds[i], tmpmags[i]), xytext=(7, -6), textcoords='offset points',size=12, color = curve.plotcolour)
 
 	if collapseref and len(reflevels) != 0:
 		print "WARNING : collapsing the refs %s" % (reflevels)
-		plt.axhline(np.mean(np.array(reflevels)), color="gray", dashes = ((3,3))) # the new ref
+		axes.axhline(np.mean(np.array(reflevels)), color="gray", dashes = ((3,3))) # the new ref
 
 	
 	# The supplementary objects
@@ -2176,20 +2212,30 @@ def display(lclist=[], splist=[],
 				npts = (spline.datapoints.jds[-1] - spline.datapoints.jds[0])*2.0
 				xs = np.linspace(spline.datapoints.jds[0], spline.datapoints.jds[-1], npts)
 				ys = spline.eval(jds = xs)
-				plt.plot(xs, ys, "-", color=spline.plotcolour, zorder=+20, label=str(spline))
+				axes.plot(xs, ys, "-", color=spline.plotcolour, zorder=+20, label=str(spline))
 				# For the knots, we might not want to show them (by default we do show them) :
 				if getattr(spline, "showknots", True) == True:
-					#plt.errorbar(spline.getinttex(), spline.eval(jds = spline.getinttex()), 0.015*np.ones(len(spline.getinttex())), capsize=0, ecolor=spline.plotcolour, linestyle="none", marker="", elinewidth=1.5, zorder=40, barsabove=True)
-					
-					ax = plt.gca()
-					knotxs = spline.getinttex()
-					knotys = spline.eval(knotxs)
-					for (knotx, knoty) in zip(knotxs, knotys):
-						l = matplotlib.lines.Line2D([knotx,knotx],[knoty-knotsize,knoty+knotsize], zorder=30, linewidth=1.5, color=spline.plotcolour)                                    
- 						ax.add_line(l)  
+					if ax != None:
+						ax.errorbar(spline.getinttex(), spline.eval(jds = spline.getinttex()), 0.015*np.ones(len(spline.getinttex())), capsize=0, ecolor=spline.plotcolour, linestyle="none", marker="", elinewidth=1.5, zorder=40, barsabove=True)
+
+						#ax = plt.gca()
+						knotxs = spline.getinttex()
+						knotys = spline.eval(knotxs)
+						for (knotx, knoty) in zip(knotxs, knotys):
+							l = matplotlib.lines.Line2D([knotx,knotx],[knoty-knotsize,knoty+knotsize], zorder=30, linewidth=1.5, color=spline.plotcolour)
+							ax.add_line(l)
+					else:
+						plt.errorbar(spline.getinttex(), spline.eval(jds = spline.getinttex()), 0.015*np.ones(len(spline.getinttex())), capsize=0, ecolor=spline.plotcolour, linestyle="none", marker="", elinewidth=1.5, zorder=40, barsabove=True)
+
+						axes = plt.gca()
+						knotxs = spline.getinttex()
+						knotys = spline.eval(knotxs)
+						for (knotx, knoty) in zip(knotxs, knotys):
+							l = matplotlib.lines.Line2D([knotx,knotx],[knoty-knotsize,knoty+knotsize], zorder=30, linewidth=1.5, color=spline.plotcolour)
+							axes.add_line(l)
 				
 				if showspldp: # The datapoints of the spline (usually not shown)
-					plt.plot(spline.datapoints.jds, spline.datapoints.mags, marker = ",", linestyle="None", color=spline.plotcolour, zorder=-20)
+					axes.plot(spline.datapoints.jds, spline.datapoints.mags, marker = ",", linestyle="None", color=spline.plotcolour, zorder=-20)
 			
 #			if hasattr(stuff, "regfct"): # Then it's a GPR
 # 				
@@ -2207,7 +2253,7 @@ def display(lclist=[], splist=[],
 				
 				rs = stuff
 				#plt.plot(rs.getjds(), rs.mags, "-.", color=rs.plotcolour)
-				plt.plot(rs.getjds(), rs.mags, "-", color=rs.plotcolour)
+				axes.plot(rs.getjds(), rs.mags, "-", color=rs.plotcolour)
 				xf = np.concatenate((rs.getjds(), rs.getjds()[::-1]))
         			yf = np.concatenate((rs.mags+rs.magerrs, (rs.mags-rs.magerrs)[::-1]))
         			plt.fill(xf, yf, facecolor = rs.plotcolour, alpha=0.2, edgecolor = (1,1,1), label=str(rs))
@@ -2235,15 +2281,15 @@ def display(lclist=[], splist=[],
 		pass
 	else:
 		#plt.title(title, fontsize=18)
-		axes.annotate(title, xy=(0.5, 1.0), xycoords='axes fraction', xytext=(0, -10),
-			textcoords='offset points', ha='center', va='top', fontsize=30)
+		axes.annotate(title, xy=(0.5, 1.0), xycoords='axes fraction', xytext=(0, -4),
+			textcoords='offset points', ha='center', va='top', fontsize=25)
 	
 	if jdrange != None:
-		plt.xlim(jdrange[0], jdrange[1])
+		axes.set_xlim(jdrange[0], jdrange[1])
 	
 	
-	plt.xlabel("HJD - 2400000.5 [day]", fontsize = labelfontsize)
-	plt.ylabel("Magnitude (relative)", fontsize = labelfontsize)
+	axes.set_xlabel("HJD - 2400000.5 [day]", fontsize = labelfontsize)
+	axes.set_ylabel("Magnitude (relative)", fontsize = labelfontsize)
 	
 	if showdelays:
 		txt = getnicetimedelays(lclist, separator="\n")
@@ -2258,7 +2304,7 @@ def display(lclist=[], splist=[],
 			print txt
 	
 	if showlegend and (len(lclist) > 0 or len(splist) > 0):
-		plt.legend(loc = legendloc, numpoints = 1, prop = fm.FontProperties(size = 12))
+		axes.legend(loc = legendloc, numpoints = 1, prop = fm.FontProperties(size = 12))
 	
 	if magrange != None:
 		if type(magrange) == float or type(magrange) == int:
@@ -2267,9 +2313,9 @@ def display(lclist=[], splist=[],
 			for l in lclist:
 				allmags.extend(l.getmags())
 			meanlevel = np.mean(np.array(allmags))
-			plt.ylim(meanlevel+magrange, meanlevel-magrange)
+			axes.set_ylim(meanlevel+magrange, meanlevel-magrange)
 		else:
-			plt.ylim(magrange[0], magrange[1])
+			axes.set_ylim(magrange[0], magrange[1])
 	
 	if showdates: # Be careful when you change something here, it could mess up the axes.
 		# Especially watch out when you change the plot range.
@@ -2285,6 +2331,8 @@ def display(lclist=[], splist=[],
 		yearx.xaxis.set_major_locator(matplotlib.dates.YearLocator())
 		yearx.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y'))
 		yearx.xaxis.tick_top()
+		if keeponlygrid:
+			yearx.set_xticklabels([])
 		#yearx.set_xlabel("Date")
 	
 	minoryLocator = MultipleLocator(magmintickstep)
@@ -2292,12 +2340,24 @@ def display(lclist=[], splist=[],
 	
 	
 	if showgrid:
-		plt.grid(zorder=2000)
+		plt.grid(zorder=20)
 	
 	if text != None:
 		for line in text:
 			axes.text(line[0], line[1], line[2], transform=axes.transAxes, **line[3])
-	
+
+	if showinsert:
+		assert insertname != None
+		from matplotlib._png import read_png
+		from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+		im = read_png(insertname)
+		imagebox = OffsetImage(im, zoom=0.5, interpolation="sinc", resample = True)
+		ab = AnnotationBbox(imagebox,  xy=(1.0, 1.0), xycoords='axes fraction', xybox = (-75, -75),
+				boxcoords="offset points",
+				pad=0.0, frameon=False
+			)
+		axes.add_artist(ab)
+
 	if showlogo:
 	
 		# The EPFL logo :	
@@ -2364,10 +2424,14 @@ def display(lclist=[], splist=[],
 			# the plot, rather than hide behind it... (e.g. zorder=10)
 			fig.figimage(im, 0, fig.bbox.ymax - height)
 		"""
-		
+
+	if ax != None:
+		return
+
 	if filename == "screen":
 		plt.show()
 	else:
+
 		plt.savefig(filename, transparent=transparent)
 		#if verbose:
 		print "Plot written to %s" % filename
