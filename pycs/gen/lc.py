@@ -604,7 +604,7 @@ class lightcurve:
 		self.labels = ["%.1f" % (jd) for jd in self.jds]
 		#self.showlabels = True
 	
-	def maskskiplist(self, filepath, searchrange=0.2, ignore_warnings=False, verbose=True):
+	def maskskiplist(self, filepath, searchrange=0.2, accept_multiple_matches=False, verbose=True):
 		"""
 		I mask points according to a skiplist. I do not modify the mask for points that are not on the skiplist,
 		i.e. I do not reset the mask in any way.
@@ -637,7 +637,7 @@ class lightcurve:
 			elif len(indices) > 1:
 				if verbose:
 					print "Warning, multiple matches for epoch %s from skiplist !" % (skippoint[0])
-				if ignore_warnings:
+				if accept_multiple_matches:
 					if verbose:
 						print "I mask all of them..."
 					for index in indices:
@@ -2217,16 +2217,12 @@ def display(lclist=[], splist=[],
 				if getattr(spline, "showknots", True) == True:
 					if ax != None:
 						ax.errorbar(spline.getinttex(), spline.eval(jds = spline.getinttex()), 0.015*np.ones(len(spline.getinttex())), capsize=0, ecolor=spline.plotcolour, linestyle="none", marker="", elinewidth=1.5, zorder=40, barsabove=True)
-
-						#ax = plt.gca()
 						knotxs = spline.getinttex()
 						knotys = spline.eval(knotxs)
 						for (knotx, knoty) in zip(knotxs, knotys):
 							l = matplotlib.lines.Line2D([knotx,knotx],[knoty-knotsize,knoty+knotsize], zorder=30, linewidth=1.5, color=spline.plotcolour)
 							ax.add_line(l)
 					else:
-						plt.errorbar(spline.getinttex(), spline.eval(jds = spline.getinttex()), 0.015*np.ones(len(spline.getinttex())), capsize=0, ecolor=spline.plotcolour, linestyle="none", marker="", elinewidth=1.5, zorder=40, barsabove=True)
-
 						axes = plt.gca()
 						knotxs = spline.getinttex()
 						knotys = spline.eval(knotxs)
