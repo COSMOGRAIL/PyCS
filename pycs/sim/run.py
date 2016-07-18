@@ -173,7 +173,7 @@ class runresults:
 		return self.tsarray.shape[1]
 	
 	def __str__(self):
-		return "Runresults %s (%i)" % (getattr(self, "simset", "untitled"), len(self))
+		return "Runresults '%s' (%i)" % (getattr(self, "name", "untitled"), len(self))
 	
 	def copy(self):
 		return pythoncopy.deepcopy(self)

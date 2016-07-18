@@ -101,7 +101,7 @@ Try it :
 	pycs.gen.splml.addtolc(lcs[1], knotstep=300) # Yep, let's try spline microlensing !
 	
 	# And now the optimizer. Note that it returns the spline object !
-	spline = pycs.spl.topopt.opt_rough(lcs, nit = 5, splstep=150)
+	spline = pycs.spl.topopt.opt_rough(lcs, nit=5, knotstep=150)
 	
 
 To show this spline, we make use of :py:func:`pycs.gen.lc.display` that you've met many times before. Indeed, this function can also display an arbitrary number of splines !
@@ -119,22 +119,22 @@ This particular spline is shown in black, with vertical ticks indicating its kno
 The spline optimizer seen above takes a few optional arguments. Some words about the arguments seen at this point :
 
 * ``nit`` is a number of iterations, it's fine to leave it at 5 unless you dig into the details of these optimizers.
-* ``splstep`` sets the initial "spacing" (in days) of the knots. These knots will then move around, so the spacing will change... but the number of knots will not !
+* ``knotstep`` sets the initial "spacing" (in days) of the knots. These knots will then move around, so the spacing will change... but the number of knots will not !
 
-.. warning:: A *lower* splstep corresponds to *more* knots !
+.. warning:: A *lower* knotstep corresponds to *more* knots !
 
-When adding the spline microlensing to the curve, we specified ``knotstep=300`` : this is the same parameter, but for the knots of the microlensing. So choose a lower ``knotstep`` to get a more flexible microlensing.
+When adding the spline microlensing to the curve, we specified ``knotstep=300`` : this is the same parameter, but for the knots of the microlensing. So choose a lower microlensing-``knotstep`` to get a more flexible microlensing.
 
-The above example used the "rough" optimizer. This one is not made to get accurate time delays, but to roughly (and quickly) adjust the shifts and the microlensing so that the curves match somehow. Hence, for this *rough* part, leave a relatively high ``splstep``.
+The above example used the "rough" optimizer. This one is not made to get accurate time delays, but to roughly (and quickly) adjust the shifts and the microlensing so that the curves match somehow. Hence, for this *rough* part, leave a relatively high ``knotstep``.
 
 Directly after this rough optimization, add a call to a finer optimizer :
 
 ::
 
-	spline = pycs.spl.topopt.opt_fine(lcs, nit = 5, splstep=100)
+	spline = pycs.spl.topopt.opt_fine(lcs, nit = 5, knotstep=100)
 	
 
-This optimizer will build a new spline from scratch (and return it), using a (usually finer) ``splstep`` of your choice. Add this line just after the call to opt_rough, and play with the splstep (e.g. 50) to see the effect. Also note that the knots are now effectively moving (the opt_rough didn't move them).
+This optimizer will build a new spline from scratch (and return it), using a (usually finer) ``knotstep`` of your choice. Add this line just after the call to opt_rough, and play with the knotstep (e.g. 50) to see the effect. Also note that the knots are now effectively moving (the opt_rough didn't move them).
 
 
 .. image:: ../_static/tutorial/spline.png
@@ -142,16 +142,16 @@ This optimizer will build a new spline from scratch (and return it), using a (us
 	:width: 800
 
 
-It's now a good idea to add these optimizers to your ``myopt.py`` file, directly concatenating them ! This allows you to build a custom optimizer for your particular light curve. Here is an example (you should probably update the splsteps, depending on the curves you want to process) :
+It's now a good idea to add these optimizers to your ``myopt.py`` file, directly concatenating them ! This allows you to build a custom optimizer for your particular light curve. Here is an example (you should probably update the knotsteps, depending on the curves you want to process) :
 
 ::
 
 	def spl(lcs):
-		spline = pycs.spl.topopt.opt_rough(lcs, nit=5, splstep=150)
+		spline = pycs.spl.topopt.opt_rough(lcs, nit=5, knotstep=150)
 		for l in lcs:
 			l.resetml()
-		spline = pycs.spl.topopt.opt_rough(lcs, nit=5, splstep=40)
-		spline = pycs.spl.topopt.opt_fine(lcs, nit=10, splstep=40)
+		spline = pycs.spl.topopt.opt_rough(lcs, nit=5, knotstep=40)
+		spline = pycs.spl.topopt.opt_fine(lcs, nit=10, knotstep=40)
 
 		return spline # Do not forget to return the spline !
 

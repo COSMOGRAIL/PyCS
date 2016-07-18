@@ -5,13 +5,13 @@
 import pycs
 #import pycs.regdiff # (needs pymc)
 
-# The free-knot spline method :
+# A simple attempt to get a multi-purpose free-knot spline method :
 def spl(lcs):
-	spline = pycs.spl.topopt.opt_rough(lcs, nit=5, splstep=50)
+	spline = pycs.spl.topopt.opt_rough(lcs, nit=5, knotstep=50)
 	for l in lcs:
 		l.resetml()
-	spline = pycs.spl.topopt.opt_rough(lcs, nit=5, splstep=30)
-	spline = pycs.spl.topopt.opt_fine(lcs, nit=10, splstep=20)
+	spline = pycs.spl.topopt.opt_rough(lcs, nit=5, knotstep=30)
+	spline = pycs.spl.topopt.opt_fine(lcs, nit=10, knotstep=20)
 	return spline
 
 # The dispersion method :

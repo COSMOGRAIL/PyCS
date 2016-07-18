@@ -464,8 +464,8 @@ class lightcurve:
 				return self.mags + self.magshift + self.ml.calcmlmags(self)
 			else:
 				return self.mags + self.magshift	
-		
-	
+
+
 #	def getflux(self):
 # 		"""
 # 		For debugging ...
@@ -604,7 +604,7 @@ class lightcurve:
 		self.labels = ["%.1f" % (jd) for jd in self.jds]
 		#self.showlabels = True
 	
-	def maskskiplist(self, filepath, searchrange=0.2, verbose=True):
+	def maskskiplist(self, filepath, searchrange=0.2, accept_multiple_matches=False, verbose=True):
 		"""
 		I mask points according to a skiplist. I do not modify the mask for points that are not on the skiplist,
 		i.e. I do not reset the mask in any way.
@@ -637,6 +637,15 @@ class lightcurve:
 			elif len(indices) > 1:
 				if verbose:
 					print "Warning, multiple matches for epoch %s from skiplist !" % (skippoint[0])
+				if accept_multiple_matches:
+					if verbose:
+						print "I mask all of them..."
+					for index in indices:
+						if self.mask[index] == False:
+							if verbose:
+								print "Epoch %s is already masked." % (skippoint[0])
+						else:
+							self.mask[index] = False
 			elif len(indices) == 1:
 				index = indices[0]
 				if self.mask[index] == False:
@@ -1044,64 +1053,64 @@ def factory(jds, mags, magerrs=None, telescopename="Unknown", object="Unknown", 
 	newlc.jds = np.asarray(jds)
 	newlc.mags = np.asarray(mags)
 	
-	if magerrs == None:
+	if magerrs is None:
 		newlc.magerrs = np.zeros(len(newlc.jds)) + 0.1
 	else:
 		newlc.magerrs = np.asarray(magerrs)
-	
+
 	if len(newlc.jds) != len(newlc.mags) or len(newlc.jds) != len(newlc.magerrs):
 		raise RuntimeError, "lightcurve factory called with arrays of incoherent lengths"
-	
+
 	newlc.mask = newlc.magerrs >= 0.0	# This should be true for all !
-	
+
 	newlc.properties = [{}] * len(newlc.jds)
-	
+
 	newlc.telescopename = telescopename
 	newlc.object = object
 
 	newlc.setindexlabels()
 	newlc.commentlist = []
-	
+
 	newlc.sort() # not sure if this is needed / should be there
-	
+
 	newlc.validate()
-	
+
 	if verbose: print "New lightcurve %s with %i points" % (str(newlc), len(newlc.jds))
-	
+
 	return newlc
-	
+
 
 def flexibleimport(filepath, jdcol=1, magcol=2, errcol=3, startline=1, flagcol=None, propertycols=None, telescopename="Unknown", object="Unknown", plotcolour="red", verbose = True):
 	"""
 	The general form of file reading. We read only one lightcurve object.
 	To comment a line in the input file, start the line with # like in python.
-	
+
 	:param jdcol: The column number containing the MHJDs. First column is number 1, not 0 !
 	:param magcol: The column number containing the magnitudes.
 	:param errcol: The column number containing the magnitude errorbars.
 	:param flagcol: (default : None) The colum containing a mask (if available). This one should contain False (= will be masked) or True (not masked).
-	
+
 	:param propertycols: (default : None) is a dict : ``propertycols = {"fwhm":7, "skylevel":8}`` means that col 7 should be read in as property "fwhm" and 8 as "skylevel".
 	:type propertycols: dictionary
-	
-	
+
+
 	"""
 	if verbose : print "Reading \"%s\"..." % (os.path.basename(filepath))
 	rdbfile = open(filepath, "r")
 	rdbfilelines = rdbfile.readlines()[startline-1:] # we directly "skip" the first lines of eventual headers ...
 	rdbfile.close()
-	
+
 	jds = []
 	mags = []
 	magerrs = []
 	flags = []
 	properties = []
-	
+
 	elsperline = None
-	
+
 	for i, line in enumerate(rdbfilelines) :
-		
-		
+
+
 		if line[0] == "#":
 			continue
 
@@ -1110,17 +1119,17 @@ def flexibleimport(filepath, jdcol=1, magcol=2, errcol=3, startline=1, flagcol=N
 			continue
 
 		elements = line.split() # line is a string, elements is a list of strings
-		
+
 		# We check the consistency of the number of elements...
 		if elsperline != None:
 			if len(elements) != elsperline:
 				raise RuntimeError, "Parsing error in line %i, check columns : \n%s" % (i+startline, repr(line))
 		elsperline = len(elements)
-		
+
 		jds.append(float(elements[jdcol-1]))
 		mags.append(float(elements[magcol-1]))
 		magerrs.append(float(elements[errcol-1]))
-		
+
 		if flagcol != None :
 			strflag = str(elements[flagcol-1])
 			if strflag == "True":
@@ -1132,14 +1141,14 @@ def flexibleimport(filepath, jdcol=1, magcol=2, errcol=3, startline=1, flagcol=N
 				flags.append(True)
 		else :
 			flags.append(True)
-			
+
 		propdict = {} # an empty dict for now
 		if propertycols != None :
 			for (propname, propcol) in propertycols.items():
 				propdict[propname] = str(elements[propcol-1])
 		properties.append(propdict)
-				
-	
+
+
 	# Make a brand new lightcurve object :
 	newlc = factory(np.array(jds), np.array(mags), magerrs=np.array(magerrs), telescopename=telescopename, object=object)
 	newlc.properties = properties[:]
@@ -1148,7 +1157,7 @@ def flexibleimport(filepath, jdcol=1, magcol=2, errcol=3, startline=1, flagcol=N
 	nbmask = np.sum(newlc.mask==False)
 	commentcols = "(%i, %i, %i)" % (jdcol, magcol, errcol)
 	newlc.commentlist.insert(0, "Imported from %s, columns %s" % (os.path.basename(filepath), commentcols))
-	if verbose: print "%s with %i points imported (%i of them masked)." % (str(newlc), len(newlc.jds), nbmask) 
+	if verbose: print "%s with %i points imported (%i of them masked)." % (str(newlc), len(newlc.jds), nbmask)
 	return newlc
 
 
@@ -1158,19 +1167,19 @@ def rdbimport(filepath, object="Unknown", magcolname="mag", magerrcolname="mager
 	"""
 	The relaxed way to import lightcurves, especially those from cosmouline, provided they come as rdb files.
 	Don't care about column indices, just give the column headers that you want to read.
-	
+
 	Propertycolnames is a list of column names that I will add as properties.
 	Possible settings :
 	"lcmanip" : (default) I will import the standard cols from lcmanip / cosmouline, if those are available.
 	None : I will not import any properties
 	["property1", "property2"] : just give a list of properties to import.
-	
+
 	The default column names are those used by the method :py:meth:`pycs.gen.lc.lightcurve.rdbexport` : "mhjd", "mag", "magerr", "mask".
-	
+
 	We use flexibleimport under the hood.
-	
+
 	"""
-	
+
 	if verbose : print "Checking header of \"%s\"..." % (os.path.basename(filepath))
 	rdbfile = open(filepath, "r")
 	rdbfilelines = rdbfile.readlines()
@@ -1192,175 +1201,69 @@ def rdbimport(filepath, object="Unknown", magcolname="mag", magerrcolname="mager
 	for name in checknames:
 		if name not in headers:
 			raise RuntimeError, 'I cannot find a column named "%s" in your file !' % (name)
-	
-	
+
+
 	jdcol = headers.index(mhjdcolname) + 1 # +1 as we use human convention in flexibleimport
 	magcol = headers.index(magcolname) + 1
 	errcol = headers.index(magerrcolname) + 1
-	
+
 	if flagcolname != None :
 		flagcol = headers.index(flagcolname) + 1
 	else:
 		flagcol = None
-	
-		
+
+
 	if propertycolnames != None :
 		propertycols = {}
 		for propertycolname in propertycolnames:
 			propertycols[propertycolname] = headers.index(propertycolname) + 1
 	else:
 		propertycols = None
-	
+
 	newlc = flexibleimport(filepath, jdcol=jdcol, magcol=magcol, errcol=errcol, startline=3, flagcol=flagcol, propertycols=propertycols, telescopename=telescopename, object=object, verbose=verbose)
 	newlc.plotcolour = plotcolour
 	return newlc
 
 
-# def oldrdbimport(filename, columndicts, returntype='dictdict', verbose = True):
-# 	"""
-# 	
-# 	What a mess. Don't use this anymore, much easier to have one file per curve.
-# 	
-# 	Next generation advanced technology importing function. Gets all lightcurves of a file at once, separated by telescopename (first column).
-# 	Example for columndicts :
-# 	
-# 		>>> [
-# 		>>> {'object':'A', 'jdcol':2, 'magcol':3, 'errcol':4},
-# 		>>> {'object':'B', 'jdcol':2, 'magcol':5, 'errcol':6},
-# 		>>> {'object':'C', 'jdcol':2, 'magcol':7, 'errcol':8}
-# 		>>> ]
-# 		
-# 	'errcol' is optional.
-# 	Each telescope automatically gets a new colour. Wow.
-# 	
-# 	By default, returns a dict of dicts of lightcurves : output['Mercator']['A']
-# 	If you prefer a flat list, specify returntype='flatlist'
-# 	If you prefer a list of telescopes each containing a list of objects, specify returntype='listlist'
-# 	If you prefer a dict of telescopeseach containing a list of objects, specify returntype='dictlist'
-# 	
-# 	This is FAR form optimized, but straightforward to debug / adapt.
-# 	"""
-# 	colours = ["red", "blue", "green", "cyan", "magenta", "black"]
-# 	
-# 	if verbose : print "Reading \"%s\"..." % (os.path.basename(filename))
-# 	rdbfile = open(filename, "r")
-# 	rdbfilelines = rdbfile.readlines()[2:] # we directly "skip" the first 2 lines of rdb-headers. rdbfilelines is now a list of strings.
-# 	rdbfile.close()
-# 	
-# 	# First step : transform this into a list of lists :
-# 	lines = []
-# 	nbrels = 0
-# 	for i, rdbfileline in enumerate(rdbfilelines):
-# 		line = []
-# 		elements = rdbfileline.split() 	# line is a string, elements is a list of strings
-# 		line.append(elements[0]) 	# this is a string, the telescopename
-# 		for element in elements[1:]:	# these are the other columns
-# 			line.append(float(element))
-# 		if i == 0:
-# 			nbrels = len(line)
-# 		else:
-# 			if len(line) != nbrels:
-# 				raise RuntimeError, "Error in rdb file %s on line %i" % (filename, i+3)
-# 		lines.append(line)
-# 	
-# 	# Ok, now we have the same structure but as a "table" with correct data types.	
-# 		
-# 	# To make this simple to debug, let's get the telescopenames in a first loop :
-# 	telescopenames = sorted(list(set([line[0] for line in lines])))
-# 	if verbose : print "Telescopes in file : %s." % ", ".join(telescopenames)
-# 	
-# 	# And now we get the values, telescope by telescope and object by object :
-# 	output = {}
-# 	for i, telescopename in enumerate(telescopenames):
-# 		output[telescopename] = {}
-# 		colour = colours[i%len(telescopenames)]
-# 		teldata = np.array([line[1:] for line in lines if line[0] == telescopename])	# One array similar to the file structure, but skipping the first column and only
-# 												# for this particular telescope
-# 		for column in columndicts:
-# 			object = column['object']
-# 			jds = teldata[:,column['jdcol']-2]	# -2 as the array starts with index 0 for the "second" column of the file...
-# 			mags = teldata[:,column['magcol']-2]
-# 			if column.has_key('errcol'):
-# 				magerrs = teldata[:,column['errcol']-2]
-# 				commentcols = "(%i, %i, %i)" % (column['jdcol'], column['magcol'], column['errcol'])
-# 			else:
-# 				magerrs = None
-# 				commentcols = "(%i, %i)" % (column['jdcol'], column['magcol'])
-# 			newlc = factory(jds, mags, magerrs=magerrs, telescopename=telescopename, object=object, verbose = verbose)
-# 			newlc.plotcolour = colour
-# 			
-# 			newlc.commentlist.insert(0, "Imported from %s, columns %s" % (os.path.basename(filename), commentcols))
-# 			
-# 			output[telescopename][object] = newlc
-# 			
-# 			
-# 	if returntype == 'flatlist':
-# 		outputlist = []
-# 		for telescopename in sorted(output.keys()):
-# 			for object in sorted(output[telescopename].keys()):
-# 				outputlist.append(output[telescopename][object])
-# 		return outputlist
-# 	
-# 	if returntype == 'listlist':
-# 		outputlist = []
-# 		for telescopename in sorted(output.keys()):
-# 			tellist = []
-# 			for object in sorted(output[telescopename].keys()):
-# 				tellist.append(output[telescopename][object])
-# 			outputlist.append(tellist)
-# 		return outputlist
-# 	
-# 	if returntype == 'dictlist':
-# 		outputdict = {}
-# 		for telescopename in sorted(output.keys()):
-# 			tellist = []
-# 			for object in sorted(output[telescopename].keys()):
-# 				tellist.append(output[telescopename][object])
-# 			outputdict[telescopename] = tellist
-# 		return outputdict
-# 
-# 
-# 	return output # this is default, return a dictdict
-# 
-
-
 def multidisplay(setlist=[],
-	title=None, style=None, showlegend=True, showlogo=False, logopos="left", showdates=False, showdelays=False, nicefont=False, text=None, 
+	title=None, style=None, showlegend=True, showlogo=False, logopos="left", showdates=False, showdelays=False, nicefont=False, text=None,
 	jdrange=None, magrange=None, initfigsize=(12,8), plotsize=(0.08, 0.96, 0.09, 0.95), showgrid=False,
 	markersize=6, showerrorbars=True, errorbarcolour = "#BBBBBB", capsize=3, knotsize=0.015,
 	legendloc = "best", showspldp=False, colourprop=None, hidecolourbar=False, transparent=False,
 	collapseref=False, jdmintickstep=100, magmintickstep=0.2, filename="screen", verbose=False):
+
+	#todo: this is a mess ! clean
 	"""
 	Function that uses matplotlib to plot a **list** of lightcurves/splines/GPRs, either on screen or into a file.
 	It uses lightcurve attributes such as ``lc.plotcolour`` and ``lc.showlabels``, and displays masked points
 	as black circles. It's certainly a key function of pycs.
 	You can also put tuples (lightcurve, listofseasons) in the lclist, and the seasons will be drawn.
 	This function is intended both for interactive exploration and for producing publication plots.
-	
+
 	:param lclist: A list of lightcurve objects [lc1, lc2, ...] you want to plot.
-	:type lclist: list	
+	:type lclist: list
 
 	:param splist: A list of spline or rslc (e.g., GPR) objects to display on top of the data points.
 	:type splist: list
-	
+
 	:param title: Adds a title to the plot, center top of the axes, usually used for lens names.
-		To nicely write a lens name, remember to use raw strings and LaTeX mathrm, e.g. : 
+		To nicely write a lens name, remember to use raw strings and LaTeX mathrm, e.g. :
 		``title = r"$\mathrm{RX\,J1131-1231}$"``
 	:type title: string
 
 	:param style: A shortcut to produce specific kinds of stylings for the plots.
 		Available styles:
-			
+
 			* ``homepagepdf`` : for cosmograil homepage, ok also with long magnitude labels (like -13.2)
-			
+
 	:type style: string
 
 	:param showlegend: Automatic legend (too technical/ugly for publication plots, uses str(lightcurve))
 	:type showlegend: boolean
-	
+
 	:param showlogo: Adds an EPFL logo + www.cosmograil.org on the plot.
 	:type showlogo: boolean
-	
+
 	:param logopos: Where to put it, "left" or "right"
 	:type logopos: string
 
@@ -1369,49 +1272,49 @@ def multidisplay(setlist=[],
 
 	:param showdelays: If True, the relative delays between the curves are written on the plot.
 	:type showdelays: boolean
-	
+
 	:param nicefont: Sets default to serif fonts (terrible implementation, but works)
 	:type nicefont: boolean
-	
+
 	:param text:
 		Generic text that you want to display on top of the plot, in the form : [line1, line2, line3 ...]
-		where line_i is (x, y, text, kwargs) where kwargs is e.g. {"fontsize":18} and x and y are relative positions (from 0 to 1). 
+		where line_i is (x, y, text, kwargs) where kwargs is e.g. {"fontsize":18} and x and y are relative positions (from 0 to 1).
 	:type text: list
-	
+
 	:param jdrange: Range of jds to plot, e.g. (53000, 54000).
 	:type jdrange: tuple
-	
+
 	:param magrange: Range of magnitudes to plot, like ``magrange = [-11, -13]``.
 		If you give only a float, like ``magrange=1.0``, I'll plot +/- this number around the mean curve level
 		Default is None -> automatic mag range.
 	:type magrange: tuple
-	
+
 	:param figsize: Figure size (width, height) in inches, for interactive display or savefig.
 	:type figsize: tuple
-	
+
 	:param plotsize: Position of the axes in the figure (left, right, bottom, top), default is (0.065, 0.96, 0.09, 0.95).
 	:type plotsize: tuple
-	
+
 	:param showgrid: Show grid, that is vertical lines only, one for every year.
 	:type showgrid: boolean
 
 	:param markersize: Size of the data points, default is 6
 	:type markersize: float
-	
+
 	:param showerrorbars: If False, the ploterrorbar settings of the lightcurves are disregared and no error bars are shown.
 	:type showerrorbars: boolean
-	
+
 	:param errorbarcolour: Color for the error bars
 	:type errorbarcolour: string
-	
+
 	:param capsize: Size of the error bar "ticks"
 	:type capsize: float
 
 	:param knotsize: For splines, the length of the knot ticks, in magnitudes.
 	:type knotsize: float
-	
+
 	:param legendloc: Position of the legend. It is passed to matplotlib legend. It can be useful to specify this if you want to make animations etc.
-		
+
 			* string	int
 			* upper right	1
 			* upper left	2
@@ -1423,17 +1326,17 @@ def multidisplay(setlist=[],
 			* lower center	8
 			* upper center	9
 			* center	10
-	
+
 	:type legendloc: string or int
 
 	:param showspldp: Show the acutal data points of spline objects (for debugging etc)
 	:type showspldp: boolean
-	
+
 	:param colourprop: If this is set I will make a scatter plot with points coloured according to the given property, disregarding the lightcurve attribute plotcolour.
 		Format : (property_name, display_name, minval, maxval), where display_name is a "nice" version of property_name, like "FWHM [arcsec]" instead of "seeing".
 		Note that this property will be used in terms of a float. So you cannot use this for properties that are not floats.
 	:type colourprop: tuple
-	
+
 	:param hidecolourbar: Set to True to hide the colourbar for the colourprop
 	:type hidecolourbar: boolean
 
@@ -1444,13 +1347,13 @@ def multidisplay(setlist=[],
 		Use this if you would otherwise get ugly overplotted dashed lines nearly at the same level ...
 		This option is a bit ugly, as it does not correct the actual microlensing curves for the collapse.
 	:type collapseref: boolean
-	
+
 	:param jdmintickstep: Minor tick step for jd axis
 	:type jdmintickstep: float
-	
+
 	:param magmintickstep: Minor tick step for mag axis
 	:type magmintickstep: float
-	
+
 	:param filename: If this is not "screen", I will save the plot to a file instead of displaying it. Try e.g. "test.png" or "test.pdf". Success depends on your matplotlib backend.
 	:type filename: string
 
@@ -1459,14 +1362,14 @@ def multidisplay(setlist=[],
 
 
 	"""
-	
+
 	import matplotlib as mpl
 	import matplotlib.pyplot as plt
 	import matplotlib.font_manager as fm
 	from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 	import matplotlib.dates
 	import matplotlib.lines
-	
+
 	if style == None:
 		pass
 	elif style=="homepagepdf":
@@ -1485,15 +1388,15 @@ def multidisplay(setlist=[],
 		showgrid=True
 	else:
 		raise RuntimeError("I do not know the style %s" % (style))
-	
-	
+
+
 	# warning discarded : user must be careful (bad...)
 	#if not (isinstance(lclist, list) or isinstance(lclist, tuple)):
 		#raise TypeError, "Hey, give me a LIST of lightcurves !"
 
 	if colourprop != None:
 		(colourpropname, colournicename, colourminval, colourmaxval) = colourprop
-	
+
 	labelfontsize = 14
 	if nicefont:
 		#mpl.rcParams['font.size'] = 20
@@ -1501,49 +1404,49 @@ def multidisplay(setlist=[],
 		#labelfontsize = 20
 	else:
 		labelfontsize = 14
-        
-	
+
+
 	figsize = [initfigsize[0]]
 	if len(setlist) != 1:
 		figsize.append(15)
 	else:
-		figsize.append(initfigsize[1])	
+		figsize.append(initfigsize[1])
 	fig = plt.figure(figsize=figsize)	# sets figure size
 	fig.subplots_adjust(left = plotsize[0], right=plotsize[1], bottom=plotsize[2], top=plotsize[3])
 
 	axes = plt.gca()
-	
+
 	if verbose : print "Plotting %i lightcurves and %i splines ..." % (len(lclist), len(splist))
 
 	reflevels = [] # only used for collapseref
-	
-	
+
+
 
 	for ind,set in enumerate(setlist):
-		
+
 		lclist = set[0]
 		if len(set) != 3:
 			if len(set) == 1:
 				splist = []
 				comment = ''
-			else:	
+			else:
 				if len(set) == 2:
 					if isinstance(set[1],str):
 						splist  = []
 						comment = set[1]
-					else:	
+					else:
 						splist  = set[1]
 						comment = ''
-				else:			
+				else:
 					raise TypeError, 'Give me a good setlist ! (i.e. [lcs,[spline],somecaption])'
-		else:	
+		else:
 			splist  = set[1]
 			comment = set[2]
-		
-	        
+
+
 		#initialize the subplot we will draw on:
 		plt.subplot(len(setlist),1,ind+1)
-		
+
 		# The lightcurves :
 		for curve in lclist :
 
@@ -1625,13 +1528,13 @@ def multidisplay(setlist=[],
 						if len(label) > 4: # Probably jd labels, we write vertically :
 							axes.annotate(label, (tmpjds[i], tmpmags[i]), xytext=(-3, -70), textcoords='offset points',size=12, color = curve.plotcolour, rotation = 90)
 						else:	# horizontal writing
-							axes.annotate(label, (tmpjds[i], tmpmags[i]), xytext=(7, -6), textcoords='offset points',size=12, color = curve.plotcolour)	
+							axes.annotate(label, (tmpjds[i], tmpmags[i]), xytext=(7, -6), textcoords='offset points',size=12, color = curve.plotcolour)
 
 		if collapseref and len(reflevels) != 0:
 			print "WARNING : collapsing the refs %s" % (reflevels)
 			plt.axhline(np.mean(np.array(reflevels)), color="gray", dashes = ((3,3))) # the new ref
 
-	
+
 		# The supplementary objects
 		if len(splist) != 0:
 			for stuff in splist:
@@ -1654,14 +1557,14 @@ def multidisplay(setlist=[],
 						knotxs = spline.getinttex()
 						knotys = spline.eval(knotxs)
 						for (knotx, knoty) in zip(knotxs, knotys):
-							l = matplotlib.lines.Line2D([knotx,knotx],[knoty-knotsize,knoty+knotsize], zorder=30, linewidth=1.5, color=spline.plotcolour)                                    
- 							ax.add_line(l)  
+							l = matplotlib.lines.Line2D([knotx,knotx],[knoty-knotsize,knoty+knotsize], zorder=30, linewidth=1.5, color=spline.plotcolour)
+ 							ax.add_line(l)
 
 					if showspldp: # The datapoints of the spline (usually not shown)
 						plt.plot(spline.datapoints.jds, spline.datapoints.mags, marker = ",", linestyle="None", color=spline.plotcolour, zorder=-20)
 
 #				if hasattr(stuff, "regfct"): # Then it's a GPR
-# 				
+#
 # 					gpr = stuff
 # 					npts = (gpr.jds[-1] - gpr.jds[0])*2.0
 # 					xs = np.linspace(gpr.jds[0], gpr.jds[-1], npts)
@@ -1680,8 +1583,8 @@ def multidisplay(setlist=[],
 					xf = np.concatenate((rs.getjds(), rs.getjds()[::-1]))
         				yf = np.concatenate((rs.mags+rs.magerrs, (rs.mags-rs.magerrs)[::-1]))
         				plt.fill(xf, yf, facecolor = rs.plotcolour, alpha=0.2, edgecolor = (1,1,1), label=str(rs))
-				
-	
+
+
 		# Astronomers like minor tick marks :
 		minorxLocator = MultipleLocator(jdmintickstep)
 		axes.xaxis.set_minor_locator(minorxLocator)
@@ -1695,7 +1598,7 @@ def multidisplay(setlist=[],
 
 		if colourprop != None and hidecolourbar == False:
 			cbar = plt.colorbar(orientation='vertical', shrink=1.0, fraction=0.065, pad=0.025)
-			cbar.set_label(colournicename) 
+			cbar.set_label(colournicename)
 
 		# And we make custom title :
 
@@ -1716,11 +1619,11 @@ def multidisplay(setlist=[],
 
 		if showdelays:
 			txt = getnicetimedelays(lclist, separator="\n")
-			
+
 			#axes.annotate(txt, xy=(0.0, 1.0), xycoords='axes fraction', xytext=(6, -6),
 				#textcoords='offset points', ha='left', va='top')
-	
-	
+
+
 			#stupid way of doing things...but it works and I'm not in the mood of doing it cleaner right now...
 			if len(setlist)==1:
 				ytxtcoord = [0.99]
@@ -1733,23 +1636,23 @@ def multidisplay(setlist=[],
 			if len(setlist)==5:
 				ytxtcoord = [0.995,0.787,0.582,0.374, 0.167]
 			if len(setlist)==6:
-				ytxtcoord = [0.995,0.826, 0.655,  0.48, 0.31, 0.14]								
-				
-			# you want more subplots ? Feel free to add ytxtcoord...				
+				ytxtcoord = [0.995,0.826, 0.655,  0.48, 0.31, 0.14]
+
+			# you want more subplots ? Feel free to add ytxtcoord...
 			'''
 			plt.text(0.01, ytxtcoord[ind], txt,
 				horizontalalignment='left', verticalalignment='top',
 				transform = axes.transAxes)
-			
-			plt.text(0.4, ytxtcoord[ind], comment, 	
+
+			plt.text(0.4, ytxtcoord[ind], comment,
 				horizontalalignment='left', verticalalignment='top',
-				transform = axes.transAxes)				
+				transform = axes.transAxes)
 			legendloc = 1
 			if verbose:
 				print "Delays between plotted curves :"
 				print txt
 			'''
-				
+
 
 		if showlegend and (len(lclist) > 0 or len(splist) > 0):
 			plt.legend(loc = legendloc, numpoints = 1, prop = fm.FontProperties(size = 12))
@@ -1757,7 +1660,7 @@ def multidisplay(setlist=[],
 		if magrange != None:
 			if type(magrange) == float or type(magrange) == int:
 				# We find the mean mag of the stuff to plot :
-				allmags = []		
+				allmags = []
 				for l in lclist:
 					allmags.extend(l.getmags())
 				meanlevel = np.mean(np.array(allmags))
@@ -1794,7 +1697,7 @@ def multidisplay(setlist=[],
 
 		if showlogo:
 
-			# The EPFL logo :	
+			# The EPFL logo :
 			from matplotlib._png import read_png
 			from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 			logodir = os.path.dirname(__file__)
@@ -1831,50 +1734,47 @@ def multidisplay(setlist=[],
 				print height
 				im = np.array(im).astype(np.float) / 255
 				fig.figimage(im, 0, fig.bbox.ymax - height)
-				# With newer (1.0) versions of matplotlib, you can 
+				# With newer (1.0) versions of matplotlib, you can
 				# use the "zorder" kwarg to make the image overlay
 				# the plot, rather than hide behind it... (e.g. zorder=10)
 				fig.figimage(im, 0, fig.bbox.ymax - height)
 			"""
-		
+
 	if filename == "screen":
 		plt.show()
 	else:
 		plt.savefig(filename, transparent=transparent)
 		print "Plot written to %s" % filename
 		plt.close() # this seems important so that the plot is not displayed when a next plt.show() is called.
-	
-	
-	
 
 
 def display(lclist=[], splist=[],
-	title=None, style=None, showlegend=True, showlogo=False, logopos="left", showdates=False, showdelays=False, nicefont=False, text=None, 
+	title=None, style=None, showlegend=True, showlogo=False, logopos="left", showdates=False, showdelays=False, nicefont=False, text=None, keeponlygrid=False,
 	jdrange=None, magrange=None, figsize=(12,8), plotsize=(0.08, 0.96, 0.09, 0.95), showgrid=False,
-	markersize=6, showerrorbars=True, errorbarcolour = "#BBBBBB", capsize=3, knotsize=0.015,
+	markersize=6, showerrorbars=True, showdatapoints=True, errorbarcolour = "#BBBBBB", capsize=3, knotsize=0.015,
 	legendloc = "best", showspldp=False, colourprop=None, hidecolourbar=False, transparent=False,
-	collapseref=False, jdmintickstep=100, magmintickstep=0.2, filename="screen", verbose=False):
+	collapseref=False, jdmintickstep=100, magmintickstep=0.2, filename="screen", showinsert=None, insertname=None, verbose=False, ax=None):
 	"""
 	Function that uses matplotlib to plot a **list** of lightcurves/splines/GPRs, either on screen or into a file.
 	It uses lightcurve attributes such as ``lc.plotcolour`` and ``lc.showlabels``, and displays masked points
 	as black circles. It's certainly a key function of pycs.
 	You can also put tuples (lightcurve, listofseasons) in the lclist, and the seasons will be drawn.
 	This function is intended both for interactive exploration and for producing publication plots.
-	
+
 	:param lclist: A list of lightcurve objects [lc1, lc2, ...] you want to plot.
-	:type lclist: list	
+	:type lclist: list
 
 	:param splist: A list of spline or rslc (e.g., GPR) objects to display on top of the data points.
 	:type splist: list
-	
+
 	:param title: Adds a title to the plot, center top of the axes, usually used for lens names.
-		To nicely write a lens name, remember to use raw strings and LaTeX mathrm, e.g. : 
+		To nicely write a lens name, remember to use raw strings and LaTeX mathrm, e.g. :
 		``title = r"$\mathrm{RX\,J1131-1231}$"``
 	:type title: string
 
 	:param style: A shortcut to produce specific kinds of stylings for the plots.
 		Available styles:
-			
+
 			* ``homepagepdf`` : for cosmograil homepage, ok also with long magnitude labels (like -13.2)
 			
 	:type style: string
@@ -1924,7 +1824,19 @@ def display(lclist=[], splist=[],
 	
 	:param showerrorbars: If False, the ploterrorbar settings of the lightcurves are disregared and no error bars are shown.
 	:type showerrorbars: boolean
-	
+
+	:param showdatapoints: If False, no data points are shown. Useful if you want e.g. to plot only the microlensing
+	:type showerrorbars: boolean
+
+	:param keeponlygrid: If True, keeps the yearly grid from showdates but do not display the dates above the plot.
+	:type keeponlygrid: boolean
+
+	:param showinsert: If True, display the insertname image in the top-right corner of the main image
+	:type showinsert: boolean
+
+	:param insertname: path to the image you want to insert
+	:type instername: string
+
 	:param errorbarcolour: Color for the error bars
 	:type errorbarcolour: string
 	
@@ -1979,6 +1891,9 @@ def display(lclist=[], splist=[],
 	
 	:param filename: If this is not "screen", I will save the plot to a file instead of displaying it. Try e.g. "test.png" or "test.pdf". Success depends on your matplotlib backend.
 	:type filename: string
+
+	:param ax: if not None, I will return what I plot in the given matplotlib axe you provide me with instead of plotting it.
+	:type ax: matplotlib axes
 
 	:param verbose: Set to True if you want me to print some details while I process the curves
 	:type verbose: boolean
@@ -2065,11 +1980,14 @@ def display(lclist=[], splist=[],
 	else:
 		labelfontsize = 14
 
-	
-	fig = plt.figure(figsize=figsize)	# sets figure size
-	fig.subplots_adjust(left = plotsize[0], right=plotsize[1], bottom=plotsize[2], top=plotsize[3])
+	if ax == None:
+		fig = plt.figure(figsize=figsize)	# sets figure size
+		fig.subplots_adjust(left = plotsize[0], right=plotsize[1], bottom=plotsize[2], top=plotsize[3])
+		axes = plt.gca()
 
-	axes = plt.gca()
+	else:
+		ihaveax = True
+		axes = ax
 	
 	if verbose : print "Plotting %i lightcurves and %i splines ..." % (len(lclist), len(splist))
 
@@ -2077,51 +1995,51 @@ def display(lclist=[], splist=[],
 
 	# The lightcurves :
 	for curve in lclist :
-		
-		if type(curve).__name__ == 'tuple': # then we have both a lightcurve and a season to plot
-		
-			actualcurve = curve[0]
-			curveseasons = curve[1]
-			
-			if not isinstance(curveseasons, list):
-				raise TypeError, "lc.display wants LISTs of seasons, not individual seasons !"
-			for curveseason in curveseasons:
-				# the x lims :
-				(x1, x2) = curveseason.getjdlims(actualcurve)
-				# for y, lets take the median of that season
-				y = np.median(actualcurve.getmags()[curveseason.indices])
-				
-				# we make this robust even with old versions of matplotlib, so no fancy arrows here.
-				plt.plot([x1, x2], [y, y], color = actualcurve.plotcolour, dashes = (1,1))
-				axes.annotate(str(curveseason), ((x1 + x2)/2.0, y), xytext=(-50, -15), textcoords='offset points', size=10, color = actualcurve.plotcolour)
-				#plt.axvline(seasonjdlims[0], color = curve[0].plotcolour, dashes = (5,5))
-				#plt.axvline(seasonjdlims[1], color = curve[0].plotcolour, dashes = (5,5))
-			
-			curve = curve[0] # for the rest of this loop, curve is now only the lightcurve.
-	
+		if showdatapoints:
+			if type(curve).__name__ == 'tuple': # then we have both a lightcurve and a season to plot
 
-		if verbose: print "#   %s -> %s\n\t%s" % (curve, str(curve.plotcolour), "\n\t".join(curve.commentlist))
-		#if verbose and (curve.ml != None):
-		#	print curve.ml.longinfo()
-		
-		tmpjds = curve.getjds()
-		tmpmags = curve.getmags() # to avoid calculating the microlensing each time we need it
-		
-		if colourprop != None:
-			scattervalues = np.array([float(propertydict[colourpropname]) for propertydict in curve.properties])
-			plt.scatter(tmpjds, tmpmags, s=markersize, c=scattervalues, vmin=colourminval, vmax=colourmaxval, edgecolors="None")
-		else:
-		
-			if curve.ploterrorbars and showerrorbars:
-				plt.errorbar(tmpjds, tmpmags, curve.magerrs, fmt=".", markersize = markersize, markeredgecolor=curve.plotcolour, color=curve.plotcolour, ecolor=errorbarcolour, capsize=capsize, label=str(curve), elinewidth=0.5)
-				#plt.errorbar(tmpjds, tmpmags, curve.magerrs, linestyle="-", marker=".", color=curve.plotcolour, ecolor="#BBBBBB", label=str(curve))
-				#
-			else :
-				plt.plot(tmpjds, tmpmags, marker=".", markersize = markersize, linestyle="None", markeredgecolor=curve.plotcolour, color=curve.plotcolour, label=str(curve))
-			
-		# We plot little round circles around masked points.
-		plt.plot(tmpjds[curve.mask == False], tmpmags[curve.mask == False], linestyle="None", marker="o", markersize=8., markeredgecolor="black", markerfacecolor="None", color="black")
-		
+				actualcurve = curve[0]
+				curveseasons = curve[1]
+
+				if not isinstance(curveseasons, list):
+					raise TypeError, "lc.display wants LISTs of seasons, not individual seasons !"
+				for curveseason in curveseasons:
+					# the x lims :
+					(x1, x2) = curveseason.getjdlims(actualcurve)
+					# for y, lets take the median of that season
+					y = np.median(actualcurve.getmags()[curveseason.indices])
+
+					# we make this robust even with old versions of matplotlib, so no fancy arrows here.
+					axes.plot([x1, x2], [y, y], color = actualcurve.plotcolour, dashes = (1,1))
+					axes.annotate(str(curveseason), ((x1 + x2)/2.0, y), xytext=(-50, -15), textcoords='offset points', size=10, color = actualcurve.plotcolour)
+					#plt.axvline(seasonjdlims[0], color = curve[0].plotcolour, dashes = (5,5))
+					#plt.axvline(seasonjdlims[1], color = curve[0].plotcolour, dashes = (5,5))
+
+				curve = curve[0] # for the rest of this loop, curve is now only the lightcurve.
+
+
+			if verbose: print "#   %s -> %s\n\t%s" % (curve, str(curve.plotcolour), "\n\t".join(curve.commentlist))
+			#if verbose and (curve.ml != None):
+			#	print curve.ml.longinfo()
+
+			tmpjds = curve.getjds()
+			tmpmags = curve.getmags() # to avoid calculating the microlensing each time we need it
+
+			if colourprop != None:
+				scattervalues = np.array([float(propertydict[colourpropname]) for propertydict in curve.properties])
+				axes.scatter(tmpjds, tmpmags, s=markersize, c=scattervalues, vmin=colourminval, vmax=colourmaxval, edgecolors="None")
+			else:
+
+				if curve.ploterrorbars and showerrorbars:
+					axes.errorbar(tmpjds, tmpmags, curve.magerrs, fmt=".", markersize = markersize, markeredgecolor=curve.plotcolour, color=curve.plotcolour, ecolor=errorbarcolour, capsize=capsize, label=str(curve), elinewidth=0.5)
+					#plt.errorbar(tmpjds, tmpmags, curve.magerrs, linestyle="-", marker=".", color=curve.plotcolour, ecolor="#BBBBBB", label=str(curve))
+					#
+				else :
+					axes.plot(tmpjds, tmpmags, marker=".", markersize = markersize, linestyle="None", markeredgecolor=curve.plotcolour, color=curve.plotcolour, label=str(curve))
+
+			# We plot little round circles around masked points.
+			axes.plot(tmpjds[curve.mask == False], tmpmags[curve.mask == False], linestyle="None", marker="o", markersize=8., markeredgecolor="black", markerfacecolor="None", color="black")
+
 		# And now we want to graphically display the microlensing in a nice way. This costs some cpu but anyway
 		# for a display it's fine.
 		#if curve.ml != None and curve.hideml == False:
@@ -2130,24 +2048,33 @@ def display(lclist=[], splist=[],
 				for sfct in curve.ml.mllist:
 					smoothml = sfct.smooth(curve)
 					if not collapseref:
-						plt.plot(smoothml['jds'], smoothml['refmags'], color=curve.plotcolour, dashes = ((3,3))) # the new ref
+						axes.plot(smoothml['jds'], smoothml['refmags'], color=curve.plotcolour, dashes = ((3,3))) # the new ref
 					else:
 						reflevels.append(np.mean(smoothml['refmags']))
-					plt.plot(smoothml['jds'], smoothml['refmags'] + smoothml['ml'], color=curve.plotcolour)
+					axes.plot(smoothml['jds'], smoothml['refmags'] + smoothml['ml'], color=curve.plotcolour)
 			if curve.ml.mltype == "spline":
 				smoothml = curve.ml.smooth(curve)
-				
+
 				if not collapseref:
-					plt.plot(smoothml['jds'], np.zeros(smoothml["n"]) + smoothml['refmag'], color=curve.plotcolour, dashes = ((3,3))) # the new ref
+					axes.plot(smoothml['jds'], np.zeros(smoothml["n"]) + smoothml['refmag'], color=curve.plotcolour, dashes = ((3,3))) # the new ref
 				else:
 					reflevels.append(smoothml['refmag'])
-				
-				plt.plot(smoothml['jds'], smoothml['refmag'] + smoothml['ml'], color=curve.plotcolour)
+
+				if hasattr(curve, "hideml"):
+					if not curve.hideml:
+						axes.plot(smoothml['jds'], smoothml['refmag'] + smoothml['ml'], color=curve.plotcolour)
+				else:
+					axes.plot(smoothml['jds'], smoothml['refmag'] + smoothml['ml'], color=curve.plotcolour)
 				# We want to overplot the knots
-				#plt.plot(smoothml['knotjds'], smoothml['knotmags'] + smoothml["refmag"], color=curve.plotcolour, linestyle="none", marker=".")
-				if getattr(curve.ml.spline, "showknots", True) == True:
-					plt.errorbar(smoothml['knotjds'], smoothml['knotmags'] + smoothml["refmag"], knotsize*np.ones(len(smoothml['knotjds'])), capsize=0, ecolor=curve.plotcolour, linestyle="none", marker="", elinewidth=1.5)
-		
+				if hasattr(curve, "hideml"):
+					if not curve.hideml:
+						if getattr(curve.ml.spline, "showknots", True) == True:
+							axes.errorbar(smoothml['knotjds'], smoothml['knotmags'] + smoothml["refmag"], knotsize*np.ones(len(smoothml['knotjds'])), capsize=0, ecolor=curve.plotcolour, linestyle="none", marker="", elinewidth=1.5)
+				else:
+					if getattr(curve.ml.spline, "showknots", True) == True:
+						axes.errorbar(smoothml['knotjds'], smoothml['knotmags'] + smoothml["refmag"], knotsize*np.ones(len(smoothml['knotjds'])), capsize=0, ecolor=curve.plotcolour, linestyle="none", marker="", elinewidth=1.5)
+
+
 		# Labels if wanted :
 		if curve.showlabels:
 			for i, label in enumerate(curve.labels):
@@ -2156,11 +2083,11 @@ def display(lclist=[], splist=[],
 					if len(label) > 4: # Probably jd labels, we write vertically :
 						axes.annotate(label, (tmpjds[i], tmpmags[i]), xytext=(-3, -70), textcoords='offset points',size=12, color = curve.plotcolour, rotation = 90)
 					else:	# horizontal writing
-						axes.annotate(label, (tmpjds[i], tmpmags[i]), xytext=(7, -6), textcoords='offset points',size=12, color = curve.plotcolour)	
+						axes.annotate(label, (tmpjds[i], tmpmags[i]), xytext=(7, -6), textcoords='offset points',size=12, color = curve.plotcolour)
 
 	if collapseref and len(reflevels) != 0:
 		print "WARNING : collapsing the refs %s" % (reflevels)
-		plt.axhline(np.mean(np.array(reflevels)), color="gray", dashes = ((3,3))) # the new ref
+		axes.axhline(np.mean(np.array(reflevels)), color="gray", dashes = ((3,3))) # the new ref
 
 	
 	# The supplementary objects
@@ -2176,20 +2103,26 @@ def display(lclist=[], splist=[],
 				npts = (spline.datapoints.jds[-1] - spline.datapoints.jds[0])*2.0
 				xs = np.linspace(spline.datapoints.jds[0], spline.datapoints.jds[-1], npts)
 				ys = spline.eval(jds = xs)
-				plt.plot(xs, ys, "-", color=spline.plotcolour, zorder=+20, label=str(spline))
+				axes.plot(xs, ys, "-", color=spline.plotcolour, zorder=+20, label=str(spline))
 				# For the knots, we might not want to show them (by default we do show them) :
 				if getattr(spline, "showknots", True) == True:
-					#plt.errorbar(spline.getinttex(), spline.eval(jds = spline.getinttex()), 0.015*np.ones(len(spline.getinttex())), capsize=0, ecolor=spline.plotcolour, linestyle="none", marker="", elinewidth=1.5, zorder=40, barsabove=True)
-					
-					ax = plt.gca()
-					knotxs = spline.getinttex()
-					knotys = spline.eval(knotxs)
-					for (knotx, knoty) in zip(knotxs, knotys):
-						l = matplotlib.lines.Line2D([knotx,knotx],[knoty-knotsize,knoty+knotsize], zorder=30, linewidth=1.5, color=spline.plotcolour)                                    
- 						ax.add_line(l)  
+					if ax != None:
+						ax.errorbar(spline.getinttex(), spline.eval(jds = spline.getinttex()), 0.015*np.ones(len(spline.getinttex())), capsize=0, ecolor=spline.plotcolour, linestyle="none", marker="", elinewidth=1.5, zorder=40, barsabove=True)
+						knotxs = spline.getinttex()
+						knotys = spline.eval(knotxs)
+						for (knotx, knoty) in zip(knotxs, knotys):
+							l = matplotlib.lines.Line2D([knotx,knotx],[knoty-knotsize,knoty+knotsize], zorder=30, linewidth=1.5, color=spline.plotcolour)
+							ax.add_line(l)
+					else:
+						axes = plt.gca()
+						knotxs = spline.getinttex()
+						knotys = spline.eval(knotxs)
+						for (knotx, knoty) in zip(knotxs, knotys):
+							l = matplotlib.lines.Line2D([knotx,knotx],[knoty-knotsize,knoty+knotsize], zorder=30, linewidth=1.5, color=spline.plotcolour)
+							axes.add_line(l)
 				
 				if showspldp: # The datapoints of the spline (usually not shown)
-					plt.plot(spline.datapoints.jds, spline.datapoints.mags, marker = ",", linestyle="None", color=spline.plotcolour, zorder=-20)
+					axes.plot(spline.datapoints.jds, spline.datapoints.mags, marker = ",", linestyle="None", color=spline.plotcolour, zorder=-20)
 			
 #			if hasattr(stuff, "regfct"): # Then it's a GPR
 # 				
@@ -2207,7 +2140,7 @@ def display(lclist=[], splist=[],
 				
 				rs = stuff
 				#plt.plot(rs.getjds(), rs.mags, "-.", color=rs.plotcolour)
-				plt.plot(rs.getjds(), rs.mags, "-", color=rs.plotcolour)
+				axes.plot(rs.getjds(), rs.mags, "-", color=rs.plotcolour)
 				xf = np.concatenate((rs.getjds(), rs.getjds()[::-1]))
         			yf = np.concatenate((rs.mags+rs.magerrs, (rs.mags-rs.magerrs)[::-1]))
         			plt.fill(xf, yf, facecolor = rs.plotcolour, alpha=0.2, edgecolor = (1,1,1), label=str(rs))
@@ -2235,15 +2168,15 @@ def display(lclist=[], splist=[],
 		pass
 	else:
 		#plt.title(title, fontsize=18)
-		axes.annotate(title, xy=(0.5, 1.0), xycoords='axes fraction', xytext=(0, -10),
-			textcoords='offset points', ha='center', va='top', fontsize=30)
+		axes.annotate(title, xy=(0.5, 1.0), xycoords='axes fraction', xytext=(0, -4),
+			textcoords='offset points', ha='center', va='top', fontsize=25)
 	
 	if jdrange != None:
-		plt.xlim(jdrange[0], jdrange[1])
+		axes.set_xlim(jdrange[0], jdrange[1])
 	
 	
-	plt.xlabel("HJD - 2400000.5 [day]", fontsize = labelfontsize)
-	plt.ylabel("Magnitude (relative)", fontsize = labelfontsize)
+	axes.set_xlabel("HJD - 2400000.5 [day]", fontsize = labelfontsize)
+	axes.set_ylabel("Magnitude (relative)", fontsize = labelfontsize)
 	
 	if showdelays:
 		txt = getnicetimedelays(lclist, separator="\n")
@@ -2258,7 +2191,7 @@ def display(lclist=[], splist=[],
 			print txt
 	
 	if showlegend and (len(lclist) > 0 or len(splist) > 0):
-		plt.legend(loc = legendloc, numpoints = 1, prop = fm.FontProperties(size = 12))
+		axes.legend(loc = legendloc, numpoints = 1, prop = fm.FontProperties(size = 12))
 	
 	if magrange != None:
 		if type(magrange) == float or type(magrange) == int:
@@ -2267,9 +2200,9 @@ def display(lclist=[], splist=[],
 			for l in lclist:
 				allmags.extend(l.getmags())
 			meanlevel = np.mean(np.array(allmags))
-			plt.ylim(meanlevel+magrange, meanlevel-magrange)
+			axes.set_ylim(meanlevel+magrange, meanlevel-magrange)
 		else:
-			plt.ylim(magrange[0], magrange[1])
+			axes.set_ylim(magrange[0], magrange[1])
 	
 	if showdates: # Be careful when you change something here, it could mess up the axes.
 		# Especially watch out when you change the plot range.
@@ -2285,6 +2218,8 @@ def display(lclist=[], splist=[],
 		yearx.xaxis.set_major_locator(matplotlib.dates.YearLocator())
 		yearx.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y'))
 		yearx.xaxis.tick_top()
+		if keeponlygrid:
+			yearx.set_xticklabels([])
 		#yearx.set_xlabel("Date")
 	
 	minoryLocator = MultipleLocator(magmintickstep)
@@ -2292,12 +2227,24 @@ def display(lclist=[], splist=[],
 	
 	
 	if showgrid:
-		plt.grid(zorder=2000)
+		plt.grid(zorder=20)
 	
 	if text != None:
 		for line in text:
 			axes.text(line[0], line[1], line[2], transform=axes.transAxes, **line[3])
-	
+
+	if showinsert:
+		assert insertname != None
+		from matplotlib._png import read_png
+		from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+		im = read_png(insertname)
+		imagebox = OffsetImage(im, zoom=0.5, interpolation="sinc", resample = True)
+		ab = AnnotationBbox(imagebox,  xy=(1.0, 1.0), xycoords='axes fraction', xybox = (-75, -75),
+				boxcoords="offset points",
+				pad=0.0, frameon=False
+			)
+		axes.add_artist(ab)
+
 	if showlogo:
 	
 		# The EPFL logo :	
@@ -2364,10 +2311,14 @@ def display(lclist=[], splist=[],
 			# the plot, rather than hide behind it... (e.g. zorder=10)
 			fig.figimage(im, 0, fig.bbox.ymax - height)
 		"""
-		
+
+	if ax != None:
+		return
+
 	if filename == "screen":
 		plt.show()
 	else:
+
 		plt.savefig(filename, transparent=transparent)
 		#if verbose:
 		print "Plot written to %s" % filename

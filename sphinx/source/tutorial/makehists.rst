@@ -1,12 +1,11 @@
-Getting time delay histograms
-=============================
-
+Getting delay histograms and results
+====================================
 
 
 Generalities
 ------------
 
-To obtain time delay histograms or PDFs, several steps need to be done; they are presented in the following subsections.
+To obtain time-delay histograms and point and uncertainty estimates, several steps need to be done; they are presented in the following subsections.
 We assume that you have generated some mock curves as described in the previous section.
 
 
@@ -78,7 +77,24 @@ Analysing the measurement results
 We read the "runresults" pickle files created at the previous step, and turn them into plots.
 This is very flexible, as you might want to plot and analyse many things.
 
-For now, here is a typical example of the kind of plots we're after :
+To start, we have the function :py:func:`pycs.sim.run.collect` that collects all the results from one directory::
+
+	results = pycs.sim.run.collect(directory="./for/example/sims_copies_opt_spl")
+
+The resulting object ``results`` is an instance of the class :py:class:`pycs.sim.run.runresults`. If you want to perform your own analysis of the results, you could directly access the following attributes::
+
+	print results.labels # A list of the QSO image names (defines the order of QSO images with which the following results are given)
+	print results.tsarray # A 2D array with the measured time shifts. Shape is (number of sets, number of QSO images)
+	print results.truetsarray # Idem, for the TRUE time shifts, in case of simulated data
+	print results.qs # A 1D array with the "chi2" or dispersion values. Shape is (number of sets).
+
+Note that these "tsarrays" contain time shifts, not time delays. To get time delays between images "A" and "B" (i.e., ``results.labels[0]`` and ``results.labels[1]``), you would have to compute the differences yourself::
+
+	measured_delays = results.tsarray[:,1] - results.tsarray[:,0]
+	print measured_delays
+
+
+If you want to go straight to some more or less automatic plots showing the results, here is a typical example:
 
 ::
 
