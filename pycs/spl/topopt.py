@@ -1,7 +1,9 @@
 """
-Higher level wrappers around the multiopt optimizers
+Higher level wrappers around the multiopt optimizers.
+These attempt to be a as multi-puropose as possible, but please understand that there is no general "optimal" way to optimize
+a spline fit. Depening on your data, custom optimizers might be needed. That's what we did for the TDC.
 
-We do not define the microlensing inside of the optimizer, we really just optimize it.
+In principle we do not define the microlensing inside of the optimizer, we really just optimize it.
 
 The functions must return a final optimal spline. This spline object also contains its final r2, saved into the pkl, and used for plots etc.
 
@@ -87,7 +89,7 @@ def opt_rough(lcs, nit = 5, shifttime=True, crit="r2",
 def opt_fine(lcs, spline=None, nit=10, shifttime=True, crit="r2", 
 	knotstep=20, stabext=300.0, stabgap=20.0, stabstep=4.0, stabmagerr=-2.0,
 	bokeps=10, boktests=10, bokwindow=None,
-	redistribflux=False, splflat=True, verbose=True, trace=False, tracedir = "opt4"):
+	redistribflux=False, splflat=True, verbose=True, trace=False, tracedir = "opt_fine"):
 	"""
 	Fine approach, we assume that the timeshifts are within 2 days, and ML is optimized.
 	
@@ -180,24 +182,13 @@ def opt_fine2(lcs, knotstepfact=1.0, maxit=10, minchange=1.0, verbose=True):
 	Version 2
 	Generalisation of pycs.tdc.splotp.spl3, but for a random number of lcs.
 	Assumes a really good initial time shift, does not care about inital magshift.
+	Also, contrary to what was done for tdc.splopt, we do NOT add ML in here, but use whatever is there!
 
-	ML is added inside this function to lcs[i] for i in mllist.
-	The ML signal should not get strong if it is not required.
 
 	:param maxit: maximum number of iterations
-
 	:param minchange: minimum decrease in percent of the r2. I stop if the decrease gets smaller.
 
-	:param mltype: choose between spline microlensing using the mlknotstep parameter, or polynomial microlensing, using the nparams and autoseasongap parameters
-
 	"""
-
-	"""
-	for lc in lcs:
-		#assert lc.ml == None
-		lc.rmml()
-	"""
-
 
 	stats = lcs[0].samplingstats(seasongap=30)
 	sampling = stats["med"]

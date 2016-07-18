@@ -14,3 +14,4 @@ To cite PyCS, we suggest both of the following papers:
   - This paper demonstrates the performance of PyCS on synthetic data from the first Time Delay Challenge.
 
 
+.. note:: Please use the URL ``http://www.cosmograil.org`` when indicating a website for PyCS. While the hosting of the code might change, we will try hard to keep this URL valid for the years to come.

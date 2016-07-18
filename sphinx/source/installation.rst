@@ -5,9 +5,10 @@ Download & Installation
 Dependencies
 ------------
 
-PyCS is developed using python 2.7 and might be fine with older versions, but not with python 3.
+PyCS is developed using python 2.7 and might be fine with older versions, but currently not with python 3.
 
-It requires ``numpy``, ``scipy`` and ``matplotlib``. Those are all you need to run the free knot splines.
+It requires ``numpy``, ``scipy`` and ``matplotlib``. As of March 2016, everything seems to work with the latest versions of these packages.
+Those are all you need to run the free-knot splines.
 
 Some other estimators (e.g., the "regression difference" technique) might have furter dependencies:
 

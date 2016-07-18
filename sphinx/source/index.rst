@@ -18,7 +18,7 @@ If you have already read our :doc:`papers<citing>`, you might want to proceed wi
 Questions ?
 -----------
 
-Feel free to post an `issue on GitHub <https://github.com/COSMOGRAIL/PyCS/issues>`_, or to contact the authors `Malte Tewes <https://astro.uni-bonn.de/~mtewes>`_ and `Vivien Bonvin <http://people.epfl.ch/vivien.bonvin>`_.
+Feel free to post an `issue on GitHub <https://github.com/COSMOGRAIL/PyCS/issues>`_, or to contact the code authors `Malte Tewes <https://astro.uni-bonn.de/~mtewes>`_ and `Vivien Bonvin <http://people.epfl.ch/vivien.bonvin>`_.
 
 
 Contents

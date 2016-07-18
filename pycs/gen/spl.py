@@ -172,8 +172,8 @@ class DataPoints():
 		
 		absstabmagerr = self.calcstabmagerr()
 		
-		gaps = self.jds[1:] - self.jds[:-1]
-		gapindices = np.arange(len(self.jds))[gaps > self.stabgap]
+		gaps = self.jds[1:] - self.jds[:-1] # has a length of len(self.jds) - 1
+		gapindices = np.arange(len(self.jds) - 1)[gaps > self.stabgap] # indices of those gaps that are larger than stabgap
 		
 		for n in range(len(gapindices)):
 			i = gapindices[n]
@@ -1011,7 +1011,7 @@ class Spline():
 		By default, we exclude the stabilization points !
 		If jds is not None, we use them instead of our own jds (in this case excludestab makes no sense)
 		"""
-		if jds == None:
+		if jds is None:
 			if nostab:
 				jds = self.datapoints.jds[self.datapoints.mask]
 			else:
