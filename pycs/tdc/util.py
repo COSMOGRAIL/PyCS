@@ -192,20 +192,12 @@ def writesubmission(estimates, filepath, commentlist=None, theseonly=False):
 				ind = estids.index(searchid)
 				tdcfile.write("%s\t%8.2f\t%8.2f\n" % (name, -1.0 * estimates[ind].td, estimates[ind].tderr))
 				# --- WARNING --- The TDC convention for the delays is the inverse of PyCS, thus the "-" sign above
-				
-				# Just a little check to make Vivien happy: **Woohoo** !
-				# Warningue : you may want to comment this when dealing with personal D3CS submissions
-				
-				if rung==3 and pair==505:
-					assert estimates[ind].td == 91.6 and estimates[ind].tderr == 2.9
-				
+
 			except ValueError:	
 				notfound += 1
 				if not theseonly:
 					tdcfile.write("%s\t%8.2f\t%8.2f\n" % (name, -99.0, -99.0))
-	
-	
-	#tdcfile.write("\n")
+
 	tdcfile.close()	
 
 	print "Wrote %s" % (filepath)
