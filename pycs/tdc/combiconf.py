@@ -1,17 +1,22 @@
 import numpy as np
 import pycs
-import sys
 
 def combiconf1(estimates):
 	"""
-	Give me a group of ests of the same pair, I return the combined confidence. Simple version
+	Give me a group of estimates of the same TDC pair, I return the combined confidence.
+	1 is for doubtless
+	2 for plausible
+	3 for multimodal
+	4 for uninformative
+
+	Simple version
+
+	@param estimates: list of Estimate objects
+
+	@return: dictionary that contains the combined confidence code and the estimate set, rung and pair.
 	"""
-	
+
 	(tdcset, rung, pair) = pycs.tdc.est.checkallsame(estimates)
-	
-	identity = estimates[0].id
-	combiconfcode = 0 # the output value.
-	
 	idconfs = [(est.id,est.confidence) for est in estimates]
 	
 	
@@ -49,11 +54,22 @@ def combiconf1(estimates):
 	
 def combiconf2(estimates):
 	"""
+
+	Give me a group of estimates of the same TDC pair, I return the combined confidence.
+	1 is for doubtless
+	2 for plausible
+	3 for multimodal
+	4 for uninformative
+
 	Updated version of combiconf1, now with accordance criterias between the estimates, and weight given to Vivien/Malte estimates
+
+	@param estimates: list of Estimate objects
+
+	@return: dictionary that contains the combined confidence code and the estimate set, rung and pair.
+
 	"""	
 	(tdcset, rung, pair) = pycs.tdc.est.checkallsame(estimates)
-	
-	identity = estimates[0].id
+
 	combiconfcode = 0 # the output value.
 	
 	idconfs = [(est.id,est.confidence) for est in estimates]	
@@ -67,7 +83,6 @@ def combiconf2(estimates):
 	#	 	see if the errorbars are not too big compared to the delay
 	#	if not, if Malte has an estimate, see if it agrees with Vivien
 	#		if not, see if Vivien has a high confidence level (doubt/plaus)		  
-	
 
 	
 	# doubtless, conflevels = 1 only.
@@ -96,8 +111,6 @@ def combiconf2(estimates):
 					combiconfcode = 13 # Malte and Vivien disagree		
 			else:
 				combiconfcode = 14 # No Malte, only Vivien, disagree with someone else	
-
-
 
 
 	# plausible, conflevels = 1 or 2. 
@@ -129,8 +142,6 @@ def combiconf2(estimates):
 				combiconfcode = 24 # No Malte, only Vivien, disagree with someone else							
 
 
-	
-			
 	# doubless+multimodal
 	elif all(idconf[1]<=3 for idconf in idconfs) and 1 in (idconf[1] for idconf in idconfs):
 		for est in estimates:
@@ -226,8 +237,6 @@ def combiconf2(estimates):
 					combiconfcode = 56 # ests disagree, but Vivien flagged plausible/doubtless.
 				else:
 					combiconfcode = 57 # ests disagree, Vivien flagged uninformative						
-					
-
 
 					
 	# uninformative and/or multimodal, to shoot
@@ -248,6 +257,10 @@ def reroll(estimates):
 	"""
 	Give me a list of estimates. I remove all estimates not from Malte or Vivien, then recompute the combiconfcode
 	Return the new combiconfcode, along with the id of the estimate
+
+	@param estimates: list of Estimate objects
+
+	@return: dictionnary containing the new combiconfcode computed by combiconf2, the estimate set, rung and pair and the corresponding estimates from Malte and Vivien only
 	"""					
 					
 	new_estimates = [est for est in estimates if est.methodpar == "Vivien" or est.methodpar == "mtewes"]
@@ -260,11 +273,20 @@ def reroll(estimates):
 
 def combiquads(estimates):
 	"""
+
+	This function is based on a exploit discovered during the rungs generation: the quads with the same pair indices are the same amongst all rungs, thus have the same delay.
+
+	Not used for TDC1 official submissions, just for fun.
+
 	Give me a list of already combined estimates (i.e. one per pair only).
 	I compute for each quad pair the best td and tderr among the corresponding rungs (which is an exploit !)
-	I return the modified entry list, with all the quads modified, and with only the doubtless double
+	I return the modified estimates list, with all the quads modified, and with only the doubtless double
 	
-	# BIG WARNING !!! This function (pycs.tdc.combiconf.combiquads) actually modify estimates, we DO NOT want that ! 
+	# BIG WARNING !!! This function (pycs.tdc.combiconf.combiquads) actually modify estimates, we DO NOT want that !
+
+	@param estimates: list of Estimate objects. Each id must be present no more than once.
+
+	@return: list of modified Estimate objects.
 	"""
 
 	print 'BIG WARNING !!! This function (pycs.tdc.combiconf.combiquads) actually modify estimates, we DO NOT want that ! '
@@ -319,15 +341,13 @@ def combiquads(estimates):
 			print est.confidence
 			raise RuntimeError("WARNING -- I didn't catch %s, should not happen !" % est.originalid)
 			
-		
-		
+
 		for est in groupest:
 			est.td = td
 			est.tderr = tderr
 			est.confidence = confidence
 			est.id = est.originalid # get back to normal...ouf !
-	
-	
+
 	# Rebuild the list of estimates to return
 	
 	exploitests = []
@@ -339,16 +359,4 @@ def combiquads(estimates):
 			exploitests.append(est)	
 	
 	return exploitests
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
