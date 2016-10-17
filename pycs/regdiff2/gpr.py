@@ -6,7 +6,7 @@ from sklearn.gaussian_process import GaussianProcess
 import numpy as np
 
 
-def regression(x, y, yerr, theta0, verbose=True):
+def regression(x, y, yerr, verbose=True, **kwargs):
 	"""
 	Give me data points
 	yerr is the 1sigma error of each y
@@ -23,8 +23,11 @@ def regression(x, y, yerr, theta0, verbose=True):
 #  		random_start=3, verbose=verbose)
 	
 	
-	gp = GaussianProcess(corr='squared_exponential',
-		theta0=theta0, random_start=1, nugget = 0.001, verbose=verbose)
+	mykwargs = {"theta0" : 1.0e2, "nugget" : 0.001}
+	mykwargs.update(kwargs)
+	#print mykwargs
+	
+	gp = GaussianProcess(corr='squared_exponential', random_start=1, verbose=verbose, **mykwargs)
 
 
 	#gp = GaussianProcess(corr='squared_exponential',

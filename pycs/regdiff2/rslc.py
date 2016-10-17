@@ -74,7 +74,7 @@ class rslc():
 		
 		
 
-def factory(l, theta0 = 1.0e5, pad=0.0, pd=2, plotcolour=None):
+def factory(l, pad=0.0, pd=2, plotcolour=None, **kwargs):
 	"""
 	Give me a lightcurve, I return a regularly sampled light curve, by performing some regression.
 	
@@ -115,7 +115,7 @@ def factory(l, theta0 = 1.0e5, pad=0.0, pd=2, plotcolour=None):
 	def meanprior(query):
 		return (0.0 * query + mean_mag)
 		
-	regfct = gpr.regression(jds, mags, magerrs, theta0=theta0)
+	regfct = gpr.regression(jds, mags, magerrs, **kwargs)
 	(rsmags, rsmagerrs) = regfct(rsjds)
 	
 	return rslc(rsjds, rsmags, rsmagerrs, pad, pd, timeshift=timeshift, name=name, plotcolour=plotcolour)
