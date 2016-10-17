@@ -31,16 +31,16 @@ pycs.sim.plot.covplot(simresults, filename="fig_covplot.pdf")
 
 # Finally we group the information saved by these steps to get the results in form of a summary plot :
 
-disp = (pycs.gen.util.readpickle("sims_copies_opt_disp_delays.pkl"),
+dispres = (pycs.gen.util.readpickle("sims_copies_opt_disp_delays.pkl"),
 	pycs.gen.util.readpickle("sims_1Kset1_opt_disp_errorbars.pkl"))
 
-regdiff = (pycs.gen.util.readpickle("sims_copies_opt_regdiff_delays.pkl"),
+regdiffres = (pycs.gen.util.readpickle("sims_copies_opt_regdiff_delays.pkl"),
 	pycs.gen.util.readpickle("sims_1Kset1_opt_regdiff_errorbars.pkl"))
 
-spl = (pycs.gen.util.readpickle("sims_copies_opt_spl_delays.pkl"),
+splres = (pycs.gen.util.readpickle("sims_copies_opt_spl_delays.pkl"),
 	pycs.gen.util.readpickle("sims_1Kset1_opt_spl_errorbars.pkl"))
 
-pycs.sim.plot.newdelayplot([disp, regdiff, spl], rplot=6.0, displaytext=True,
+pycs.sim.plot.newdelayplot([dispres, regdiffres, splres], rplot=6.0, displaytext=True,
 	filename = "fig_delays.pdf", refshifts=[{"colour":"gray", "shifts":(0, -5, -20, -70)}])
 
 
