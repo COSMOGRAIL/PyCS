@@ -697,29 +697,9 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 		plt.savefig(filename)
 
 
-def newcovplot(rrlist, r=5, nbins = 10, nbins2d = 3, plotpoints=True, plotrods=True, ploterrorbars=True, sidebyside=True, errorrange=None, binclip=False, binclipr=10.0, title=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, displayn=True, filename=None, dataout=False):
-	"""
+def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, method='indepbin', verbose=True):
 
-	:param rrlist:
-	:param showpoints:
-	:param showcontour:
-	:param showdensity:
-	:param fractionalresiduals:
-	:param bins:
-	:param smoothing:
-	:param figsize:
-	:param left:
-	:param right:
-	:param bottom:
-	:param top:
-	:param wspace:
-	:param hspace:
-	:param r:
-	:param title:
-	:param txtstep:
-	:param filename:
-	:return:
-	"""
+	assert (method in ['depbin', 'indepbin'])
 
 	nimages = rrlist[0].nimages()
 	imginds = np.arange(nimages)
@@ -744,23 +724,26 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d = 3, plotpoints=True, plotrods=T
 			tderrsdicts.append({"tderrs": tderrs, "truetds": truetds})
 
 	#tderrsdict contains the errors on the true delays, as well as the true delays for each simulation
-	fig = plt.figure(figsize=figsize)
-	fig.subplots_adjust(left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace)
 
+	#TODO: we want to make a control plot out of this procedure"
+	#fig = plt.figure(figsize=figsize)
+	#fig.subplots_adjust(left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace)
 	axisNum = 0
 
-	# create the covariance matrix
+	# create the empty covariance matrix
 	covmat = []
 	for ind in range(len(couplelist)):
 		covmat.append(np.zeros(len(couplelist)))
-
+	indepbins = np.zeros(len(couplelist))
+	depbins = np.zeros(len(couplelist))
+	rranges = np.zeros(len(couplelist))
 	for ii, i in enumerate(couplelist): # (0, 1), (0, 2) ...
 		xtderrs = [tderrsdict["tderrs"][ii] for tderrsdict in tderrsdicts]
 		xtruetds = [tderrsdict["truetds"][ii] for tderrsdict in tderrsdicts]
 		maxx = np.max(xtruetds)
 		minx = np.min(xtruetds)
 
-		# fill the non-diagonal elements
+		### fill the off-diagonal elements
 		for jj, j in enumerate(couplelist):
 
 			if (ii == 0) or (jj == ncouples-1) :
@@ -769,24 +752,18 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d = 3, plotpoints=True, plotrods=T
 			if jj >= ii:
 				continue
 
-			#print i, j, axisNum
 			ax = plt.subplot(ncouples-1, ncouples-1, axisNum, aspect='equal')
 			ax.axhline(0, color="black")
 			ax.axvline(0, color="black")
 
-
 			ytderrs = [tderrsdict["tderrs"][jj] for tderrsdict in tderrsdicts]
 			ytruetds = [tderrsdict["truetds"][jj] for tderrsdict in tderrsdicts]
-
-			#print tderrsdicts[0]
-			#print xtderrs[0], ytderrs[0], xtruetds[0], ytruetds[0]
 
 			# Now we want to bins xtderrs and ytderrs according to their trude delay values
 			xbinvals = np.linspace(minx, maxx, num=nbins2d+1, endpoint=True)
 			maxy = np.max(ytruetds)
 			miny = np.min(ytruetds)
 			ybinvals = np.linspace(miny, maxy, num=nbins2d+1, endpoint=True)
-
 
 			covs=[]
 			for indx, xbinval in enumerate(xbinvals[:nbins2d]):
@@ -796,7 +773,7 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d = 3, plotpoints=True, plotrods=T
 						if xtruetd > xbinval and xtruetd < xbinvals[indx+1] and ytruetd > ybinval and ytruetd < ybinvals[indy+1]:
 							subsamples.append((xtderrs[ind], ytderrs[ind]))
 
-					#@todo: due to the non-uniform sampling of the simulated true tds, some regions of the truetd_x vs truetd_y are rather empty (less than 10 samples). Should we i) increase the number of simulated samples, ii) discard these regions from the analysis ?
+					#TODO: due to the non-uniform sampling of the simulated true tds, some regions of the truetd_x vs truetd_y are rather empty (less than 10 samples). Should we i) increase the number of simulated samples, ii) discard these regions from the analysis ?
 					covs.append(np.cov(subsamples, rowvar=False)[0][1])
 			mincov = np.min(covs)
 			maxcov = np.max(covs)
@@ -805,14 +782,12 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d = 3, plotpoints=True, plotrods=T
 				cov = mincov
 			else:
 				cov = maxcov
-			#print cov
 			covmat[ii][jj] = cov
 			covmat[jj][ii] = cov
 
-		# and fill the diagonal element
+		### and fill the diagonal element
 
 		# way 1 - binning independent of xtruedelays distribution. User choose the plot range. Similar to newdelayplot()
-		indepbins = np.zeros(len(couplelist))
 		reftrueshifts = np.round(rrlist[0].gettruets()["center"])
 		reftruedelay = reftrueshifts[i[0]] - reftrueshifts[i[1]]
 		plotrange = (reftruedelay - r, reftruedelay + r)
@@ -845,14 +820,12 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d = 3, plotpoints=True, plotrods=T
 		syserror = np.max(np.fabs(binmeans))
 		randerror = np.max(binstds)
 		toterror = np.sqrt(syserror*syserror + randerror*randerror)
-		bias = np.mean(binmeans)
-
 		indepbins[ii] = toterror
 
-
 		# way 2 - binning dependent on the xtruedelays samples: min and max vals corresponds to the extremas of xtruedelays distribution
-		depbins = []
+
 		xbinvals = np.linspace(minx, maxx, num=nbins+1, endpoint=True)
+		rranges[ii] = maxx-minx
 
 		binmeans = []
 		binstds = []
@@ -866,22 +839,39 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d = 3, plotpoints=True, plotrods=T
 		syserror = np.max(np.fabs(binmeans))
 		randerror = np.max(binstds)
 		toterror = np.sqrt(syserror*syserror + randerror*randerror)
-
 		depbins[ii] = toterror
 
+		# We let the user choose which method he prefers
+		# Dear user, be EXTREMELY CAREFUL with your choice !
+
+		if method == 'depbin':
+			if ii == 0 and verbose : print "You chose a binning depending on the sample values"
+			covmat[ii][ii] = depbins[ii]
+		elif method == 'indepbin':
+			if ii == 0 and verbose : print "You chose a binning independent of the sample values"
+			covmat[ii][ii] = indepbins[ii]
 
 	# now let's compare indepbins and depbins
+	if verbose:
+		print "-"*35
+		print "nbins = %i" % nbins
+		print "indepbins - r = %.1f" % r
+		print "depbins - r(max-min) =", np.mean(rranges)
+		print "-"*35
+		print "pair - indepbins - depbins - diff"
+		print "-"*35
+		print "AB - %.2f - %.2f - %.1f%%" % (indepbins[0], depbins[0], (max(indepbins[0], depbins[0])-min(indepbins[0], depbins[0])) / max(indepbins[0], depbins[0])*100)
+		print "AC - %.2f - %.2f - %.1f%%" % (indepbins[1], depbins[1], (max(indepbins[1], depbins[1])-min(indepbins[1], depbins[1])) / max(indepbins[1], depbins[1])*100)
+		print "BC - %.2f - %.2f - %.1f%%" % (indepbins[3], depbins[3], (max(indepbins[3], depbins[3])-min(indepbins[3], depbins[3])) / max(indepbins[3], depbins[3])*100)
+		print "AD - %.2f - %.2f - %.1f%%" % (indepbins[2], depbins[2], (max(indepbins[2], depbins[2])-min(indepbins[2], depbins[2])) / max(indepbins[2], depbins[2])*100)
+		print "BD - %.2f - %.2f - %.1f%%" % (indepbins[4], depbins[4], (max(indepbins[4], depbins[4])-min(indepbins[4], depbins[4])) / max(indepbins[4], depbins[4])*100)
+		print "CD - %.2f - %.2f - %.1f%%" % (indepbins[5], depbins[5], (max(indepbins[5], depbins[5])-min(indepbins[5], depbins[5])) / max(indepbins[5], depbins[5])*100)
+		print "-"*35
 
-	print "AB: ", covmat[0][0]
-	print "AC: ", covmat[1][1]
-	print "BC: ", covmat[3][3]
-	print "AD: ", covmat[2][2]
-	print "BD: ", covmat[4][4]
-	print "CD: ", covmat[5][5]
+	return covmat
 
-	#for ii in range(len(couplelist)):
-		#print covmat[ii][ii]
-	#sys.exit()
+
+
 
 def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, plotrods=True, ploterrorbars=True, sidebyside=True, errorrange=None, binclip=False, binclipr=10.0, title=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, displayn=True, filename=None, dataout=False):
 	"""
