@@ -14,6 +14,7 @@ To measure time delays with ``pycs``, you'll typically write a script calling so
 
 If you have already read our :doc:`papers<citing>`, you might want to proceed with :doc:`installation`, or the :doc:`tutorial/tutorial`. To get a quick first impression of how PyCS looks in practice, install PyCS and then go directly to the :doc:`tutorial/demo1`. These show you how to **reproduce** the figures from the method paper.
 
+.. warning:: Please also read :doc:`this<warning>`.
 
 Questions ?
 -----------
@@ -28,6 +29,7 @@ Contents
 .. toctree::
 	:maxdepth: 2
 	
+	A word of warning <warning>
 	installation
 	tutorial/tutorial
 	citing
