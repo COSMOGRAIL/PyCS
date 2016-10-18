@@ -4,7 +4,7 @@ Subpackage with functions to plot all kind of results from runs.
 
 
 import numpy as np
-import math
+import math, sys
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -496,9 +496,6 @@ def newdelayplot2(plotlist, rplot=7.0, displaytext=True, hidedetails=False, show
 		plt.savefig(filename)
 
 
-
-
-
 def normal(x, mu, sigma):
 	"""
 	Plain normal distribution.
@@ -700,8 +697,193 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 		plt.savefig(filename)
 
 
+def newcovplot(rrlist, r=5, nbins = 10, nbins2d = 3, plotpoints=True, plotrods=True, ploterrorbars=True, sidebyside=True, errorrange=None, binclip=False, binclipr=10.0, title=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, displayn=True, filename=None, dataout=False):
+	"""
 
-def measvstrue(rrlist, r=10.0, nbins = 20, plotpoints=True, plotrods=True, ploterrorbars=True, sidebyside=True, errorrange=None, binclip=False, binclipr=10.0, title=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, displayn=True, filename=None, dataout=False):
+	:param rrlist:
+	:param showpoints:
+	:param showcontour:
+	:param showdensity:
+	:param fractionalresiduals:
+	:param bins:
+	:param smoothing:
+	:param figsize:
+	:param left:
+	:param right:
+	:param bottom:
+	:param top:
+	:param wspace:
+	:param hspace:
+	:param r:
+	:param title:
+	:param txtstep:
+	:param filename:
+	:return:
+	"""
+
+	nimages = rrlist[0].nimages()
+	imginds = np.arange(nimages)
+	labels = rrlist[0].labels
+
+	couplelist = [(i, j) for j in imginds for i in imginds if i > j]
+	ncouples = len(couplelist)
+	# print couplelist
+
+	tderrsdicts = []
+	# rrlist is just a list of rr, we treat them one after the other
+	for rr in rrlist:
+		# for each rr, we compute the error from the true delay
+		truetsslist = rr.truetsarray
+		tsslist = rr.tsarray-truetsslist
+		for ind, tss in enumerate(tsslist):
+			tderrs = []
+			truetds = []
+			for (i, j) in couplelist:
+				tderrs.append(tss[i]-tss[j])
+				truetds.append(truetsslist[ind][i]-truetsslist[ind][j])
+			tderrsdicts.append({"tderrs": tderrs, "truetds": truetds})
+
+	#tderrsdict contains the errors on the true delays, as well as the true delays for each simulation
+	fig = plt.figure(figsize=figsize)
+	fig.subplots_adjust(left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace)
+
+	axisNum = 0
+
+	# create the covariance matrix
+	covmat = []
+	for ind in range(len(couplelist)):
+		covmat.append(np.zeros(len(couplelist)))
+
+	for ii, i in enumerate(couplelist): # (0, 1), (0, 2) ...
+		xtderrs = [tderrsdict["tderrs"][ii] for tderrsdict in tderrsdicts]
+		xtruetds = [tderrsdict["truetds"][ii] for tderrsdict in tderrsdicts]
+		maxx = np.max(xtruetds)
+		minx = np.min(xtruetds)
+
+		# fill the non-diagonal elements
+		for jj, j in enumerate(couplelist):
+
+			if (ii == 0) or (jj == ncouples-1) :
+				continue # No plot
+			axisNum += 1
+			if jj >= ii:
+				continue
+
+			#print i, j, axisNum
+			ax = plt.subplot(ncouples-1, ncouples-1, axisNum, aspect='equal')
+			ax.axhline(0, color="black")
+			ax.axvline(0, color="black")
+
+
+			ytderrs = [tderrsdict["tderrs"][jj] for tderrsdict in tderrsdicts]
+			ytruetds = [tderrsdict["truetds"][jj] for tderrsdict in tderrsdicts]
+
+			#print tderrsdicts[0]
+			#print xtderrs[0], ytderrs[0], xtruetds[0], ytruetds[0]
+
+			# Now we want to bins xtderrs and ytderrs according to their trude delay values
+			xbinvals = np.linspace(minx, maxx, num=nbins2d+1, endpoint=True)
+			maxy = np.max(ytruetds)
+			miny = np.min(ytruetds)
+			ybinvals = np.linspace(miny, maxy, num=nbins2d+1, endpoint=True)
+
+
+			covs=[]
+			for indx, xbinval in enumerate(xbinvals[:nbins2d]):
+				for indy, ybinval in enumerate(ybinvals[:nbins2d]):
+					subsamples = []
+					for (ind, xtruetd), ytruetd in zip(enumerate(xtruetds), ytruetds):
+						if xtruetd > xbinval and xtruetd < xbinvals[indx+1] and ytruetd > ybinval and ytruetd < ybinvals[indy+1]:
+							subsamples.append((xtderrs[ind], ytderrs[ind]))
+
+					#@todo: due to the non-uniform sampling of the simulated true tds, some regions of the truetd_x vs truetd_y are rather empty (less than 10 samples). Should we i) increase the number of simulated samples, ii) discard these regions from the analysis ?
+					covs.append(np.cov(subsamples, rowvar=False)[0][1])
+			mincov = np.min(covs)
+			maxcov = np.max(covs)
+
+			if abs(mincov) > maxcov:
+				cov = mincov
+			else:
+				cov = maxcov
+			#print cov
+			covmat[ii][jj] = cov
+			covmat[jj][ii] = cov
+
+		# and fill the diagonal element
+
+		# way 1 - binning independent of xtruedelays distribution. User choose the plot range. Similar to newdelayplot()
+		indepbins = np.zeros(len(couplelist))
+		reftrueshifts = np.round(rrlist[0].gettruets()["center"])
+		reftruedelay = reftrueshifts[i[0]] - reftrueshifts[i[1]]
+		plotrange = (reftruedelay - r, reftruedelay + r)
+		binlims = np.linspace(plotrange[0], plotrange[1], nbins + 1)
+
+		# If we want to compare to newdelayplot():
+		# xtruetds = trudedlays
+		# xtderrs = resis
+
+		# needed for binvals:
+		xtderrs = np.array(xtderrs)
+
+		digitized = np.digitize(xtruetds, binlims)
+		binvals = [xtderrs[digitized == bini] for bini in range(1, len(binlims))]
+		binstds = map(np.std, binvals)
+		binmedians = map(np.median, binvals)
+		binmeans = map(np.mean, binvals)
+
+		if binclip:
+				for (bini, binvalarray) in enumerate(binvals):
+
+					keep = np.logical_and(binvalarray < binclipr, binvalarray > -binclipr)
+					if np.sum(keep == False) != 0:
+						print "Kicking %i points." % (np.sum(keep == False))
+					binvals[bini] = binvalarray[keep]
+				binstds = map(np.std, binvals)
+				binmedians = map(np.median, binvals)
+				binmeans = map(np.mean, binvals)
+
+		syserror = np.max(np.fabs(binmeans))
+		randerror = np.max(binstds)
+		toterror = np.sqrt(syserror*syserror + randerror*randerror)
+		bias = np.mean(binmeans)
+
+		indepbins[ii] = toterror
+
+
+		# way 2 - binning dependent on the xtruedelays samples: min and max vals corresponds to the extremas of xtruedelays distribution
+		depbins = []
+		xbinvals = np.linspace(minx, maxx, num=nbins+1, endpoint=True)
+
+		binmeans = []
+		binstds = []
+		for indx, xbinval in enumerate(xbinvals[:nbins]):
+			subsamples = []
+			for (ind, xtruetd) in enumerate(xtruetds):
+				if xtruetd > xbinval and xtruetd < xbinvals[indx+1]:
+					subsamples.append(xtderrs[ind])
+			binmeans.append(np.mean(subsamples))
+			binstds.append(np.std(subsamples))
+		syserror = np.max(np.fabs(binmeans))
+		randerror = np.max(binstds)
+		toterror = np.sqrt(syserror*syserror + randerror*randerror)
+
+		depbins[ii] = toterror
+
+
+	# now let's compare indepbins and depbins
+
+	print "AB: ", covmat[0][0]
+	print "AC: ", covmat[1][1]
+	print "BC: ", covmat[3][3]
+	print "AD: ", covmat[2][2]
+	print "BD: ", covmat[4][4]
+	print "CD: ", covmat[5][5]
+
+	#for ii in range(len(couplelist)):
+		#print covmat[ii][ii]
+	#sys.exit()
+
+def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, plotrods=True, ploterrorbars=True, sidebyside=True, errorrange=None, binclip=False, binclipr=10.0, title=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, displayn=True, filename=None, dataout=False):
 	"""
 	
 	Plots measured delays versus true delays
@@ -723,7 +905,11 @@ def measvstrue(rrlist, r=10.0, nbins = 20, plotpoints=True, plotrods=True, plote
 	labels = rrlist[0].labels
 	
 	# To get some fixed ranges for the histograms, we will use the first element of rrlist.
+
 	reftrueshifts = np.round(rrlist[0].gettruets()["center"])
+	#@todo: WAAARNING ! Depending on the shape your rrlist (is it a 1x1000 runresults or 50x20 runresults), reftrueshift will have different values, impacting the final determination of the systematic and random error you compute. This can lead to a variation >10% on the final error !!!! DO SOMETHING !!!
+	#print len(rrlist), rrlist[0].gettruets()["center"]
+	#sys.exit()
 
 	for rr in rrlist:
 		if rr.labels != labels:
@@ -769,18 +955,19 @@ def measvstrue(rrlist, r=10.0, nbins = 20, plotpoints=True, plotrods=True, plote
 			
 			# Preparing the bins :
 			binlims = np.linspace(plotrange[0], plotrange[1], nbins + 1)
-			
+
+
 			for irr, rr in enumerate(rrlist): # We go through the different runresult objects
 				# We will express the delays "i - j"
 				truedelays = rr.truetsarray[:,i] - rr.truetsarray[:,j]
 				measdelays = rr.tsarray[:,i] - rr.tsarray[:,j]
-				
+
 				resis = measdelays-truedelays
-				
+
 				# A simple scatter plot of the residues :
 				if plotpoints:
 					ax.scatter(truedelays, resis, s=2, facecolor=rr.plotcolour, lw = 0)
-				
+
 				# We bin those :
 				digitized = np.digitize(truedelays, binlims)
 				
@@ -788,10 +975,7 @@ def measvstrue(rrlist, r=10.0, nbins = 20, plotpoints=True, plotrods=True, plote
 				binstds = map(np.std, binvals)
 				binmedians = map(np.median, binvals)
 				binmeans = map(np.mean, binvals)
-				
-				#print binstds
-				#print binmedians
-				
+
 				if binclip:
 					for (bini, binvalarray) in enumerate(binvals):
 						
@@ -804,12 +988,13 @@ def measvstrue(rrlist, r=10.0, nbins = 20, plotpoints=True, plotrods=True, plote
 					binstds = map(np.std, binvals)
 					binmedians = map(np.median, binvals)
 					binmeans = map(np.mean, binvals)
-				
+
 				# We save the maximum sys and ran error :
-				
+
 				syserror = np.max(np.fabs(binmeans))
 				randerror = np.max(binstds)
 				toterror = np.sqrt(syserror*syserror + randerror*randerror)
+
 				bias = np.mean(binmeans) # The signed bias
 				rr.tmpdata.append({
 					"label":delaylabel,
@@ -940,8 +1125,7 @@ def covplot(rrlist, showpoints=False, showcontour=True, showdensity=False, fract
 				
 			
 			for rr in rrlist:
-			
-				
+
 				#print idelaylabel, " vs ", jdelaylabel
 				itruedelays = rr.truetsarray[:,i[0]] - rr.truetsarray[:,i[1]]
 				imeasdelays = rr.tsarray[:,i[0]] - rr.tsarray[:,i[1]]
