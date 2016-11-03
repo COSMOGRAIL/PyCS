@@ -725,7 +725,7 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0,
 
 	#tderrsdict contains the errors on the true delays, as well as the true delays for each simulation
 
-	#TODO: we want to make a control plot out of this procedure"
+	#todo: we want to make a control plot out of this procedure"
 	#fig = plt.figure(figsize=figsize)
 	#fig.subplots_adjust(left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace)
 	axisNum = 0
@@ -743,49 +743,8 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0,
 		maxx = np.max(xtruetds)
 		minx = np.min(xtruetds)
 
-		### fill the off-diagonal elements
-		for jj, j in enumerate(couplelist):
 
-			if (ii == 0) or (jj == ncouples-1) :
-				continue # No plot
-			axisNum += 1
-			if jj >= ii:
-				continue
-
-			ax = plt.subplot(ncouples-1, ncouples-1, axisNum, aspect='equal')
-			ax.axhline(0, color="black")
-			ax.axvline(0, color="black")
-
-			ytderrs = [tderrsdict["tderrs"][jj] for tderrsdict in tderrsdicts]
-			ytruetds = [tderrsdict["truetds"][jj] for tderrsdict in tderrsdicts]
-
-			# Now we want to bins xtderrs and ytderrs according to their trude delay values
-			xbinvals = np.linspace(minx, maxx, num=nbins2d+1, endpoint=True)
-			maxy = np.max(ytruetds)
-			miny = np.min(ytruetds)
-			ybinvals = np.linspace(miny, maxy, num=nbins2d+1, endpoint=True)
-
-			covs=[]
-			for indx, xbinval in enumerate(xbinvals[:nbins2d]):
-				for indy, ybinval in enumerate(ybinvals[:nbins2d]):
-					subsamples = []
-					for (ind, xtruetd), ytruetd in zip(enumerate(xtruetds), ytruetds):
-						if xtruetd > xbinval and xtruetd < xbinvals[indx+1] and ytruetd > ybinval and ytruetd < ybinvals[indy+1]:
-							subsamples.append((xtderrs[ind], ytderrs[ind]))
-
-					#TODO: due to the non-uniform sampling of the simulated true tds, some regions of the truetd_x vs truetd_y are rather empty (less than 10 samples). Should we i) increase the number of simulated samples, ii) discard these regions from the analysis ?
-					covs.append(np.cov(subsamples, rowvar=False)[0][1])
-			mincov = np.min(covs)
-			maxcov = np.max(covs)
-
-			if abs(mincov) > maxcov:
-				cov = mincov
-			else:
-				cov = maxcov
-			covmat[ii][jj] = cov
-			covmat[jj][ii] = cov
-
-		### and fill the diagonal element
+		### fill the diagonal element
 
 		# way 1 - binning independent of xtruedelays distribution. User choose the plot range. Similar to newdelayplot()
 		reftrueshifts = np.round(rrlist[0].gettruets()["center"])
@@ -794,7 +753,7 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0,
 		binlims = np.linspace(plotrange[0], plotrange[1], nbins + 1)
 
 		# If we want to compare to newdelayplot():
-		# xtruetds = trudedlays
+		# xtruetds = truedelays
 		# xtderrs = resis
 
 		# needed for binvals:
@@ -803,7 +762,6 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0,
 		digitized = np.digitize(xtruetds, binlims)
 		binvals = [xtderrs[digitized == bini] for bini in range(1, len(binlims))]
 		binstds = map(np.std, binvals)
-		binmedians = map(np.median, binvals)
 		binmeans = map(np.mean, binvals)
 
 		if binclip:
@@ -814,7 +772,6 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0,
 						print "Kicking %i points." % (np.sum(keep == False))
 					binvals[bini] = binvalarray[keep]
 				binstds = map(np.std, binvals)
-				binmedians = map(np.median, binvals)
 				binmeans = map(np.mean, binvals)
 
 		syserror = np.max(np.fabs(binmeans))
@@ -842,7 +799,7 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0,
 		depbins[ii] = toterror
 
 		# We let the user choose which method he prefers
-		# Dear user, be EXTREMELY CAREFUL with your choice !
+		# Dear user, be CAREFUL with your choice !
 
 		if method == 'depbin':
 			if ii == 0 and verbose : print "You chose a binning depending on the sample values"
@@ -851,6 +808,88 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0,
 			if ii == 0 and verbose : print "You chose a binning independent of the sample values"
 			covmat[ii][ii] = indepbins[ii]
 
+
+		### fill the off-diagonal elements
+		for jj, j in enumerate(couplelist):
+
+			if (ii == 0) or (jj == ncouples-1) :
+				continue # No plot
+			axisNum += 1
+			if jj >= ii:
+				continue
+
+			#ax = plt.subplot(ncouples-1, ncouples-1, axisNum, aspect='equal')
+			#ax.axhline(0, color="black")
+			#ax.axvline(0, color="black")
+			ytderrs = [tderrsdict["tderrs"][jj] for tderrsdict in tderrsdicts]
+			ytruetds = [tderrsdict["truetds"][jj] for tderrsdict in tderrsdicts]
+
+			## binning independent of xtrudelays and ytruedelays distribution.
+			xbinlims2d = np.linspace(plotrange[0], plotrange[1], nbins2d + 1)
+
+			yreftruedelay = reftrueshifts[j[0]] - reftrueshifts[j[1]]
+			yplotrange = (yreftruedelay - r, yreftruedelay + r)
+			ybinlims2d = np.linspace(yplotrange[0], yplotrange[1], nbins2d + 1)
+
+			covsindep=[]
+			for indx, xbinlim in enumerate(xbinlims2d[:nbins2d]):
+				for indy, ybinlim in enumerate(ybinlims2d[:nbins2d]):
+					subsamples = []
+					for (ind, xtruetd), ytruetd in zip(enumerate(xtruetds), ytruetds):
+						if xtruetd > xbinlim and xtruetd < xbinlims2d[indx+1] and ytruetd > ybinlim and ytruetd < ybinlims2d[indy+1]:
+							subsamples.append((xtderrs[ind], ytderrs[ind]))
+
+					#print len(subsamples), len(subsamples[0]), subsamples[0]
+
+					covsindep.append(np.cov(subsamples, rowvar=False)[0][1])
+			mincovindep = np.min(covsindep)
+			maxcovindep = np.max(covsindep)
+
+			if abs(mincovindep) > maxcovindep:
+				covindep = mincovindep
+			else:
+				covindep = maxcovindep
+
+
+			## binning dependent of true delays, for comparision
+			xbinvals = np.linspace(minx, maxx, num=nbins2d+1, endpoint=True)
+			maxy = np.max(ytruetds)
+			miny = np.min(ytruetds)
+			ybinvals = np.linspace(miny, maxy, num=nbins2d+1, endpoint=True)
+
+			covsdep=[]
+			for indx, xbinval in enumerate(xbinvals[:nbins2d]):
+				for indy, ybinval in enumerate(ybinvals[:nbins2d]):
+					subsamples = []
+					for (ind, xtruetd), ytruetd in zip(enumerate(xtruetds), ytruetds):
+						if xtruetd > xbinval and xtruetd < xbinvals[indx+1] and ytruetd > ybinval and ytruetd < ybinvals[indy+1]:
+							subsamples.append((xtderrs[ind], ytderrs[ind]))
+
+					#TODO: due to the non-uniform sampling of the simulated true tds, some regions of the truetd_x vs truetd_y are rather empty (less than 10 samples). Should we i) increase the number of simulated samples, ii) discard these regions from the analysis, iii) transfer these samples to the nearest bin  ?
+					#print len(subsamples), len(subsamples[0]), subsamples[0]
+
+					covsdep.append(np.cov(subsamples, rowvar=False)[0][1])
+			mincovdep = np.min(covsdep)
+			maxcovdep = np.max(covsdep)
+
+			if abs(mincovdep) > maxcovdep:
+				covdep = mincovdep
+			else:
+				covdep = maxcovdep
+
+			if method == "depbin":
+				covmat[ii][jj] = covdep
+				covmat[jj][ii] = covdep
+			elif method == "indepbin":
+				covmat[ii][jj] = covindep
+				covmat[jj][ii] = covindep
+
+			print "-"*15
+			print i, j
+			print covdep, covindep
+
+
+	sys.exit()
 	# now let's compare indepbins and depbins
 	if verbose:
 		print "-"*35
