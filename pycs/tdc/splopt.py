@@ -1,6 +1,5 @@
 """
 Here we collect some spline optimizers specifically designed for the TDC
-
 """
 
 import pycs
@@ -47,7 +46,6 @@ def spl1(lcs, verbose=True):
 	"""
 	Custom spline optimizer for TDC
 	Assumes reasonable initial time shift, but no magshift.
-	
 	"""
 	(lca, lcb) = lcs  # Just nomenclature : lca is the "first one", NOT necesserily A !!!
 	
@@ -131,7 +129,6 @@ def spl2(lcs, maxit=7, minchange=1.0, verbose=True):
 	Optimizes any ML that is present.
 	
 	:param maxit: maximum number of iteartions
-	
 	:param minchange: minimum decrease in percent of the r2. I stop if the decrease gets smaller.
 	
 	"""
@@ -269,7 +266,6 @@ def spl3(lcs, knotstepfact=1.0, mlknotstep=365, maxit=7, minchange=1.0, verbose=
 	The ML signal should not get strong if it is not required.
 	
 	:param maxit: maximum number of iteartions
-	
 	:param minchange: minimum decrease in percent of the r2. I stop if the decrease gets smaller.
 	
 	"""

@@ -21,7 +21,7 @@ def progress(estimates, htmlcode=False, path='leaderboard.html'):
 	print '    User \t estimations \t  %    |'
 	print '=======================================|'
 	
-	stats=[]
+	stats = []
 	for user in users:
 		
 		userests = [est for est in estimates if est.methodpar == user]
@@ -41,7 +41,7 @@ def progress(estimates, htmlcode=False, path='leaderboard.html'):
 			nperestids_corr.append(n)
 		
 
-	nestims      = [nperestids_corr.count(nestim) for nestim in set(nperestids_corr)] # number of pairs with 1 estimation, 2, 3,...
+	nestims = [nperestids_corr.count(nestim) for nestim in set(nperestids_corr)] # number of pairs with 1 estimation, 2, 3,...
 	print nestims
 	
 	if min(nperestids_corr) > 1:
@@ -53,8 +53,8 @@ def progress(estimates, htmlcode=False, path='leaderboard.html'):
 	nestimcumuls = [sum(nestims[ind:]) for ind in np.arange(len(nestims))]
 	print nestimcumuls
 	
-	fracs	     = [nestimcumul / 5180.0 * 100 for nestimcumul in nestimcumuls]
-	maxoverall   = 3
+	fracs = [nestimcumul / 5180.0 * 100 for nestimcumul in nestimcumuls]
+	maxoverall = 3
 	print '=======================================|'
 	
 	for ind in np.arange(min(len(nestimcumuls),maxoverall)):
@@ -87,8 +87,7 @@ def progress(estimates, htmlcode=False, path='leaderboard.html'):
 			f.write('<td>%.2f</td> \n'% float(stat[2])) 
 			f.write('</tr> \n')
 		
-		# Overall estimation (buggy, need to investigate...)
-
+		# Overall estimation todo: (buggy, need to investigate...)
 		
 		for ind in np.arange(min(len(nestimcumuls),maxoverall)):
 			f.write('<tr> </tr>\n')

@@ -9,9 +9,11 @@ def vario(l, plot=False, filepath=None, nsamp=1000000, verbose=False):
 	"""
 	A simple stochatic variogram-like plot, and return the ratio
 	delta_mag around 50-75 over delta_mag for the smallest step
-	
-	:param nsamp: the number of random samples to take
 
+	@param l: light curve Object.
+	@param nsamp: integer. The number of random samples to take
+	@param plot: boolean. Do you want to plot the vario analysis ?
+	@param filepath: if not None, it is the path to where the plot will be saved
 	"""
 	
 	if verbose:
@@ -72,31 +74,9 @@ def vario(l, plot=False, filepath=None, nsamp=1000000, verbose=False):
 		plt.xlabel("Time separation")
 		plt.ylabel("Average mag separation")
 		if filepath != None:
-			
 			plt.savefig(filepath)
 				
 		else:
 			plt.show()
-		
-	
-	
+
 	return {"vratio":vratio, "sampling":sampling, "seasonlength":seasonlength, "zoneval":zoneval, "firstval":firstval, "bincenters":bincenters, "binmeans":binmeans, "binerrs":binerrs}
-		
-	"""
-	plt.xlim(-5, seasonlength)
-	plt.xlabel("delta time [day]")
-	plt.ylim(0, 0.3)
-	plt.ylabel("delta mag")
-	plt.show()
-	"""
-
-
-
-	
-	
-	
-	
-
-	
-
-	

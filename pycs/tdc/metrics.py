@@ -99,8 +99,6 @@ def maxPplot(estslist, N, filepath=None):
 def getP(db, method, median=False):
 	"""
 	Compute P and Perr - std(P)/sqrt(len(P)) - for a given method stored in the database
-
-	@param db:
 	"""
 	subdb = [item for item in db if "%s_P" %(method) in item]
 	Ps = [item["%s_P" %(method)] for item in subdb]

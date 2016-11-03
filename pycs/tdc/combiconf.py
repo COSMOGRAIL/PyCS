@@ -359,4 +359,4 @@ def combiquads(estimates):
 			exploitests.append(est)	
 	
 	return exploitests
-	
+

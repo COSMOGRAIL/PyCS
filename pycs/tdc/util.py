@@ -299,11 +299,10 @@ def readsubmission(filepath):
 def godtweak(estimates):
 
 	"""
-	I return a list of estimates in which I have modified some by divin inspiration.
+	I return a list of estimates in which I have modified some by divine inspiration.
 	This should be systematically done before writing a TDC1-D3CS submission.
 
 	@param estimates: list of Estimate objects
-
 	@return: tweaked list of estimates
 	"""
 

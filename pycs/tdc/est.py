@@ -15,8 +15,6 @@ import copy as pythoncopy
 class Estimate:
 	"""
 	Class to hold delay estimates for TDC curves, as obtained by various delay estimators.
-
-
 	"""
 	
 	def __init__(self, set="tdc0", rung=0, pair=1, method="None", methodpar="None", td=0.0, tderr=0.0, ms=0.0, confidence=0, timetaken=0.0):
@@ -850,10 +848,6 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 	
 	else:
 		interactiveplot(estids)
-
-
-
-
 
 
 def bigplot(estimates, shadedestimates = None, plotpath = None, minradius=100):
