@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter, MaxNLocator
 
 import scipy.ndimage
 
@@ -697,7 +697,7 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 		plt.savefig(filename)
 
 
-def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, method='indepbin', verbose=True):
+def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0, figsize=(20, 12), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.3, hspace=0.3, method='indepbin', detailplots=True, verbose=True):
 
 	assert (method in ['depbin', 'indepbin'])
 
@@ -726,8 +726,15 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0,
 	#tderrsdict contains the errors on the true delays, as well as the true delays for each simulation
 
 	#todo: we want to make a control plot out of this procedure"
-	#fig = plt.figure(figsize=figsize)
-	#fig.subplots_adjust(left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace)
+	# figure 1: general covariance plot for each pair of delays. Diagonal elements are the same than newdelayplot, off-diagonal elements are covariance for all the runresults
+	allcovplot = plt.figure(figsize=figsize)
+	allcovplot.subplots_adjust(left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace)
+	# figure 2: covariance computed in each bin, for each pair of delays. Diagonal elements are the same than newdelayplot, off diagonal elements are colored tiles of covariance per true delays bins, with points overplotted.
+	bincovplot = plt.figure(figsize=figsize)
+	bincovplot.subplots_adjust(left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace)
+	# figure 3: for each pair, plot the covariance in each bin. One figure per pair
+	# todo: define me below !!
+
 	axisNum = 0
 
 	# create the empty covariance matrix
@@ -738,6 +745,7 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0,
 	depbins = np.zeros(len(couplelist))
 	rranges = np.zeros(len(couplelist))
 	for ii, i in enumerate(couplelist): # (0, 1), (0, 2) ...
+
 		xtderrs = [tderrsdict["tderrs"][ii] for tderrsdict in tderrsdicts]
 		xtruetds = [tderrsdict["truetds"][ii] for tderrsdict in tderrsdicts]
 		maxx = np.max(xtruetds)
@@ -745,6 +753,14 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0,
 
 
 		### fill the diagonal element
+
+		ax1 = allcovplot.add_subplot(ncouples, ncouples, 6*ii + (ii+1))
+		ax2 = bincovplot.add_subplot(ncouples, ncouples, 6*ii + (ii+1))
+		majorLocator = MultipleLocator(1.0)
+
+		for ax in [ax1, ax2]:
+			ax.yaxis.set_major_locator(majorLocator)
+			ax.xaxis.set_major_locator(MaxNLocator(5))
 
 		# way 1 - binning independent of xtruedelays distribution. User choose the plot range. Similar to newdelayplot()
 		reftrueshifts = np.round(rrlist[0].gettruets()["center"])
@@ -779,6 +795,23 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0,
 		toterror = np.sqrt(syserror*syserror + randerror*randerror)
 		indepbins[ii] = toterror
 
+		# Plot the result !
+		line = np.linspace(plotrange[0], plotrange[1], 100)
+		zeros = np.zeros(100)
+		delaylabel="%s%s" % (labels[i[1]], labels[i[0]])
+		width = binlims[1] - binlims[0]
+		errorrange=1.5
+		for ax in [ax1, ax2]:
+			ax.plot(line, zeros, color="black", lw=0.5)
+			ax.bar(binlims[:-1], binmeans, yerr=binstds, width=width, color=rr.plotcolour, ecolor=rr.plotcolour, error_kw={"capsize":2.5, "capthick":0.5, "markeredgewidth":0.5}, edgecolor=rr.plotcolour, alpha = 0.2)
+			ax.set_ylim((-errorrange, errorrange))
+			if figsize[0] > 8:
+				ax.annotate(delaylabel, xy=(0.9, 0.05),  xycoords='axes fraction', ha="center") # x axis
+			else:
+				ax.annotate(delaylabel, xy=(0.78, 0.08),  xycoords='axes fraction', ha="center")
+			ax.set_xlim(plotrange)
+
+
 		# way 2 - binning dependent on the xtruedelays samples: min and max vals corresponds to the extremas of xtruedelays distribution
 
 		xbinvals = np.linspace(minx, maxx, num=nbins+1, endpoint=True)
@@ -812,17 +845,31 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0,
 		### fill the off-diagonal elements
 		for jj, j in enumerate(couplelist):
 
+			axisNum += 1
 			if (ii == 0) or (jj == ncouples-1) :
 				continue # No plot
-			axisNum += 1
 			if jj >= ii:
 				continue
 
-			#ax = plt.subplot(ncouples-1, ncouples-1, axisNum, aspect='equal')
-			#ax.axhline(0, color="black")
-			#ax.axvline(0, color="black")
+			if detailplots:
+				# figure 3: for each pair, plot the covariance in each bin. One figure per pair
+				bincovplot2 = plt.figure(figsize=figsize)
+				bincovplot2.subplots_adjust(left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace)
+
 			ytderrs = [tderrsdict["tderrs"][jj] for tderrsdict in tderrsdicts]
 			ytruetds = [tderrsdict["truetds"][jj] for tderrsdict in tderrsdicts]
+
+			ax1 = allcovplot.add_subplot(ncouples, ncouples, axisNum)
+			ax2 = bincovplot.add_subplot(ncouples, ncouples, axisNum)
+			majorLocator = MultipleLocator(2.0)
+			for ax in [ax1]:
+				ax.set_xlim(-rerr, rerr)
+				ax.set_ylim(-rerr, rerr)
+				ax.xaxis.set_major_locator(majorLocator)
+				ax.yaxis.set_major_locator(majorLocator)
+				ax.axhline(0, color="black")
+				ax.axvline(0, color="black")
+
 
 			## binning independent of xtrudelays and ytruedelays distribution.
 			xbinlims2d = np.linspace(plotrange[0], plotrange[1], nbins2d + 1)
@@ -840,8 +887,54 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0,
 							subsamples.append((xtderrs[ind], ytderrs[ind]))
 
 					#print len(subsamples), len(subsamples[0]), subsamples[0]
+					covval = np.cov(subsamples, rowvar=False)[0][1]
+					xcoord = xbinlim + (xbinlims2d[indx+1]-xbinlim)/2
+					ycoord = ybinlim + (ybinlims2d[indy+1]-ybinlim)/2
+					ax2.annotate("%.2f" % covval, xy=(xcoord, ycoord), ha="center")
+					maxval=0.5
+					alpha = min(np.abs(covval/maxval), 1.0)
+					from matplotlib.patches import Rectangle
+					rect = Rectangle((xbinlim, ybinlim), xbinlims2d[indx+1]-xbinlim, ybinlims2d[indy+1]-ybinlim, color=rrlist[0].plotcolour, alpha=alpha)
+					ax2.add_patch(rect)
 
-					covsindep.append(np.cov(subsamples, rowvar=False)[0][1])
+					if detailplots:
+						# add a axes on the new figure for each bin, and plot the errors
+						# mapping the maptlotlib indice is a bit tricky:
+						# if we use nbins2dx and nbins2dy: nbins2dx*nbins2dy - (nbins2dx-1-indx) - (nbins2dy*indy)
+						spind = nbins2d*nbins2d - (nbins2d-1-indx) - (nbins2d*indy)
+						ax3 = bincovplot2.add_subplot(nbins2d, nbins2d, spind)
+						ax3.set_xlim(-rerr, rerr)
+						ax3.set_ylim(-rerr, rerr)
+						showdensity = True
+						bins = 10
+						if showdensity:
+							cmap = colors.LinearSegmentedColormap.from_list('custom', ['white', rrlist[0].plotcolour],gamma=1.0)
+							ax3.hexbin([s[0] for s in subsamples], [s[1] for s in subsamples], gridsize=bins, extent=(-rerr, rerr, -rerr, rerr), mincnt=1, cmap=cmap, edgecolor="none")
+						showpoints=True
+						if showpoints:
+							ax3.scatter([s[0] for s in subsamples], [s[1] for s in subsamples], s=5, facecolor=rrlist[0].plotcolour, lw=0)
+						showcontour=True
+						if showcontour:
+							H, xedges, yedges = np.histogram2d([s[0] for s in subsamples], [s[1] for s in subsamples], range=[[-r, r], [-r, r]], bins=(bins, bins))
+							extent = [yedges[0], yedges[-1], xedges[0], xedges[-1]]
+							data = np.vstack((xtderrs, ytderrs))
+							kde = scipy.stats.kde.gaussian_kde(data)
+							grid = np.mgrid[-r:r:1j*bins, -r:r:1j*bins]
+							grid_coords = np.append(grid[0].reshape(-1,1),grid[1].reshape(-1,1),axis=1)
+							z = kde(grid_coords.T)
+							z = z.reshape(bins,bins)
+							levels = [np.max(z)*0.45]
+							cset = ax3.contour(grid[0], grid[1], z, levels=levels, origin="lower", colors=rrlist[0].plotcolour, extent=extent, linewidth=0.5)
+
+						xdelaylabel="%s%s [%.1f , %.1f]" % (labels[i[1]], labels[i[0]], xbinlim, xbinlims2d[indx+1])
+						ydelaylabel="%s%s [%.1f , %.1f]" % (labels[j[1]], labels[j[0]], ybinlim, ybinlims2d[indy+1])
+
+						if figsize[0] > 8:
+							ax3.annotate(xdelaylabel, xy=(0.85, 0.05),  xycoords='axes fraction', ha="center")
+							ax3.annotate(ydelaylabel, xy=(0.04, 0.85),  xycoords='axes fraction', ha="left", rotation=90.0)
+
+					covsindep.append(covval)
+			detailplots = False
 			mincovindep = np.min(covsindep)
 			maxcovindep = np.max(covsindep)
 
@@ -850,6 +943,54 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0,
 			else:
 				covindep = maxcovindep
 
+			#plotting ax2 uses the 2d binning
+			for ind, xbinlim in enumerate(xbinlims2d):
+				ax2.axvline(xbinlim, linestyle='--', color='black', alpha=0.5)
+				ax2.axhline(ybinlims2d[ind], linestyle='--', color='black', alpha=0.5)
+			showpoints=True
+			if showpoints:
+				ax2.scatter(xtruetds, ytruetds, s=2, facecolor=rrlist[0].plotcolour, lw=0)
+
+			ax2.set_xlim(plotrange)
+			ax2.set_ylim(yplotrange)
+
+			# plotting ax1 is pretty basic, that's only the points
+			showdensity = True
+			bins = 10
+			if showdensity:
+				cmap = colors.LinearSegmentedColormap.from_list('custom', ['white', rrlist[0].plotcolour],gamma=1.0)
+				ax1.hexbin(xtderrs, ytderrs, gridsize=bins, extent=(-rerr, rerr, -rerr, rerr), mincnt=1, cmap=cmap, edgecolor="none")
+
+			showpoints=False
+			if showpoints:
+				ax1.scatter(xtderrs, ytderrs, s=2, facecolor=rrlist[0].plotcolour, lw=0)
+
+			showcontour=True
+			if showcontour:
+				H, xedges, yedges = np.histogram2d(xtderrs, ytderrs, range=[[-r, r], [-r, r]], bins=(bins, bins))
+				extent = [yedges[0], yedges[-1], xedges[0], xedges[-1]]
+
+				data = np.vstack((xtderrs, ytderrs))
+				kde = scipy.stats.kde.gaussian_kde(data)
+
+				grid = np.mgrid[-r:r:1j*bins, -r:r:1j*bins]
+				grid_coords = np.append(grid[0].reshape(-1,1),grid[1].reshape(-1,1),axis=1)
+
+				z = kde(grid_coords.T)
+				z = z.reshape(bins,bins)
+
+				levels = [np.max(z)*0.45]
+				cset = ax1.contour(grid[0], grid[1], z, levels=levels, origin="lower", colors=rrlist[0].plotcolour, extent=extent, linewidth=0.5)
+
+			xdelaylabel="%s%s" % (labels[i[1]], labels[i[0]])
+			ydelaylabel="%s%s" % (labels[j[1]], labels[j[0]])
+
+			if figsize[0] > 8:
+				ax1.annotate(xdelaylabel, xy=(0.9, 0.05),  xycoords='axes fraction', ha="center") # x axis
+				ax1.annotate(ydelaylabel, xy=(0.06, 0.85),  xycoords='axes fraction', ha="left", rotation=90.0) # y axis
+			else:
+				ax1.annotate(xdelaylabel, xy=(0.78, 0.08),  xycoords='axes fraction', ha="center") # x axis
+				ax1.annotate(ydelaylabel, xy=(0.08, 0.76),  xycoords='axes fraction', ha="left", rotation=90.0) # y axis
 
 			## binning dependent of true delays, for comparision
 			xbinvals = np.linspace(minx, maxx, num=nbins2d+1, endpoint=True)
@@ -888,7 +1029,7 @@ def newcovplot(rrlist, r=5, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0,
 			print i, j
 			print covdep, covindep
 
-
+	plt.show()
 	sys.exit()
 	# now let's compare indepbins and depbins
 	if verbose:
