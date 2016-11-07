@@ -4,7 +4,7 @@ Subpackage with functions to plot all kind of results from runs.
 
 
 import numpy as np
-import math, sys
+import math, sys, os
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -697,7 +697,7 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 		plt.savefig(filename)
 
 
-def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=False, binclipr=10.0, figsize=(20, 12), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.3, hspace=0.3, method='indepbin', detailplots=True, verbose=True):
+def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclipr=10.0, figsize=(13, 13), left=0.06, right=0.97, top=0.97, bottom=0.04, wspace=0.3, hspace=0.3, method='indepbin', minsamples=10, detailplots=False, filepath=None, verbose=True):
 
 	assert (method in ['depbin', 'indepbin'])
 
@@ -725,15 +725,14 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=False, bincli
 
 	#tderrsdict contains the errors on the true delays, as well as the true delays for each simulation
 
-	#todo: we want to make a control plot out of this procedure"
+
 	# figure 1: general covariance plot for each pair of delays. Diagonal elements are the same than newdelayplot, off-diagonal elements are covariance for all the runresults
 	allcovplot = plt.figure(figsize=figsize)
 	allcovplot.subplots_adjust(left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace)
 	# figure 2: covariance computed in each bin, for each pair of delays. Diagonal elements are the same than newdelayplot, off diagonal elements are colored tiles of covariance per true delays bins, with points overplotted.
 	bincovplot = plt.figure(figsize=figsize)
 	bincovplot.subplots_adjust(left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace)
-	# figure 3: for each pair, plot the covariance in each bin. One figure per pair
-	# todo: define me below !!
+
 
 	axisNum = 0
 
@@ -761,6 +760,9 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=False, bincli
 		for ax in [ax1, ax2]:
 			ax.yaxis.set_major_locator(majorLocator)
 			ax.xaxis.set_major_locator(MaxNLocator(5))
+			if ii == len(couplelist)-1:
+				ax1.set_xlabel('True Delay [day]')
+				ax2.set_ylabel('Measurement error [day]', labelpad=-10)
 
 		# way 1 - binning independent of xtruedelays distribution. User choose the plot range. Similar to newdelayplot()
 		reftrueshifts = np.round(rrlist[0].gettruets()["center"])
@@ -800,16 +802,16 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=False, bincli
 		zeros = np.zeros(100)
 		delaylabel="%s%s" % (labels[i[1]], labels[i[0]])
 		width = binlims[1] - binlims[0]
-		errorrange=1.5
 		for ax in [ax1, ax2]:
 			ax.plot(line, zeros, color="black", lw=0.5)
 			ax.bar(binlims[:-1], binmeans, yerr=binstds, width=width, color=rr.plotcolour, ecolor=rr.plotcolour, error_kw={"capsize":2.5, "capthick":0.5, "markeredgewidth":0.5}, edgecolor=rr.plotcolour, alpha = 0.2)
-			ax.set_ylim((-errorrange, errorrange))
+			ax.set_ylim((-rerr, rerr))
 			if figsize[0] > 8:
 				ax.annotate(delaylabel, xy=(0.9, 0.05),  xycoords='axes fraction', ha="center") # x axis
 			else:
 				ax.annotate(delaylabel, xy=(0.78, 0.08),  xycoords='axes fraction', ha="center")
 			ax.set_xlim(plotrange)
+			ax.set_title(r'sys=%.2f | ran=%.2f' % (syserror, randerror)+'\n'+'tot=%.2f' % toterror, fontsize=10)
 
 
 		# way 2 - binning dependent on the xtruedelays samples: min and max vals corresponds to the extremas of xtruedelays distribution
@@ -837,7 +839,7 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=False, bincli
 		if method == 'depbin':
 			if ii == 0 and verbose : print "You chose a binning depending on the sample values"
 			covmat[ii][ii] = depbins[ii]
-		elif method == 'indepbin':
+		elif method == 'indepbin':  # that should be the default value
 			if ii == 0 and verbose : print "You chose a binning independent of the sample values"
 			covmat[ii][ii] = indepbins[ii]
 
@@ -861,14 +863,24 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=False, bincli
 
 			ax1 = allcovplot.add_subplot(ncouples, ncouples, axisNum)
 			ax2 = bincovplot.add_subplot(ncouples, ncouples, axisNum)
+
 			majorLocator = MultipleLocator(2.0)
-			for ax in [ax1]:
-				ax.set_xlim(-rerr, rerr)
-				ax.set_ylim(-rerr, rerr)
-				ax.xaxis.set_major_locator(majorLocator)
-				ax.yaxis.set_major_locator(majorLocator)
-				ax.axhline(0, color="black")
-				ax.axvline(0, color="black")
+			ax1.set_xlim(-rerr, rerr)
+			ax1.set_ylim(-rerr, rerr)
+			ax1.xaxis.set_major_locator(majorLocator)
+			ax1.yaxis.set_major_locator(majorLocator)
+			ax1.axhline(0, color="black")
+			ax1.axvline(0, color="black")
+
+			ax2.xaxis.set_major_locator(MaxNLocator(3))
+			ax2.yaxis.set_major_locator(MaxNLocator(3))
+
+			if axisNum == ncouples*(ncouples-1) + 1:
+				ax1.set_xlabel('Measurement error [day]')
+				ax1.set_ylabel('Measurement error [day]')
+
+				ax2.set_xlabel('True delay [day]')
+				ax2.set_ylabel('True delay [day]')
 
 
 			## binning independent of xtrudelays and ytruedelays distribution.
@@ -878,6 +890,9 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=False, bincli
 			yplotrange = (yreftruedelay - r, yreftruedelay + r)
 			ybinlims2d = np.linspace(yplotrange[0], yplotrange[1], nbins2d + 1)
 
+			xcoordsan=[]
+			ycoordsan=[]
+			colorsan=[]
 			covsindep=[]
 			for indx, xbinlim in enumerate(xbinlims2d[:nbins2d]):
 				for indy, ybinlim in enumerate(ybinlims2d[:nbins2d]):
@@ -886,11 +901,18 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=False, bincli
 						if xtruetd > xbinlim and xtruetd < xbinlims2d[indx+1] and ytruetd > ybinlim and ytruetd < ybinlims2d[indy+1]:
 							subsamples.append((xtderrs[ind], ytderrs[ind]))
 
-					#print len(subsamples), len(subsamples[0]), subsamples[0]
-					covval = np.cov(subsamples, rowvar=False)[0][1]
-					xcoord = xbinlim + (xbinlims2d[indx+1]-xbinlim)/2
-					ycoord = ybinlim + (ybinlims2d[indy+1]-ybinlim)/2
-					ax2.annotate("%.2f" % covval, xy=(xcoord, ycoord), ha="center")
+
+					if len(subsamples) > minsamples:
+						covval = np.cov(subsamples, rowvar=False)[0][1]
+						colorsan.append("black")
+					else:
+						covval = 0
+						colorsan.append('crimson')
+
+					# save the plotting coords, to bold plot the biggest covval later...
+					xcoordsan.append(xbinlim + (xbinlims2d[indx+1]-xbinlim)/2)
+					ycoordsan.append(ybinlim + (ybinlims2d[indy+1]-ybinlim)/2)
+
 					maxval=0.5
 					alpha = min(np.abs(covval/maxval), 1.0)
 					from matplotlib.patches import Rectangle
@@ -905,6 +927,13 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=False, bincli
 						ax3 = bincovplot2.add_subplot(nbins2d, nbins2d, spind)
 						ax3.set_xlim(-rerr, rerr)
 						ax3.set_ylim(-rerr, rerr)
+						ax3.xaxis.set_major_locator(majorLocator)
+						ax3.yaxis.set_major_locator(majorLocator)
+						ax3.axhline(0, color="black")
+						ax3.axvline(0, color="black")
+						ax3.set_xlabel('Measurement error [day]')
+						ax3.set_ylabel('Measurement error [day]')
+
 						showdensity = True
 						bins = 10
 						if showdensity:
@@ -930,11 +959,15 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=False, bincli
 						ydelaylabel="%s%s [%.1f , %.1f]" % (labels[j[1]], labels[j[0]], ybinlim, ybinlims2d[indy+1])
 
 						if figsize[0] > 8:
-							ax3.annotate(xdelaylabel, xy=(0.85, 0.05),  xycoords='axes fraction', ha="center")
-							ax3.annotate(ydelaylabel, xy=(0.04, 0.85),  xycoords='axes fraction', ha="left", rotation=90.0)
+							ax3.annotate(xdelaylabel, xy=(0.77, 0.05),  xycoords='axes fraction', ha="center")
+							ax3.annotate(ydelaylabel, xy=(0.04, 0.90),  xycoords='axes fraction', ha="left", rotation=90.0)
 
 					covsindep.append(covval)
-			detailplots = False
+
+			if detailplots and filepath != None:
+				bincovplot2.savefig(os.path.join(filepath, "bincov_%s%s-vs-%s%s.png" % (labels[j[1]], labels[j[0]], labels[i[1]], labels[i[0]])))
+
+
 			mincovindep = np.min(covsindep)
 			maxcovindep = np.max(covsindep)
 
@@ -942,6 +975,14 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=False, bincli
 				covindep = mincovindep
 			else:
 				covindep = maxcovindep
+
+			mind = covsindep.index(covindep)
+			print mind
+			for ind, val in enumerate(covsindep):
+				if ind == mind:
+					ax2.annotate("%.2f" % val, xy=(xcoordsan[ind], ycoordsan[ind]), ha="center", va='center', color='darkblue', fontsize=14)
+				else:
+					ax2.annotate("%.2f" % val, xy=(xcoordsan[ind], ycoordsan[ind]), ha="center", va='center', color=colorsan[ind])
 
 			#plotting ax2 uses the 2d binning
 			for ind, xbinlim in enumerate(xbinlims2d):
@@ -953,6 +994,8 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=False, bincli
 
 			ax2.set_xlim(plotrange)
 			ax2.set_ylim(yplotrange)
+
+
 
 			# plotting ax1 is pretty basic, that's only the points
 			showdensity = True
@@ -992,6 +1035,9 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=False, bincli
 				ax1.annotate(xdelaylabel, xy=(0.78, 0.08),  xycoords='axes fraction', ha="center") # x axis
 				ax1.annotate(ydelaylabel, xy=(0.08, 0.76),  xycoords='axes fraction', ha="left", rotation=90.0) # y axis
 
+			ax2.set_title('%s vs %s | mean = %.2f' % (ydelaylabel, xdelaylabel, np.cov([(xtderr, ytderr) for xtderr, ytderr in zip(xtderrs, ytderrs)], rowvar=False)[0][1]), fontsize=10)
+
+
 			## binning dependent of true delays, for comparision
 			xbinvals = np.linspace(minx, maxx, num=nbins2d+1, endpoint=True)
 			maxy = np.max(ytruetds)
@@ -1029,8 +1075,31 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=False, bincli
 			print i, j
 			print covdep, covindep
 
-	plt.show()
-	sys.exit()
+	axinv = bincovplot.add_subplot(ncouples, ncouples, 2, frameon=False)
+	axinv.set_xticklabels([])
+	axinv.set_yticklabels([])
+	axinv.set_xticks([])
+	axinv.set_yticks([])
+
+	# and annotate
+	text = 'True delay plot range: +- %i [days]' % r + '\n\n'
+	text += 'Measurement error plot range: +- %.1f [days]' % rerr + '\n\n'
+	text += '1D binning:  %i bins' % nbins + '\n\n'
+	text += '2D binning:  %ix%i bins' % (nbins2d, nbins2d) + '\n\n'
+	text += 'Min. number of samples in 2D binning:  %i samples' % minsamples + '\n\n\n\n'
+
+	#text = r'$ \begin{array}{ccc} a & b & c \\ d & e & f \\ g & h & i \end{array} $'
+
+
+	axinv.annotate(text, xy=(0.9 * (ncouples-1), -1.0),  xycoords='axes fraction', ha="center")
+
+	if filepath != None:
+		bincovplot.savefig(os.path.join(filepath, "bincov.png"))
+		allcovplot.savefig(os.path.join(filepath, "allcov.png"))
+
+	else:
+		plt.show()
+
 	# now let's compare indepbins and depbins
 	if verbose:
 		print "-"*35
