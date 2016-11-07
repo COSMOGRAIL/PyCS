@@ -3,7 +3,7 @@ Variability analysis stuff
 """
 
 
-import numpy as np
+import numpy as np, sys
 
 def vario(l, plot=False, filepath=None, nsamp=1000000, verbose=False):
 	"""
@@ -22,16 +22,16 @@ def vario(l, plot=False, filepath=None, nsamp=1000000, verbose=False):
 	jds = l.getjds()
 	mags = l.getmags()
 	magerrs = l.magerrs
-	
 	stats = l.samplingstats(seasongap=60)
 	sampling = float(stats["med"]) # The median sampling, in days
 	seasonlength = 365 - stats["meansg"] # The mean season length, in days
-	
+
 	rsamp = int(np.floor(seasonlength / sampling)) # The typical number of datapoints we have per season
 	#print "sampling", sampling, "seasonlength", seasonlength, "rsamp", rsamp
 	
 	# We now draw indices of points in lca and lcb to form pairs contributing to the variogram.
 	# Instead of just drawing them randomly, we are smart and draw them relatively close by
+
 	indas = np.random.random_integers(rsamp, len(jds)-1-rsamp, size=nsamp)
 	#indbs = np.random.random_integers(0, len(jds)-1, size=nsamp)
 	
