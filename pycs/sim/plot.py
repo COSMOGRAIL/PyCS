@@ -700,6 +700,8 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclipr=10.0, figsize=(13, 13), left=0.06, right=0.97, top=0.97, bottom=0.04, wspace=0.3, hspace=0.3, method='indepbin', minsamples=10, detailplots=False, filepath=None, verbose=True):
 
 	assert (method in ['depbin', 'indepbin'])
+	retdict = {}  # we put all the intermediate products in a dict that we return
+
 
 	nimages = rrlist[0].nimages()
 	imginds = np.arange(nimages)
@@ -743,7 +745,11 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 	indepbins = np.zeros(len(couplelist))
 	depbins = np.zeros(len(couplelist))
 	rranges = np.zeros(len(couplelist))
+	retdict["delay"] = {}  # dict in a dict !
 	for ii, i in enumerate(couplelist): # (0, 1), (0, 2) ...
+		delaylabel="%s%s" % (labels[i[1]], labels[i[0]])
+		retdict["delay"]["%s" % delaylabel] = {}  # dict in a dict in a dict ! dictception !!
+
 
 		xtderrs = [tderrsdict["tderrs"][ii] for tderrsdict in tderrsdicts]
 		xtruetds = [tderrsdict["truetds"][ii] for tderrsdict in tderrsdicts]
@@ -797,10 +803,14 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 		toterror = np.sqrt(syserror*syserror + randerror*randerror)
 		indepbins[ii] = toterror
 
+		retdict["delay"]["%s" % delaylabel]["indep"] = {}  # dict in a dict in a dict in a dict ! we need to go deeper !!!
+		retdict["delay"]["%s" % delaylabel]["indep"]["syserror"] = syserror
+		retdict["delay"]["%s" % delaylabel]["indep"]["randerror"] = randerror
+		retdict["delay"]["%s" % delaylabel]["indep"]["toterror"] = toterror  # that's already in the covariance matrix...
+
 		# Plot the result !
 		line = np.linspace(plotrange[0], plotrange[1], 100)
 		zeros = np.zeros(100)
-		delaylabel="%s%s" % (labels[i[1]], labels[i[0]])
 		width = binlims[1] - binlims[0]
 		for ax in [ax1, ax2]:
 			ax.plot(line, zeros, color="black", lw=0.5)
@@ -833,6 +843,11 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 		toterror = np.sqrt(syserror*syserror + randerror*randerror)
 		depbins[ii] = toterror
 
+		retdict["delay"]["%s" % delaylabel]["dep"] = {}
+		retdict["delay"]["%s" % delaylabel]["dep"]["syserror"] = syserror
+		retdict["delay"]["%s" % delaylabel]["dep"]["randerror"] = randerror
+		retdict["delay"]["%s" % delaylabel]["dep"]["toterror"] = toterror
+
 		# We let the user choose which method he prefers
 		# Dear user, be CAREFUL with your choice !
 
@@ -845,13 +860,16 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 
 
 		### fill the off-diagonal elements
+		retdict["cov"] = {}
 		for jj, j in enumerate(couplelist):
-
 			axisNum += 1
 			if (ii == 0) or (jj == ncouples-1) :
 				continue # No plot
 			if jj >= ii:
 				continue
+			xdelaylabel="%s%s" % (labels[i[1]], labels[i[0]])
+			ydelaylabel="%s%s" % (labels[j[1]], labels[j[0]])
+			retdict["cov"]["%s-%s" % (ydelaylabel, xdelaylabel)] = {}
 
 			if detailplots:
 				# figure 3: for each pair, plot the covariance in each bin. One figure per pair
@@ -883,7 +901,8 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 				ax2.set_ylabel('True delay [day]')
 
 
-			## binning independent of xtrudelays and ytruedelays distribution.
+			## binning independent of xtrudelays and ytruedelays distribution. Same plotrange as diagonal elements, but 2d binning
+			retdict["cov"]["%s-%s" % (ydelaylabel, xdelaylabel)]["indep"] = {}
 			xbinlims2d = np.linspace(plotrange[0], plotrange[1], nbins2d + 1)
 
 			yreftruedelay = reftrueshifts[j[0]] - reftrueshifts[j[1]]
@@ -894,13 +913,13 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 			ycoordsan=[]
 			colorsan=[]
 			covsindep=[]
+
 			for indx, xbinlim in enumerate(xbinlims2d[:nbins2d]):
 				for indy, ybinlim in enumerate(ybinlims2d[:nbins2d]):
 					subsamples = []
 					for (ind, xtruetd), ytruetd in zip(enumerate(xtruetds), ytruetds):
 						if xtruetd > xbinlim and xtruetd < xbinlims2d[indx+1] and ytruetd > ybinlim and ytruetd < ybinlims2d[indy+1]:
 							subsamples.append((xtderrs[ind], ytderrs[ind]))
-
 
 					if len(subsamples) > minsamples:
 						covval = np.cov(subsamples, rowvar=False)[0][1]
@@ -913,14 +932,21 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 					xcoordsan.append(xbinlim + (xbinlims2d[indx+1]-xbinlim)/2)
 					ycoordsan.append(ybinlim + (ybinlims2d[indy+1]-ybinlim)/2)
 
+					# colorize the regions according to the covariance value
 					maxval=0.5
 					alpha = min(np.abs(covval/maxval), 1.0)
 					from matplotlib.patches import Rectangle
 					rect = Rectangle((xbinlim, ybinlim), xbinlims2d[indx+1]-xbinlim, ybinlims2d[indy+1]-ybinlim, color=rrlist[0].plotcolour, alpha=alpha)
 					ax2.add_patch(rect)
 
+					xdelaylabeldet="%s%s [%.1f , %.1f]" % (labels[i[1]], labels[i[0]], xbinlim, xbinlims2d[indx+1])
+					ydelaylabeldet="%s%s [%.1f , %.1f]" % (labels[j[1]], labels[j[0]], ybinlim, ybinlims2d[indy+1])
+
+					retdict["cov"]["%s-%s" % (ydelaylabel, xdelaylabel)]["indep"]["%s-%s" % (ydelaylabeldet, xdelaylabeldet)] = covval
+					covsindep.append(covval)
+
 					if detailplots:
-						# add a axes on the new figure for each bin, and plot the errors
+						# add an Axes on the figure for each bin, and plot the errors
 						# mapping the maptlotlib indice is a bit tricky:
 						# if we use nbins2dx and nbins2dy: nbins2dx*nbins2dy - (nbins2dx-1-indx) - (nbins2dy*indy)
 						spind = nbins2d*nbins2d - (nbins2d-1-indx) - (nbins2d*indy)
@@ -955,14 +981,9 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 							levels = [np.max(z)*0.45]
 							cset = ax3.contour(grid[0], grid[1], z, levels=levels, origin="lower", colors=rrlist[0].plotcolour, extent=extent, linewidth=0.5)
 
-						xdelaylabel="%s%s [%.1f , %.1f]" % (labels[i[1]], labels[i[0]], xbinlim, xbinlims2d[indx+1])
-						ydelaylabel="%s%s [%.1f , %.1f]" % (labels[j[1]], labels[j[0]], ybinlim, ybinlims2d[indy+1])
-
 						if figsize[0] > 8:
-							ax3.annotate(xdelaylabel, xy=(0.77, 0.05),  xycoords='axes fraction', ha="center")
-							ax3.annotate(ydelaylabel, xy=(0.04, 0.90),  xycoords='axes fraction', ha="left", rotation=90.0)
-
-					covsindep.append(covval)
+							ax3.annotate(xdelaylabeldet, xy=(0.77, 0.05),  xycoords='axes fraction', ha="center")
+							ax3.annotate(ydelaylabeldet, xy=(0.04, 0.90),  xycoords='axes fraction', ha="left", rotation=90.0)
 
 			if detailplots and filepath != None:
 				bincovplot2.savefig(os.path.join(filepath, "bincov_%s%s-vs-%s%s.png" % (labels[j[1]], labels[j[0]], labels[i[1]], labels[i[0]])))
@@ -998,6 +1019,7 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 
 
 			# plotting ax1 is pretty basic, that's only the points
+			retdict["cov"]["%s-%s" % (ydelaylabel, xdelaylabel)]["dep"]	= {}
 			showdensity = True
 			bins = 10
 			if showdensity:
@@ -1025,9 +1047,6 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 				levels = [np.max(z)*0.45]
 				cset = ax1.contour(grid[0], grid[1], z, levels=levels, origin="lower", colors=rrlist[0].plotcolour, extent=extent, linewidth=0.5)
 
-			xdelaylabel="%s%s" % (labels[i[1]], labels[i[0]])
-			ydelaylabel="%s%s" % (labels[j[1]], labels[j[0]])
-
 			if figsize[0] > 8:
 				ax1.annotate(xdelaylabel, xy=(0.9, 0.05),  xycoords='axes fraction', ha="center") # x axis
 				ax1.annotate(ydelaylabel, xy=(0.06, 0.85),  xycoords='axes fraction', ha="left", rotation=90.0) # y axis
@@ -1054,8 +1073,11 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 
 					#TODO: due to the non-uniform sampling of the simulated true tds, some regions of the truetd_x vs truetd_y are rather empty (less than 10 samples). Should we i) increase the number of simulated samples, ii) discard these regions from the analysis, iii) transfer these samples to the nearest bin  ?
 					#print len(subsamples), len(subsamples[0]), subsamples[0]
-
-					covsdep.append(np.cov(subsamples, rowvar=False)[0][1])
+					xdelaylabeldet = "%s%s [%.1f , %.1f]" % (labels[i[1]], labels[i[0]], xbinval, xbinvals[indx+1])
+					ydelaylabeldet = "%s%s [%.1f , %.1f]" % (labels[j[1]], labels[j[0]], ybinval, ybinvals[indy+1])
+					covvaldep = np.cov(subsamples, rowvar=False)[0][1]
+					retdict["cov"]["%s-%s" % (ydelaylabel, xdelaylabel)]["dep"]["%s-%s" % (ydelaylabeldet, xdelaylabeldet)] = covvaldep
+					covsdep.append(covvaldep)
 			mincovdep = np.min(covsdep)
 			maxcovdep = np.max(covsdep)
 
@@ -1090,8 +1112,13 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 
 	#text = r'$ \begin{array}{ccc} a & b & c \\ d & e & f \\ g & h & i \end{array} $'
 
-
 	axinv.annotate(text, xy=(0.9 * (ncouples-1), -1.0),  xycoords='axes fraction', ha="center")
+
+	retdict["r"] = r
+	retdict["rerr"] = rerr
+	retdict["nbins"] = nbins
+	retdict["nbins2d"] = nbins2d
+	retdict["minsamples"] = minsamples
 
 	if filepath != None:
 		bincovplot.savefig(os.path.join(filepath, "bincov.png"))
@@ -1117,7 +1144,8 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 		print "CD - %.2f - %.2f - %.1f%%" % (indepbins[5], depbins[5], (max(indepbins[5], depbins[5])-min(indepbins[5], depbins[5])) / max(indepbins[5], depbins[5])*100)
 		print "-"*35
 
-	return covmat
+	retdict["covmat"] = covmat
+	return retdict
 
 
 
