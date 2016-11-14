@@ -697,11 +697,11 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 		plt.savefig(filename)
 
 
-def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclipr=10.0, figsize=(13, 13), left=0.06, right=0.97, top=0.97, bottom=0.04, wspace=0.3, hspace=0.3, method='indepbin', minsamples=10, detailplots=False, filepath=None, verbose=True):
+def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclipr=10.0, figsize=(13, 13), left=0.06, right=0.97, top=0.97, bottom=0.04, wspace=0.3, hspace=0.3, method='indepbin', minsamples=10, printcovmat=False, detailplots=False, filepath=None, verbose=True):
+
 
 	assert (method in ['depbin', 'indepbin'])
 	retdict = {}  # we put all the intermediate products in a dict that we return
-
 
 	nimages = rrlist[0].nimages()
 	imginds = np.arange(nimages)
@@ -998,7 +998,6 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 				covindep = maxcovindep
 
 			mind = covsindep.index(covindep)
-			print mind
 			for ind, val in enumerate(covsindep):
 				if ind == mind:
 					ax2.annotate("%.2f" % val, xy=(xcoordsan[ind], ycoordsan[ind]), ha="center", va='center', color='darkblue', fontsize=14)
@@ -1075,7 +1074,10 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 					#print len(subsamples), len(subsamples[0]), subsamples[0]
 					xdelaylabeldet = "%s%s [%.1f , %.1f]" % (labels[i[1]], labels[i[0]], xbinval, xbinvals[indx+1])
 					ydelaylabeldet = "%s%s [%.1f , %.1f]" % (labels[j[1]], labels[j[0]], ybinval, ybinvals[indy+1])
-					covvaldep = np.cov(subsamples, rowvar=False)[0][1]
+					if len(subsamples) > minsamples:
+						covvaldep = np.cov(subsamples, rowvar=False)[0][1]
+					else:
+						covvaldep = 0.0
 					retdict["cov"]["%s-%s" % (ydelaylabel, xdelaylabel)]["dep"]["%s-%s" % (ydelaylabeldet, xdelaylabeldet)] = covvaldep
 					covsdep.append(covvaldep)
 			mincovdep = np.min(covsdep)
@@ -1093,9 +1095,11 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 				covmat[ii][jj] = covindep
 				covmat[jj][ii] = covindep
 
-			print "-"*15
-			print i, j
-			print covdep, covindep
+			if verbose:
+				# I shoud definitely improve that display part...
+				print "-"*15
+				print i, j
+				print covdep, covindep
 
 	axinv = bincovplot.add_subplot(ncouples, ncouples, 2, frameon=False)
 	axinv.set_xticklabels([])
@@ -1104,15 +1108,44 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 	axinv.set_yticks([])
 
 	# and annotate
+
 	text = 'True delay plot range: +- %i [days]' % r + '\n\n'
 	text += 'Measurement error plot range: +- %.1f [days]' % rerr + '\n\n'
 	text += '1D binning:  %i bins' % nbins + '\n\n'
 	text += '2D binning:  %ix%i bins' % (nbins2d, nbins2d) + '\n\n'
 	text += 'Min. number of samples in 2D binning:  %i samples' % minsamples + '\n\n\n\n'
 
-	#text = r'$ \begin{array}{ccc} a & b & c \\ d & e & f \\ g & h & i \end{array} $'
 
-	axinv.annotate(text, xy=(0.9 * (ncouples-1), -1.0),  xycoords='axes fraction', ha="center")
+	if len(covmat[0]) == 6:
+		mylist =  [str(e) for e in covmat[0]]+\
+				  [str(e) for e in covmat[1]]+\
+				  [str(e) for e in covmat[2]]+\
+				  [str(e) for e in covmat[3]]+\
+				  [str(e) for e in covmat[4]]+\
+				  [str(e) for e in covmat[5]]
+		mylist = [float(e) for e in mylist]
+	else:
+		print "Cov. matrix display not defined for matrices other than 6x6 !"
+		printcovmat = False
+
+	if printcovmat:
+		text += ' %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n\n'\
+				' %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n\n' \
+				' %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n\n' \
+				' %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n\n' \
+				' %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n\n' \
+				' %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n\n' \
+				% (mylist[0], mylist[1], mylist[2], mylist[3], mylist[4], mylist[5]
+										   , mylist[6], mylist[7], mylist[8], mylist[9], mylist[11], mylist[11]
+										   , mylist[12], mylist[13], mylist[14], mylist[15], mylist[16], mylist[17]
+										   , mylist[18], mylist[19], mylist[20], mylist[21], mylist[22], mylist[23]
+										   , mylist[24], mylist[25], mylist[26], mylist[27], mylist[28], mylist[29]
+										   , mylist[30], mylist[31], mylist[32], mylist[33], mylist[34], mylist[35])
+
+		axinv.annotate(text, xy=(0.9 * (ncouples-1), -2.0),  xycoords='axes fraction', ha="center")
+	else:
+		axinv.annotate(text, xy=(0.9 * (ncouples-1), -1.0),  xycoords='axes fraction', ha="center")
+
 
 	retdict["r"] = r
 	retdict["rerr"] = rerr
