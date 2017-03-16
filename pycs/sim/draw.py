@@ -214,8 +214,8 @@ def draw(lcs, spline, shotnoise=None, shotnoisefrac=1.0, tweakml=None, scaletwea
 		
 		# Rescale the residuals ?
 		
-		# seems tempting here to do an "autoscaling" so that the sigma of the drawn residuals automatically mathes the observed ones.
-		# This is not possible, as we first need to redo the spline curve shifting to make a faire comparision !
+		# seems tempting here to do an "autoscaling" so that the sigma of the drawn residuals automatically matches the observed ones.
+		# This is not possible, as we first need to redo the spline curve shifting to make a fair comparision !
 		
 		if (scaletweakresi == True) and  (l.ml != None): # Otherwise no need to do anything 
 		
