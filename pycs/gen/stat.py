@@ -256,7 +256,7 @@ def mapresistats(rls):
 
 
 
-def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npkl=1000, plots=True, nplots=3, r=0.11, plotjdrange=None, plotcurveindexes=None):
+def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npkl=1000, plots=True, nplots=3, r=0.11, plotjdrange=None, plotcurveindexes=None, showplot=False):
 	"""
 	Not flexible but very high level function to analyse the spline-fit-residuals of drawn curves and comparing them to the
 	real observations.
@@ -430,8 +430,8 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 			#plt.text(-9.0, 0.85*plt.gca().get_ylim()[1], curve["optorigrlc"].object, fontsize=20)
 			plt.gca().get_yaxis().set_ticks([])
 
-
-		#plt.show()
+		if showplot:
+			plt.show()
 		plt.savefig("fig_anaoptdrawn_%s_%s_resihists.pdf" % (simset, optset))	
 	
 	
