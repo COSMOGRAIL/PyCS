@@ -1749,7 +1749,7 @@ def multidisplay(setlist=[],
 
 
 def display(lclist=[], splist=[],
-	title=None, style=None, showlegend=True, showlogo=False, logopos="left", showdates=False, showdelays=False, nicefont=False, text=None, keeponlygrid=False,
+	title=None, titlexpos=None, style=None, showlegend=True, showlogo=False, logopos="left", showdates=False, showdelays=False, nicefont=False, text=None, keeponlygrid=False,
 	jdrange=None, magrange=None, figsize=(12,8), plotsize=(0.08, 0.96, 0.09, 0.95), showgrid=False,
 	markersize=6, showerrorbars=True, showdatapoints=True, errorbarcolour = "#BBBBBB", capsize=3, knotsize=0.015,
 	legendloc = "best", showspldp=False, colourprop=None, hidecolourbar=False, transparent=False,
@@ -1771,6 +1771,9 @@ def display(lclist=[], splist=[],
 		To nicely write a lens name, remember to use raw strings and LaTeX mathrm, e.g. :
 		``title = r"$\mathrm{RX\,J1131-1231}$"``
 	:type title: string
+
+	:param titlexpos: Specify where you want your to anchor the center of your title in the x axis. the value is in the x-axis fraction.  Default is center. (x = 0.5)
+	:type titlexpos: float
 
 	:param style: A shortcut to produce specific kinds of stylings for the plots.
 		Available styles:
@@ -1910,10 +1913,12 @@ def display(lclist=[], splist=[],
 	
 	if style == None:
 		pass
-	elif style=="homepagepdf":
+	elif style in ["homepagepdf", "homepagepdfnologo"]:
 		figsize=(10,5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
-		showlogo=False
+		showlogo=True
+		if style == "homepagepdfnologo":
+			showlogo=False
 		nicefont=False
 		showdelays=False
 		showlegend=False
@@ -2168,9 +2173,12 @@ def display(lclist=[], splist=[],
 		pass
 	else:
 		#plt.title(title, fontsize=18)
-		axes.annotate(title, xy=(0.5, 1.0), xycoords='axes fraction', xytext=(0, -4),
+		if titlexpos == None:
+			axes.annotate(title, xy=(0.5, 1.0), xycoords='axes fraction', xytext=(0, -4),
 			textcoords='offset points', ha='center', va='top', fontsize=25)
-	
+		else
+			axes.annotate(title, xy=(titlexpos, 1.0), xycoords='axes fraction', xytext=(0, -4),
+			textcoords='offset points', ha='center', va='top', fontsize=25)
 	if jdrange != None:
 		axes.set_xlim(jdrange[0], jdrange[1])
 	
