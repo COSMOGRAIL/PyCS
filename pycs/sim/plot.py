@@ -1129,12 +1129,14 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 		printcovmat = False
 
 	if printcovmat:
-		text += ' %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n\n'\
-				' %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n\n' \
-				' %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n\n' \
-				' %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n\n' \
-				' %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n\n' \
-				' %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n\n' \
+		text += '     AB        AC        AD        BC        BD        CD \n'
+		text += '     '+'-----'*12+'\n'
+		text += 'AB | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n'\
+				'AC | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
+				'AD | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
+				'BC | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
+				'BD | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
+				'CD | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
 				% (mylist[0], mylist[1], mylist[2], mylist[3], mylist[4], mylist[5]
 										   , mylist[6], mylist[7], mylist[8], mylist[9], mylist[11], mylist[11]
 										   , mylist[12], mylist[13], mylist[14], mylist[15], mylist[16], mylist[17]
@@ -1142,9 +1144,9 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 										   , mylist[24], mylist[25], mylist[26], mylist[27], mylist[28], mylist[29]
 										   , mylist[30], mylist[31], mylist[32], mylist[33], mylist[34], mylist[35])
 
-		axinv.annotate(text, xy=(0.9 * (ncouples-1), -2.0),  xycoords='axes fraction', ha="center")
+		axinv.annotate(text, xy=(0.7 * (ncouples-1), -2.0),  xycoords='axes fraction', ha="left")
 	else:
-		axinv.annotate(text, xy=(0.9 * (ncouples-1), -1.0),  xycoords='axes fraction', ha="center")
+		axinv.annotate(text, xy=(0.7 * (ncouples-1), -1.0),  xycoords='axes fraction', ha="left")
 
 
 	retdict["r"] = r
