@@ -74,7 +74,7 @@ class rslc():
 		
 		
 
-def factory(l, pad=300, pd=2, plotcolour=None, pow=1.5, amp=2.0, scale=200.0, errscale=5.0):
+def factory(l, pad=300, pd=2, plotcolour=None, covkernel="matern", pow=1.5, amp=2.0, scale=200.0, errscale=5.0):
 	"""
 	Give me a lightcurve, I return a regularly sampled light curve, by performing some regression.
 	
@@ -111,7 +111,7 @@ def factory(l, pad=300, pd=2, plotcolour=None, pow=1.5, amp=2.0, scale=200.0, er
 	def meanprior(query):
 		return (0.0 * query + mean_mag)
 		
-	regfct = pymcgp.regression(jds, mags, magerrs, meanprior, pow=pow, amp=amp, scale=scale, errscale=errscale)
+	regfct = pymcgp.regression(jds, mags, magerrs, meanprior, covkernel=covkernel, pow=pow, amp=amp, scale=scale, errscale=errscale)
 	(rsmags, rsmagerrs) = regfct(rsjds)
 	
 	return rslc(rsjds, rsmags, rsmagerrs, pad, pd, timeshift=timeshift, name=name, plotcolour=plotcolour)

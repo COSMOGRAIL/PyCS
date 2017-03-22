@@ -12,7 +12,7 @@ import pycs.gen.lc
 
 
 
-def opt_ts(lcs, method="weights", pd=5, pow=1.5, amp=2.0, scale=200.0, errscale=5.0, verbose=True):
+def opt_ts(lcs, method="weights", pd=5, covkernel="matern", pow=1.5, amp=2.0, scale=200.0, errscale=5.0, verbose=True):
 	"""
 	Give me lightcurves (with more or less good initial time shifts)
 	I run a regression on them, optimize regdiff, and set their delays to the optimal values.
@@ -27,7 +27,7 @@ def opt_ts(lcs, method="weights", pd=5, pow=1.5, amp=2.0, scale=200.0, errscale=
 		print "%s" % (pycs.gen.lc.getnicetimedelays(lcs, separator=" | "))	
 	
 	
-	rss = [pycs.regdiff.rslc.factory(l, pd=pd, pow=pow, amp=amp, scale=scale, errscale=errscale) for l in lcs]
+	rss = [pycs.regdiff.rslc.factory(l, pd=pd, covkernel=covkernel, pow=pow, amp=amp, scale=scale, errscale=errscale) for l in lcs]
 	# The time shifts are transfered to these rss, any microlensing is disregarded
 
 	if verbose:
