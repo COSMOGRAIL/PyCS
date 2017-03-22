@@ -65,7 +65,10 @@ def regression(x, y, yerr, priormeanfct, covkernel='matern', pow=1.5, amp=2.0, s
 		eval_fun = gaussian.euclidean
 	else:
 		raise RuntimeError("I do not know the covariance kernel you gave me ! %s" % (covkernel))
-	C = pymc.gp.Covariance(eval_fun=eval_fun, pow=pow, amp=amp, scale=scale)
+	if covkernel == 'matern':
+		C = pymc.gp.Covariance(eval_fun=eval_fun, diff_degree=pow, amp=amp, scale=scale)
+	else:
+		C = pymc.gp.Covariance(eval_fun=eval_fun, pow=pow, amp=amp, scale=scale)
 	obs_V *= errscale
 
 	# sandbox :
