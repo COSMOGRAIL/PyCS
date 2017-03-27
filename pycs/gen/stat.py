@@ -318,8 +318,8 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 			curve["optmockrlclist"].append(optmockrlc)
 		
 	
-	
-	
+	# We want to return the displayed statistics
+	stats = []
 	for curve in curves:
 		curve["origresistats"] = resistats(curve["optorigrlc"])
 		
@@ -334,10 +334,15 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 		curve["sigmatxt"] = "sigma : %.4f (obs) vs %.4f +/- %.4f (sim)" % (curve["origresistats"]["std"], curve["meanmockresistats"]["std"], curve["stdmockresistats"]["std"])
 		print curve["zrunstxt"]
 		print curve["sigmatxt"]
+
+		# return the original, mean and std of mocks zruns, then original, mean and std of mocks of sigma
+		stats.append([curve["origresistats"]["zruns"], curve["meanmockresistats"]["zruns"], curve["stdmockresistats"]["zruns"], curve["origresistats"]["std"], curve["meanmockresistats"]["std"], curve["stdmockresistats"]["std"]])
 	
 		#for item in curve["mockresistats"]:
 		#	print item["zruns"]
-	
+
+
+	return stats
 	# Now we proceed with making plots.
 	
 	# The plots of the residuals statistics, one for each curve :
