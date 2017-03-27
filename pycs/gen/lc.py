@@ -2176,7 +2176,7 @@ def display(lclist=[], splist=[],
 		if titlexpos == None:
 			axes.annotate(title, xy=(0.5, 1.0), xycoords='axes fraction', xytext=(0, -4),
 			textcoords='offset points', ha='center', va='top', fontsize=25)
-		else
+		else:
 			axes.annotate(title, xy=(titlexpos, 1.0), xycoords='axes fraction', xytext=(0, -4),
 			textcoords='offset points', ha='center', va='top', fontsize=25)
 	if jdrange != None:
