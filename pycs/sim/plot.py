@@ -505,7 +505,7 @@ def normal(x, mu, sigma):
 	return (1.0/np.sqrt(2.0*np.pi*sigma*sigma)) * np.exp( - (x - mu)**2/(2*sigma*sigma))
 
 
-def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None, title=None, niceplot=False, displaytext=True, figsize=(16, 9), left = 0.06, right=0.95, bottom=0.065, top=0.95, wspace=0.2, hspace=0.2, txtstep=0.04, majorticksstep=2, trueshifts=None, filename=None, dataout=False):
+def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None, title=None, niceplot=False, displaytext=True, figsize=(16, 9), left = 0.06, right=0.95, bottom=0.065, top=0.95, wspace=0.2, hspace=0.2, txtstep=0.04, majorticksstep=2, hideyaxis=True, trueshifts=None, filename=None, dataout=False):
 	"""
 	Comparing the delay distributions from different run result objects.
 	
@@ -650,7 +650,11 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 				ylims[1] *= 1.1
 			ax.set_ylim(ylims)
 			
-			
+			# hide y axis if wanted to
+			if hideyaxis:
+				ax.set_yticks([])
+
+
 			# Looked ok on big plots :
 			#plt.annotate(delaylabel, xy=(0.03, 0.88),  xycoords='axes fraction', fontsize=12, color="black")
 			if n != 2: # otherwise we have only one single panel
