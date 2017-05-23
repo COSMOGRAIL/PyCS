@@ -343,6 +343,9 @@ class lightcurve:
 		@todo: think about changing the errors as well... -- no, the error in magnitude is a relative error.
 		"""
 		self.magshift += float(deltamag)
+
+
+
 	
 	def shiftflux(self, flux):
 		"""
@@ -1753,7 +1756,7 @@ def display(lclist=[], splist=[],
 	jdrange=None, magrange=None, figsize=(12,8), plotsize=(0.08, 0.96, 0.09, 0.95), showgrid=False,
 	markersize=6, showerrorbars=True, showdatapoints=True, errorbarcolour = "#BBBBBB", capsize=3, knotsize=0.015,
 	legendloc = "best", showspldp=False, colourprop=None, hidecolourbar=False, transparent=False,
-	collapseref=False, jdmintickstep=100, magmintickstep=0.2, filename="screen", showinsert=None, insertname=None, verbose=False, ax=None):
+	collapseref=False, hidecollapseref=False, jdmintickstep=100, magmintickstep=0.2, filename="screen", showinsert=None, insertname=None, verbose=False, ax=None):
 	"""
 	Function that uses matplotlib to plot a **list** of lightcurves/splines/GPRs, either on screen or into a file.
 	It uses lightcurve attributes such as ``lc.plotcolour`` and ``lc.showlabels``, and displays masked points
@@ -1931,6 +1934,26 @@ def display(lclist=[], splist=[],
 		showgrid=True
 		transparent=False
 
+	elif style in ["2m2", "2m2showdelays"]:
+		figsize=(10,5)
+		plotsize=(0.09, 0.97, 0.10, 0.95)
+		showlogo=False
+		nicefont=True
+		showdelays=False
+		if style == "2m2showdelays":
+			showdelays = True
+		showlegend=False
+		showdates=False
+		errorbarcolour="#777777"
+		markersize=3.0
+		capsize=0
+		jdmintickstep=50
+		magmintickstep=0.2
+		showgrid=False
+		transparent=False
+
+		
+		
 	elif style=="posterpdf":
 		figsize=(10,5.5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
@@ -2092,7 +2115,8 @@ def display(lclist=[], splist=[],
 
 	if collapseref and len(reflevels) != 0:
 		print "WARNING : collapsing the refs %s" % (reflevels)
-		axes.axhline(np.mean(np.array(reflevels)), color="gray", dashes = ((3,3))) # the new ref
+		if not hidecollapseref:
+			axes.axhline(np.mean(np.array(reflevels)), color="gray", dashes = ((3,3))) # the new ref
 
 	
 	# The supplementary objects
@@ -2188,7 +2212,7 @@ def display(lclist=[], splist=[],
 	
 	if showdelays:
 		txt = getnicetimedelays(lclist, separator="\n")
-		axes.annotate(txt, xy=(0.0, 1.0), xycoords='axes fraction', xytext=(6, -6),
+		axes.annotate(txt, xy=(0.77, 0.77), xycoords='axes fraction', xytext=(6, -6),
 			textcoords='offset points', ha='left', va='top')
 		#plt.text(0.01, 0.99, txt,
 		#	horizontalalignment='left', verticalalignment='top',
@@ -2410,7 +2434,7 @@ def getnicetimedelays(lcs, separator="\n", sorted = False):
 	else:
 		worklcs = lcs
 	couples = [(worklcs[i], worklcs[j]) for i in range(n) for j in range(n) if i < j]
-	return separator.join(["%s%s %+7.2f" % ( lc1.object, lc2.object, lc2.timeshift - lc1.timeshift) for (lc1, lc2) in couples])
+	return separator.join(["%s%s = %+7.2f" % ( lc1.object, lc2.object, lc2.timeshift - lc1.timeshift) for (lc1, lc2) in couples])
 
 def getnicetimeshifts(lcs, separator="\n"):
 	"""
