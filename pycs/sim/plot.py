@@ -45,7 +45,7 @@ class delaycontainer:
 		self.yshift = 0.0 # allows to "group" measurements
 
 
-def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showlegend=True, text=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename=None, refshifts=None, refdelays=None, legendfromrefdelays=False, hatches=None, centershifts=None, ymin=0.2, hlines=None):
+def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showlegend=True, text=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename=None, refshifts=None, refdelays=None, legendfromrefdelays=False, hatches=None, centershifts=None, ymin=0.2, hlines=None, tweakeddisplay=False):
 	"""
 	Plots delay measurements from different methods, telescopes, sub-curves, etc in one single plot.
 	For this I use only ``delaycontainer`` objects, i.e. I don't do any "computation" myself.
@@ -155,7 +155,7 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 				if delays.marker == None or delays.marker == ".":
 					plt.plot([delay["mean"]], [ypos], marker='o', markersize=delays.markersize, markeredgecolor=delays.plotcolour, color=delays.plotcolour)
 				else:
-					plt.plot([delay["mean"]], [ypos], marker=delays.marker, markersize=delays.markersize, markeredgecolor=delays.plotcolour, color="white")
+					plt.plot([delay["mean"]], [ypos], marker=delays.marker, markersize=delays.markersize, markeredgecolor=delays.plotcolour, color=delays.plotcolour)
 				
 				if showbias:
 					plt.plot([delay["mean"] - error["bias"]], [ypos], marker="x", markersize=delays.markersize, markeredgecolor=delays.plotcolour, color=delays.plotcolour)
@@ -218,7 +218,10 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 	if showlegend:
 		for (ipl,(delays, errors)) in enumerate(plotlist):
 			line = "%s" % (delays.name)
-			plt.figtext(x = right, y = top - txtstep*ipl, s = line, verticalalignment="top", horizontalalignment="right", color=delays.plotcolour, fontsize=14)
+			if not tweakeddisplay:
+				plt.figtext(x = right, y = top - txtstep*ipl, s = line, verticalalignment="top", horizontalalignment="right", color=delays.plotcolour, fontsize=14)
+			else:
+				plt.figtext(x = 0.75, y = top - txtstep*ipl -0.1, s = line, verticalalignment="top", horizontalalignment="center", color=delays.plotcolour, fontsize=16) # for 3-delay plots
 		if legendfromrefdelays:
 			for (ipl,(delays, errors)) in enumerate(refdelays):
 				line = "%s" % (delays.name)
@@ -505,7 +508,7 @@ def normal(x, mu, sigma):
 	return (1.0/np.sqrt(2.0*np.pi*sigma*sigma)) * np.exp( - (x - mu)**2/(2*sigma*sigma))
 
 
-def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None, title=None, niceplot=False, displaytext=True, figsize=(16, 9), left = 0.06, right=0.95, bottom=0.065, top=0.95, wspace=0.2, hspace=0.2, txtstep=0.04, majorticksstep=2, hideyaxis=True, trueshifts=None, filename=None, dataout=False):
+def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None, title=None, ytitle=0.95, niceplot=False, displaytext=True, figsize=(16, 9), left = 0.06, right=0.95, bottom=0.065, top=0.95, wspace=0.2, hspace=0.2, txtstep=0.04, majorticksstep=2, hideyaxis=True, trueshifts=None, filename=None, dataout=False):
 	"""
 	Comparing the delay distributions from different run result objects.
 	
@@ -681,10 +684,10 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 	
 		if niceplot:
 			labeltxt = "%s" % (getattr(rr, 'name', 'NoName'))
-			plt.figtext(x = right - labelspaceright, y = top - labelspacetop - txtstep*irr, s = labeltxt, verticalalignment="top", horizontalalignment="right", color=rr.plotcolour)	
+			plt.figtext(x = right - labelspaceright, y = top - labelspacetop - txtstep*irr, s = labeltxt, verticalalignment="top", horizontalalignment="right", color=rr.plotcolour, fontsize=15)
 		else:
 			labeltxt = "%s (%s, %i) " % (getattr(rr, 'name', 'NoName'), "Truth" if rr.plottrue else "Measured", rr.tsarray.shape[0])
-			plt.figtext(x = right - labelspaceright, y = top - labelspacetop - txtstep*irr, s = labeltxt, verticalalignment="top", horizontalalignment="right", color=rr.plotcolour)	
+			plt.figtext(x = right - labelspaceright, y = top - labelspacetop - txtstep*irr, s = labeltxt, verticalalignment="top", horizontalalignment="right", color=rr.plotcolour, fontsize=15)
 
 		print 'Plotting "%s"' % labeltxt
 		print "     Labels : %s" % (", ".join(rr.labels))
@@ -693,7 +696,7 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 	
 	
 	if title != None:
-		plt.figtext(x = 0.5, y = 0.95, s = title, horizontalalignment="center", color="black", fontsize=18)	
+		plt.figtext(x = 0.5, y = ytitle, s = title, horizontalalignment="center", color="black", fontsize=18)
 
 	if filename == None:
 		plt.show()
@@ -775,7 +778,9 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 				ax2.set_ylabel('Measurement error [day]', labelpad=-10)
 
 		# way 1 - binning independent of xtruedelays distribution. User choose the plot range. Similar to newdelayplot()
-		reftrueshifts = np.round(rrlist[0].gettruets()["center"])
+
+		reftrueshifts = np.mean([rr.gettruets()["center"] for rr in rrlist], axis=0)
+		#reftrueshifts = np.round(rrlist[0].gettruets()["center"])
 		reftruedelay = reftrueshifts[i[0]] - reftrueshifts[i[1]]
 		plotrange = (reftruedelay - r, reftruedelay + r)
 		binlims = np.linspace(plotrange[0], plotrange[1], nbins + 1)
@@ -971,7 +976,7 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 							ax3.hexbin([s[0] for s in subsamples], [s[1] for s in subsamples], gridsize=bins, extent=(-rerr, rerr, -rerr, rerr), mincnt=1, cmap=cmap, edgecolor="none")
 						showpoints=True
 						if showpoints:
-							ax3.scatter([s[0] for s in subsamples], [s[1] for s in subsamples], s=5, facecolor=rrlist[0].plotcolour, lw=0)
+							ax3.scatter([s[0] for s in subsamples], [s[1] for s in subsamples], s=5, facecolor=rrlist[0].plotcolour, lw=0, alpha=0.5)
 						showcontour=True
 						if showcontour:
 							H, xedges, yedges = np.histogram2d([s[0] for s in subsamples], [s[1] for s in subsamples], range=[[-r, r], [-r, r]], bins=(bins, bins))
@@ -996,12 +1001,13 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 			mincovindep = np.min(covsindep)
 			maxcovindep = np.max(covsindep)
 
-			if abs(mincovindep) > maxcovindep:
-				covindep = mincovindep
-			else:
-				covindep = maxcovindep
 
-			mind = covsindep.index(covindep)
+			if abs(mincovindep) > maxcovindep:
+				extcovindep = mincovindep
+			else:
+				extcovindep = maxcovindep
+
+			mind = covsindep.index(extcovindep)
 			for ind, val in enumerate(covsindep):
 				if ind == mind:
 					ax2.annotate("%.2f" % val, xy=(xcoordsan[ind], ycoordsan[ind]), ha="center", va='center', color='darkblue', fontsize=14)
@@ -1014,7 +1020,7 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 				ax2.axhline(ybinlims2d[ind], linestyle='--', color='black', alpha=0.5)
 			showpoints=True
 			if showpoints:
-				ax2.scatter(xtruetds, ytruetds, s=2, facecolor=rrlist[0].plotcolour, lw=0)
+				ax2.scatter(xtruetds, ytruetds, s=2, facecolor=rrlist[0].plotcolour, lw=0, alpha=0.1)
 
 			ax2.set_xlim(plotrange)
 			ax2.set_ylim(yplotrange)
@@ -1057,7 +1063,8 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 				ax1.annotate(xdelaylabel, xy=(0.78, 0.08),  xycoords='axes fraction', ha="center") # x axis
 				ax1.annotate(ydelaylabel, xy=(0.08, 0.76),  xycoords='axes fraction', ha="left", rotation=90.0) # y axis
 
-			ax2.set_title('%s vs %s | mean = %.2f' % (ydelaylabel, xdelaylabel, np.cov([(xtderr, ytderr) for xtderr, ytderr in zip(xtderrs, ytderrs)], rowvar=False)[0][1]), fontsize=10)
+			meancov = np.cov([(xtderr, ytderr) for xtderr, ytderr in zip(xtderrs, ytderrs)], rowvar=False)[0][1]
+			ax2.set_title('%s vs %s | mean = %.2f' % (ydelaylabel, xdelaylabel, meancov), fontsize=10)
 
 
 			## binning dependent of true delays, for comparision
@@ -1087,10 +1094,17 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 			mincovdep = np.min(covsdep)
 			maxcovdep = np.max(covsdep)
 
+
+
 			if abs(mincovdep) > maxcovdep:
-				covdep = mincovdep
+				extcovdep = mincovdep
 			else:
-				covdep = maxcovdep
+				extcovdep = maxcovdep
+
+			# We do NOT want the min or max in the final covmat but the mean on all samples.
+			# do NOT take the mean of covsdep, some samples are not in !!
+			covdep = meancov
+			covindep = meancov
 
 			if method == "depbin":
 				covmat[ii][jj] = covdep
@@ -1189,7 +1203,7 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 
 
 
-def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, plotrods=True, ploterrorbars=True, sidebyside=True, errorrange=None, binclip=False, binclipr=10.0, title=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, displayn=True, filename=None, dataout=False):
+def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plotrods=True, ploterrorbars=True, sidebyside=True, errorrange=None, binclip=False, binclipr=10.0, title=None, xtitle=0.75, ytitle=0.95, titlesize=30, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, displayn=True, filename=None, dataout=False, tweakeddisplay=False):
 	"""
 	
 	Plots measured delays versus true delays
@@ -1272,7 +1286,7 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, plotrods=True, plote
 
 				# A simple scatter plot of the residues :
 				if plotpoints:
-					ax.scatter(truedelays, resis, s=2, facecolor=rr.plotcolour, lw = 0)
+					ax.scatter(truedelays, resis, s=2, facecolor=rr.plotcolour, lw = 0, alpha=alphapoints)
 
 				# We bin those :
 				digitized = np.digitize(truedelays, binlims)
@@ -1384,10 +1398,14 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, plotrods=True, plote
 			labeltxt = "%s (%i) " % (getattr(rr, 'name', 'NoName'), rr.tsarray.shape[0])
 		else:
 			labeltxt = "%s" % (getattr(rr, 'name', 'NoName'))
-		plt.figtext(x = right - labelspaceright, y = top - labelspacetop - txtstep*irr, s = labeltxt, verticalalignment="top", horizontalalignment="right", color=rr.plotcolour)	
+		if not teakeddisplay:
+			plt.figtext(x = right - labelspaceright, y = top - labelspacetop - txtstep*irr, s = labeltxt, verticalalignment="top", horizontalalignment="right", color=rr.plotcolour, fontsize=15)
+		else:
+			plt.figtext(x = 0.75, y = 0.8 - txtstep*irr, s = labeltxt, verticalalignment="top", horizontalalignment="center", color=rr.plotcolour, fontsize=15)
 
 	if title != None:
-		plt.figtext(x = 0.5, y = 0.95, s = title, horizontalalignment="center", color="black", fontsize=18)	
+		#plt.figtext(x = left + (right-left)/2.0, y = ytitle, s = title, horizontalalignment="center", color="black", fontsize=18)
+		plt.figtext(x = xtitle, y = ytitle, s = title, horizontalalignment="center", color="black", fontsize=titlesize)
 
 	if filename==None:
 		plt.show()
