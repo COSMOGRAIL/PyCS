@@ -1398,7 +1398,7 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plo
 			labeltxt = "%s (%i) " % (getattr(rr, 'name', 'NoName'), rr.tsarray.shape[0])
 		else:
 			labeltxt = "%s" % (getattr(rr, 'name', 'NoName'))
-		if not teakeddisplay:
+		if not tweakeddisplay:
 			plt.figtext(x = right - labelspaceright, y = top - labelspacetop - txtstep*irr, s = labeltxt, verticalalignment="top", horizontalalignment="right", color=rr.plotcolour, fontsize=15)
 		else:
 			plt.figtext(x = 0.75, y = 0.8 - txtstep*irr, s = labeltxt, verticalalignment="top", horizontalalignment="center", color=rr.plotcolour, fontsize=15)
