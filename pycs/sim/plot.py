@@ -185,8 +185,14 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 			plt.ylim((ymin, nmeas+1.5))
 			
 			if i == n-1:
-				plt.xlabel("Delay [day]", fontsize=14)
+				if tweakeddisplay:
+					plt.xlabel("Delay [day]", fontsize=18)
+					plt.xticks(fontsize=15)
+				else:
+					plt.xlabel("Delay [day]", fontsize=14)
 			if n != 2: # otherwise only one panel, no need
+				if tweakeddisplay:
+					plt.xticks(fontsize=15)
 				plt.annotate(delaylabel, xy=(0.03, 0.88-txtstep),  xycoords='axes fraction', fontsize=14, color="black")
 	
 			if refshifts != None:
@@ -212,7 +218,7 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 				for hline in hlines:
 					plt.axhline(hline, lw=0.5, color="gray", zorder=-30)
 					
-	
+
 	
 	# The "legend" :
 	if showlegend:
@@ -1203,7 +1209,7 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 
 
 
-def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plotrods=True, ploterrorbars=True, sidebyside=True, errorrange=None, binclip=False, binclipr=10.0, title=None, xtitle=0.75, ytitle=0.95, titlesize=30, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, displayn=True, filename=None, dataout=False, tweakeddisplay=False):
+def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plotrods=True, alpharods=0.2, ploterrorbars=True, sidebyside=True, errorrange=None, binclip=False, binclipr=10.0, title=None, xtitle=0.75, ytitle=0.95, titlesize=30, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, displayn=True, filename=None, dataout=False, tweakeddisplay=False):
 	"""
 	
 	Plots measured delays versus true delays
@@ -1260,6 +1266,10 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plo
 			majorLocator = MultipleLocator(majorticksstep)
 			ax.xaxis.set_minor_locator(minorLocator)
 			ax.xaxis.set_major_locator(majorLocator)
+			if tweakeddisplay:
+				from matplotlib.ticker import MaxNLocator
+				locator=MaxNLocator(prune='both', nbins=6)
+				ax.yaxis.set_major_locator(locator)
 			ax.yaxis.set_minor_locator(MultipleLocator(1.0))
 			
 			reftruedelay = reftrueshifts[i] - reftrueshifts[j]
@@ -1332,9 +1342,9 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plo
 				if plotrods:
 					if not sidebyside:
 						if ploterrorbars:
-							ax.bar(binlims[:-1], binmeans, yerr=binstds, width=width, color=rr.plotcolour, ecolor=rr.plotcolour, error_kw={"capsize":2.5, "capthick":0.5, "markeredgewidth":0.5}, edgecolor=rr.plotcolour, alpha = 0.2)
+							ax.bar(binlims[:-1], binmeans, yerr=binstds, width=width, color=rr.plotcolour, ecolor=rr.plotcolour, error_kw={"capsize":2.5, "capthick":0.5, "markeredgewidth":0.5}, edgecolor=rr.plotcolour, alpha = alpharods)
 						else:
-							ax.bar(binlims[:-1], binmeans, width=width, color=rr.plotcolour, edgecolor=rr.plotcolour, alpha = 0.2)
+							ax.bar(binlims[:-1], binmeans, width=width, color=rr.plotcolour, edgecolor=rr.plotcolour, alpha = alpharods)
 					else:
 						width = width/len(rrlist)
 						squeezefactor = 1.0
@@ -1342,9 +1352,9 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plo
 						offset = width * (1.0-squeezefactor)/2.0
 						
 						if ploterrorbars:
-							ax.bar(binlims[:-1] + offset + irr*plotwidth, binmeans, yerr=binstds, width=plotwidth, color=rr.plotcolour, ecolor=rr.plotcolour, error_kw={"capsize":2.5, "capthick":0.5, "markeredgewidth":0.5}, edgecolor=rr.plotcolour, alpha = 0.35, linewidth=0)
+							ax.bar(binlims[:-1] + offset + irr*plotwidth, binmeans, yerr=binstds, width=plotwidth, color=rr.plotcolour, ecolor=rr.plotcolour, error_kw={"capsize":2.5, "capthick":0.5, "markeredgewidth":0.5}, edgecolor=rr.plotcolour, alpha = alpharods, linewidth=0)
 						else:
-							ax.bar(binlims[:-1] + offset + irr*plotwidth, binmeans, width=plotwidth, color=rr.plotcolour, edgecolor=rr.plotcolour, alpha = 0.35)
+							ax.bar(binlims[:-1] + offset + irr*plotwidth, binmeans, width=plotwidth, color=rr.plotcolour, edgecolor=rr.plotcolour, alpha = alpharods)
 					
 				# That's it for the different runresult objects, back to the common stuff for this particular panel :
 			
@@ -1360,11 +1370,20 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plo
 			#	plt.ylabel("Delay measurement error [day]")
 			
 			# Just on 2 plots :
-			if i == n-1:
-				plt.xlabel("True delay [day]")
-			if j == 0 and i == int(math.floor(n/2.0)):
-				plt.ylabel("Delay measurement error [day]")
-			
+			if tweakeddisplay:
+				if i == n-1:
+					plt.xlabel("True delay [day]", fontsize=18)
+				if j == 0 and i == int(math.floor(n/2.0)):
+					plt.ylabel("Delay measurement error [day]", fontsize=18, y=-0.10)
+				plt.xticks(fontsize=15)
+				plt.yticks(fontsize=15)
+			else:
+				if i == n-1:
+					plt.xlabel("True delay [day]", fontsize=16)
+				if j == 0 and i == int(math.floor(n/2.0)):
+					plt.ylabel("Delay measurement error [day]", fontsize=16)
+				plt.xticks(fontsize=13)
+				plt.yticks(fontsize=13)
 			
 			plt.xlim(plotrange)
 			#plt.ylim(plotrange)
@@ -1375,7 +1394,7 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plo
 					plt.ylim((-errorrange, errorrange))
 			
 			if n != 2: # otherwise we have only 1 delay and panel
-				plt.annotate(delaylabel, xy=(0.03, 0.88-txtstep),  xycoords='axes fraction', fontsize=12, color="black")
+				plt.annotate(delaylabel, xy=(0.03, 0.88-txtstep),  xycoords='axes fraction', fontsize=14, color="black")
 			
 			# That's it for this panel, back to the total figure :
 	
@@ -1401,7 +1420,8 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plo
 		if not tweakeddisplay:
 			plt.figtext(x = right - labelspaceright, y = top - labelspacetop - txtstep*irr, s = labeltxt, verticalalignment="top", horizontalalignment="right", color=rr.plotcolour, fontsize=15)
 		else:
-			plt.figtext(x = 0.75, y = 0.8 - txtstep*irr, s = labeltxt, verticalalignment="top", horizontalalignment="center", color=rr.plotcolour, fontsize=15)
+			plt.figtext(x = 0.54, y = 0.8325 - txtstep*irr, s = labeltxt, verticalalignment="top", horizontalalignment="left", color=rr.plotcolour, fontsize=17)
+
 
 	if title != None:
 		#plt.figtext(x = left + (right-left)/2.0, y = ytitle, s = title, horizontalalignment="center", color="black", fontsize=18)
@@ -1557,496 +1577,3 @@ def covplot(rrlist, showpoints=False, showcontour=True, showdensity=False, fract
 		plt.show()
 	else:
 		plt.savefig(filename)
-
-
-def delayplot(datarrlist, simrrlist, type="gaussians", rplot=7.0, rbins=7, nbins = 20, binclipr=10.0, displaytext=True, total=True, title=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename=None, trueshifts=None):
-	"""
-	Plots final delay measurements for several techniques
-	delays are the mean delays as measured on the datarrlist
-	errors are statistical + systematic ones, as measured from the simrrlist
-	
-	
-	:param type: either "errorbars" or "gaussians"
-	
-	:param trueshifts: I will draw vertical lines for the delays corresponding to these shifts.
-		Give me a tuple, like (0.0, -5.0, -20.0, -70.0) (for a quad in this case)
-	
-	"""
-	print "I'M OBSOLETE, PLEASE USE NEWDELAYPLOT !"
-
-	n = datarrlist[0].nimages()
-	
-	labels = datarrlist[0].labels
-	
-	# To get some fixed centers for the bins, we will use the first element of simrrlist.
-	# If you change this, check also meanvstrue !!!
-	reftrueshifts = np.round(simrrlist[0].gettruets()["center"])
-	
-	# Center for the delay plot :
-	#plotshifts = reftrueshifts
-	plotshifts = 0.5 * (np.max(np.array([rr.getts()["center"] for rr in datarrlist]), axis=0) + np.min(np.array([rr.getts()["center"] for rr in datarrlist]), axis=0))
-	
-	
-	
-	# Checks that we compare the same lenses and curves ...
-	assert len(datarrlist) == len(simrrlist)
-	
-	for rr in datarrlist:
-		if rr.labels != labels:
-			raise RuntimeError("Don't ask me to overplot runresults of different curves !")
-	for rr in simrrlist:
-		if rr.labels != labels:
-			raise RuntimeError("Don't ask me to overplot runresults of different curves !")
-	for (datarr, simrr) in zip(datarrlist, simrrlist):
-		if datarr.plotcolour != simrr.plotcolour:
-			raise RuntimeError("Hmm, plotcolours of data and sim don't correspond !")
-		print "Data : %s <-> Simulations : %s" % (datarr.name, simrr.name)
-		
-	
-	fig = plt.figure(figsize=figsize)
-	fig.subplots_adjust(left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace)
-
-	axisNum = 0
-	for i in range(n): # A, B, C, D and so on
-		for j in range(n):
-			
-			#print i, j
-			if (i == 0) or (j == n-1) :
-				continue # No plot
-				
-			axisNum += 1
-			if j >= i:
-				continue
-		
-			ax = plt.subplot(n-1, n-1, axisNum)
-		
-			# Hide the y ticks :
-			ax.get_yaxis().set_ticks([])
-			minorLocator = MultipleLocator(1.0)
-			majorLocator = MultipleLocator(majorticksstep)
-			ax.xaxis.set_minor_locator(minorLocator)
-			ax.xaxis.set_major_locator(majorLocator)
-		
-		
-			# We determine the bin range :
-			reftruedelay = reftrueshifts[i] - reftrueshifts[j]
-			
-			
-			# and for the plot :
-			plotdelay = plotshifts[i] - plotshifts[j]
-			plotrange = (plotdelay - rplot, plotdelay + rplot)
-			
-			# Delay label
-			# We will express the delays "i - j"
-			delaylabel="%s%s" % (labels[j], labels[i])
-			
-			# We go through all the methods, simultaneously for the data and the corresponding sims :
-				
-			pdfs = []
-			plotx = np.linspace(plotrange[0], plotrange[1], 200)
-				
-			for (irr, (datarr, simrr)) in enumerate(zip(datarrlist, simrrlist)):
-				
-				#print getattr(datarr, 'name', 'NoName'), getattr(simrr, 'name', 'NoName')
-				# Getting the actual mean delays as measured on the data :
-				
-				datameasdelays = datarr.tsarray[:,i] - datarr.tsarray[:,j]
-				meandatameasdelay = np.mean(datameasdelays)
-				
-				# Check plot :
-				#(counts, bins, patches) = ax.hist(datameasdelays, bins=200, range=plotrange, histtype="bar", color=datarr.plotcolour, alpha = 0.4, lw=0, normed=True)
-				#plt.axvline(x=meandatameasdelay, linewidth=1, linestyle="-", color=datarr.plotcolour)
-			
-				# Getting the corresponding errors from the sims
-				
-				
-				simtruedelays = simrr.truetsarray[:,i] - simrr.truetsarray[:,j]
-				simmeasdelays = simrr.tsarray[:,i] - simrr.tsarray[:,j]
-					
-				simresis = simmeasdelays-simtruedelays
-				
-				# Check plot :
-				#ax.scatter(simtruedelays, simresis, s=2, facecolor=simrr.plotcolour, lw = 0)
-				
-				# We bin those :		
-				binlims = np.linspace(reftruedelay-rbins, reftruedelay+rbins, nbins + 1)
-				digitized = np.digitize(simtruedelays, binlims)
-				binvals = [simresis[digitized == bini] for bini in range(1, len(binlims))]
-				for (bini, binvalarray) in enumerate(binvals):	
-					keep = np.logical_and(binvalarray < binclipr, binvalarray > -binclipr)
-					if np.sum(keep == False) != 0:
-						print "Kicking %i points (%s, %s)" % (np.sum(keep == False), delaylabel, simrr.name)
-					binvals[bini] = binvalarray[keep]
-				
-				binstds = map(np.std, binvals)
-				binmedians = map(np.median, binvals)
-				binmeans = map(np.mean, binvals)
-				
-				syserror = np.max(np.fabs(binmeans))
-				randerror = np.max(binstds)
-				toterror = np.sqrt(syserror*syserror + randerror*randerror)
-				
-				#randpdf = normal(plotx, mu = meandatameasdelay, sigma = syserror)
-				#randpdf /= np.sum(randpdf)
-				totpdf = normal(plotx, mu = meandatameasdelay, sigma = toterror)
-				totpdf /= np.sum(totpdf)
-				
-				pdfs.append(totpdf)
-				
-				#delaytext = r"$%+.1f \pm %.1f (\mathrm{ran}) \pm %.1f (\mathrm{sys})$" % (meandatameasdelay, randerror, syserror)
-				delaytext = r"$%+.1f \pm (%.1f,\, %.1f)$" % (meandatameasdelay, randerror, syserror)
-				
-				
-				print "%s : %.2f +/- %.2f (ran) +/- %.2f (sys) using %s" % (delaylabel, meandatameasdelay, randerror, syserror, getattr(datarr, 'name', 'NoName'))
-			
-				if type == "gaussians":			
-					plt.plot(plotx, totpdf, linewidth=1, linestyle="-", color=datarr.plotcolour)
-					if displaytext:
-						ax.annotate(delaytext, xy=(0.03, 0.78 - 3*txtstep*(irr+0.5)),  xycoords='axes fraction', color = datarr.plotcolour)
-			
-					
-				if type == "errorbars":	
-					plt.errorbar([meandatameasdelay], [len(datarrlist) - irr], yerr=None, xerr=toterror, fmt='-', ecolor=datarr.plotcolour, elinewidth=1.5, capsize=3, barsabove=False)
-					plt.plot([meandatameasdelay], [len(datarrlist) - irr], marker='o', markeredgecolor=datarr.plotcolour, color=datarr.plotcolour)
-					
-					if displaytext:
-						ax.annotate(delaytext, xy=(meandatameasdelay, len(datarrlist) - irr + 0.3), color = datarr.plotcolour, horizontalalignment="center")
-			
-					
-				# Just to see, we try to get the acutal bias :
-				#sysbias = np.mean(binmeans)
-				#debiaspdf = normal(plotx, mu = meandatameasdelay-sysbias, sigma = randerror)
-				#debiaspdf /= np.sum(debiaspdf)
-				#plt.plot(plotx, debiaspdf, linewidth=1, linestyle="--", color=datarr.plotcolour)
-			
-			
-				#if displaytext and type == "gaussians":
-					#delaytext = r"$%+.1f \pm %.1f$" % (meandatameasdelay, toterror)
-					#print rr.name
-					#print delaylabel + "   " + delaytext
-					#ax.text(meddelay, np.max(y)/2.0, "%.1f +/- %.1f" % (meddelay, stddelay), horizontalalignment = "center", color = rr.plotcolour)
-					
-		
-			if total and type == "gaussians":
-				multpdf = np.ones(len(pdfs[0]))
-				for pdf in pdfs:
-					multpdf *= pdf
-				multpdf /= np.sum(multpdf)
-				plt.plot(plotx, multpdf, linewidth=1, linestyle="-", color="black")
-				
-				if displaytext:
-					
-					meanmultpdf = np.sum(multpdf * plotx)
-					stdmultpdf = np.sqrt(np.sum(multpdf * (plotx - meanmultpdf)**2))
-					
-					#testpdf = normal(plotx, mu = meanmultpdf, sigma = stdmultpdf)
-					#testpdf /= np.sum(testpdf)
-					#plt.plot(plotx, testpdf, linewidth=1, linestyle="-", color="yellow")
-					#plt.axvline(x=meanmultpdf, linewidth=1, linestyle="-", color="black")
-				
-					delaytext = r"$%+.1f \pm %.1f$" % (meanmultpdf, stdmultpdf)
-					ax.annotate(delaytext, xy=(0.03, 0.78 - 0.1*(irr+1.5)),  xycoords='axes fraction', color = "black")
-				
-			if i == n-1:
-				plt.xlabel("Delay [day]")
-			if j == 0 and type == "gaussians":
-				plt.ylabel("PDF")
-			
-			plt.xlim(plotrange)
-			if type == "errorbars":	
-				plt.ylim((0.5, len(datarrlist)+1.5))
-			
-			#if errorrange != None:
-			#	plt.ylim((-errorrange, errorrange))
-			
-			plt.annotate(delaylabel, xy=(0.03, 0.88-txtstep),  xycoords='axes fraction', fontsize=12, color="black")
-			
-			if trueshifts != None:
-				truedelay = trueshifts[i] - trueshifts[j]
-				plt.axvline(truedelay, color="gray", linestyle="--", dashes=(3, 3), zorder=-20)
-			
-			
-	# The "legend" :
-	for irr, datarr in enumerate(datarrlist):
-	
-		labeltxt = "%s" % (getattr(datarr, 'name', 'NoName'))
-		plt.figtext(x = right, y = top - txtstep*irr, s = labeltxt, verticalalignment="top", horizontalalignment="right", color=datarr.plotcolour)	
-
-	if title != None:
-		plt.figtext(x = 0.5, y = 0.95, s = title, horizontalalignment="center", color="black", fontsize=18)	
-
-	if filename==None:
-		plt.show()
-	else:
-		plt.savefig(filename)
-
-	print "I'M OBSOLETE, PLEASE USE NEWDELAYPLOT !"
-
-
-# 
-# 
-# def qsscatter(rr, r=10.0, nbins=100):
-# 	"""
-# 	Delay distribution vs qs values
-# 	"""
-# 	
-# 	n = rr.tsarray.shape[1]
-# 	labels = rr.labels
-# 	trueshifts = rr.trueshifts
-# 	qs = rr.qs
-# 	
-# 	fig = plt.figure(figsize=(16, 9))
-# 	
-# 	fig.subplots_adjust(left = 0.03, right=0.95, bottom=0.05, top=0.9, wspace=0.2, hspace=0.2)
-# 
-# 	axisNum = 0
-# 	for i in range(n): # [A, B, C, D]
-# 	    for j in range(n):
-# 	        if (i == 0) or (j == n-1) :
-# 	        	continue # No plot
-# 		axisNum += 1
-# 		if j >= i:
-# 			continue
-# 		
-# 		ax = plt.subplot(n-1, n-1, axisNum)
-# 	
-# 		truedelay = trueshifts[i] - trueshifts[j]
-# 		plotrange = (truedelay - r, truedelay + r)
-# 		delaylabel="%s%s" % (labels[j], labels[i])
-# 		print delaylabel
-# 		
-# 	    	delays = rr.tsarray[:,i] - rr.tsarray[:,j]
-# 	    	assert len(delays) == len(qs)
-# 	    	
-# 		(counts, bins, patches) = ax.hist(delays, bins=nbins, histtype="bar", range=plotrange, normed=True, facecolor='0.5', lw = 0)
-# 		# Hide the y ticks :
-# 		ax.get_yaxis().set_ticks([])
-# 		
-# 		axscatter = ax.twinx()
-# 	
-# 		axscatter.scatter(delays, qs, s=1, facecolor='black', lw = 0)
-# 		#ax2.set_ylabel('sin', color='r')
-# 		#for tl in ax2.get_yticklabels():
-#    		#tl.set_color('r')
-# 		#plt.scatter(delays, qs, s=1, facecolor='black', lw = 0)
-# 		
-# 		# We plot the true shift :
-# 		plt.axvline(x=truedelay, linewidth=1, color="black")
-# 	
-# 		plt.xlim(plotrange)
-# 		#plt.ylim(0, np.max(counts))
-# 		plt.annotate(delaylabel, xy=(0.03, 0.88),  xycoords='axes fraction', fontsize=12, color="black")
-# 	
-# 	# A title for the figure
-# 	labeltxt = "%s (%i)" % (getattr(rr, 'simset', 'NoName'), rr.tsarray.shape[0])
-# 	plt.figtext(x = 0.4, y = 0.93, s = labeltxt, color="black")	
-# 
-# 	
-# 	print 'Plotting simset "%s"' % labeltxt
-# 	print "     Labels : %s" % (", ".join(rr.labels))
-# 	print "     Median shifts : %s" % (", ".join(["%.2f" % (np.median(rr.tsarray[:,i])) for i in range(len(rr.labels))]))
-# 	print "     Std shifts : %s" % (", ".join(["%.2f" % (np.std(rr.tsarray[:,i])) for i in range(len(rr.labels))]))
-# 	
-# 	plt.show()
-# 		
-# 
-# 
-# 
-# 
-# def qshist(rr, r=10.0, nbins=50, stat="mean"):
-# 	"""
-# 	Delay distribution histograms, coloured according to median qs values.
-# 	
-# 	stat = "mean", "med", "min"
-# 	
-# 	"""
-# 	
-# 	if rr.qs == None:
-# 		#rr.qs = rr.tsarray[:, 2]
-# 		raise RuntimeError("Your rr has no qs !")
-# 	
-# 	n = rr.tsarray.shape[1]
-# 	labels = rr.labels
-# 	trueshifts = rr.trueshifts
-# 	qs = rr.qs
-# 	statnorm = colors.normalize(np.min(qs), np.max(qs)) # Important, this way we get the same colours for all histograms
-# 	
-# 	print "Colorbar min = %.2f, max = %.2f" % (np.min(qs), np.max(qs))
-# 	
-# 	plt.figure(figsize=(16, 9))
-# 
-# 	axisNum = 0
-# 	for i in range(n): # [A, B, C, D]
-# 	    for j in range(n):
-# 	        if (i == 0) or (j == n-1) :
-# 	        	continue # No plot
-# 		axisNum += 1
-# 		if j >= i:
-# 			continue
-# 		
-# 		ax = plt.subplot(n-1, n-1, axisNum)
-# 	
-# 		truedelay = trueshifts[i] - trueshifts[j]
-# 		histrange = (truedelay - r, truedelay + r)
-# 		delaylabel="%s%s" % (labels[j], labels[i])
-# 		print delaylabel
-# 		
-# 	    	delays = rr.tsarray[:,i] - rr.tsarray[:,j]
-# 	    	assert len(delays) == len(qs)
-# 	    	
-# 		(counts, bins, patches) = plt.hist(delays, bins=nbins, histtype="bar", normed=True, range=histrange)
-# 		
-# 		assert nbins+1 == len(bins)
-# 		# bins are nbins+1 floats
-# 		
-# 		# We construct the mean q for each bin
-# 		statbinqs = []
-# 		spanbinqs = []
-# 		
-# 		for bini in range(nbins):
-# 			a = bins[bini]
-# 			b = bins[bini+1]
-# 			qsofbin = []
-# 			for qsi in range(len(qs)):
-# 				if delays[qsi] < b and delays[qsi] > a:
-# 					qsofbin.append(qs[qsi])
-# 			if len(qsofbin) == 0:
-# 				qsofbin.append(0)
-# 			
-# 			qsofbin = np.array(qsofbin)
-# 			#print "Bin %i, %.1f -> %.1f, relat = %f, min(qs) = %.1f, max(qs) = %.1f" % (bini, a, b, len(qsofbin)/counts[bini], np.min(qsofbin), np.max(qsofbin))
-# 			if stat == "mean":
-# 				statbinqs.append(np.mean(qsofbin))
-# 			elif stat == "min":
-# 				statbinqs.append(np.min(qsofbin))
-# 			else:
-# 				raise RuntimeError("Unknown stat")
-# 			
-# 			spanbinqs.append(np.max(qsofbin) - np.min(qsofbin))
-# 			
-# 		assert len(statbinqs) == nbins
-# 			
-# 		
-# 		statbinqs = np.array(statbinqs)	
-# 		spanbinqs = np.array(spanbinqs)
-# 		
-# 		spannorm = colors.normalize(np.min(spanbinqs[spanbinqs>0.0]), np.max(spanbinqs))
-# 		#statnorm = colors.normalize(np.min(statbinqs[spanbinqs>0.0]), np.max(statbinqs))
-# 		#print "Warning I redefine statnorm for every plot"
-# 		
-# 		for statbinq, spanbinq, patch in zip(statbinqs, spanbinqs, patches):
-# 			patch.set_facecolor(cm.jet(statnorm(statbinq)))
-# 			patch.set_edgecolor("None")
-# 			#patch.set_edgecolor(cm.jet(spannorm(spanbinq)))
-# 			
-# 		# We plot the true shift :
-# 		plt.axvline(x=truedelay, linewidth=1, color="black")
-# 	
-# 		plt.xlim(histrange)
-# 		#plt.ylim(0, np.max(counts))
-# 		plt.annotate(delaylabel, xy=(0.03, 0.88),  xycoords='axes fraction', fontsize=12, color="black")
-# 	
-# 	# A title for the figure
-# 	labeltxt = "%s (%i)" % (getattr(rr, 'simset', 'NoName'), rr.tsarray.shape[0])
-# 	plt.figtext(x = 0.4, y = 0.93, s = labeltxt, color="black")	
-# 
-# 	
-# 	print 'Plotting simset "%s"' % labeltxt
-# 	print "     Labels : %s" % (", ".join(rr.labels))
-# 	print "     Median shifts : %s" % (", ".join(["%.2f" % (np.median(rr.tsarray[:,i])) for i in range(len(rr.labels))]))
-# 	print "     Std shifts : %s" % (", ".join(["%.2f" % (np.std(rr.tsarray[:,i])) for i in range(len(rr.labels))]))
-# 	
-# 	plt.show()
-# 		
-# 
-# 
-# 
-# 
-# 
-# def couplehists(rrlist, r=10.0, nbins=50):
-# 	"""
-# 	Comparing the delay distributions from different run result objects.
-# 	
-# 	rrlist : a list of runresults object, where each object is usually provided by collect().
-# 	I will plot each rr of this list in a different colour.
-# 		
-# 	r = a radius (we make plots around the delays from the truth ?)
-# 	"""
-# 		
-# 	n = rrlist[0].tsarray.shape[1]
-# 	
-# 	labels = rrlist[0].labels
-# 	trueshifts = rrlist[0].trueshifts
-# 	
-# 	for rr in rrlist:
-# 		if rr.labels != labels:
-# 			raise RuntimeError("Don't ask me to overplot runresults of different curves !")
-# 		if rr.trueshifts != trueshifts:
-# 			print "Warning : I use the trueshift of the first rr to set the ranges."
-# 			#raise RuntimeError("Don't ask me to overplot runresults with different true shifts !")
-# 	
-# 	colours = ["blue", "red", "#008800", "cyan", "gray"]
-# 	
-# 	fig = plt.figure(figsize=(16, 9))
-# 	fig.subplots_adjust(left = 0.03, right=0.95, bottom=0.05, top=0.9, wspace=0.2, hspace=0.2)
-# 
-# 	axisNum = 0
-# 	for i in range(n): # [A, B, C, D]
-# 	    for j in range(n):
-# 	        #print i, j
-# 	        if (i == 0) or (j == n-1) :
-# 	        	continue # No plot
-# 		axisNum += 1
-# 		if j >= i:
-# 			continue
-# 		
-# 		ax = plt.subplot(n-1, n-1, axisNum)
-# 		axscatter = ax.twinx()
-# 		
-# 		# Labels only for some plots :
-# 		#if j == 0:
-# 		#	plt.ylabel(labels[i])
-# 		#if i == n-1:
-# 		#	plt.xlabel(labels[j])
-# 			
-# 		# Hide the y ticks :
-# 		ax.get_yaxis().set_ticks([])
-# 		
-# 		# Ranges to plot
-# 		truedelay = trueshifts[i] - trueshifts[j]
-# 		histrange = (truedelay - r, truedelay + r)
-# 		
-# 		# Delay label
-# 		delaylabel="%s%s" % (labels[j], labels[i])
-# 		
-# 	    	for irr, rr in enumerate(rrlist):
-# 	    		# We will express the delays "i - j"
-# 	    		delays = rr.tsarray[:,i] - rr.tsarray[:,j]
-# 	    		
-# 			#(counts, bins, patches) = ax.hist(delays, bins=nbins, range=histrange, histtype="step", color=colours[irr % len(colours)], normed=True)
-# 			(counts, bins, patches) = ax.hist(delays, bins=nbins, range=histrange, histtype="bar", color=colours[irr % len(colours)], alpha = 0.4, lw=0, normed=True)
-# 			
-# 			axscatter.scatter(delays, rr.qs, s=1, facecolor=colours[irr % len(colours)], lw = 0)
-# 
-# 			# We plot the true shifts individually for each rr :
-# 			#truedelay = rr.trueshifts[i] - rr.trueshifts[j]
-# 			#plt.axvline(x=truedelay, linewidth=1, color=colours[irr % len(colours)])
-# 			
-# 		plt.axvline(x=truedelay, linewidth=1, color='black')
-# 		
-# 		plt.xlim(histrange)
-# 		plt.annotate(delaylabel, xy=(0.03, 0.88),  xycoords='axes fraction', fontsize=12, color="black")
-# 		
-# 	for irr, rr in enumerate(rrlist):
-# 	
-# 		labeltxt = "%s (%i)" % (getattr(rr, 'simset', 'NoName'), rr.tsarray.shape[0])
-# 		plt.figtext(x = 0.1 + 0.2*irr, y = 0.93, s = labeltxt, color=colours[irr % len(colours)])	
-# 
-# 		
-# 		print 'Plotting simset "%s"' % labeltxt
-# 		print "     Labels : %s" % (", ".join(rr.labels))
-# 		print "     Median shifts : %s" % (", ".join(["%.2f" % (np.median(rr.tsarray[:,i])) for i in range(len(rr.labels))]))
-# 		print "     Std shifts : %s" % (", ".join(["%.2f" % (np.std(rr.tsarray[:,i])) for i in range(len(rr.labels))]))
-# 		
-# 	plt.show()
-# 		
