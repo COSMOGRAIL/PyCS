@@ -204,7 +204,7 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 				plt.xticks(fontsize=15)
 				xlabelfontsize=18
 			else:
-				xlabelfontsiye=14
+				xlabelfontsize=14
 
 			if i == n-1:
 				plt.xlabel(xlabel, fontsize=xlabelfontsize)
