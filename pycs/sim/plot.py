@@ -45,7 +45,7 @@ class delaycontainer:
 		self.yshift = 0.0 # allows to "group" measurements
 
 
-def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showlegend=True, text=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename=None, refshifts=None, refdelays=None, legendfromrefdelays=False, hatches=None, centershifts=None, ymin=0.2, hlines=None, tweakeddisplay=False):
+def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showlegend=True, text=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename=None, refshifts=None, refdelays=None, legendfromrefdelays=False, hatches=None, centershifts=None, ymin=0.2, hlines=None, tweakeddisplay=False, blindness=False):
 	"""
 	Plots delay measurements from different methods, telescopes, sub-curves, etc in one single plot.
 	For this I use only ``delaycontainer`` objects, i.e. I don't do any "computation" myself.
@@ -137,10 +137,19 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 			paneldelays = []
 			
 			# Going throuh plotlist :
+
+			if blindness:
+				blinddelays = []
+				for (ipl,(delays, errors)) in enumerate(plotlist):
+					blinddelays.append([meas for meas in delays.data if meas["label"] == delaylabel][0]["mean"])
+					blindmean = np.mean(blinddelays)
+
 			for (ipl,(delays, errors)) in enumerate(plotlist):
 				
 				# Getting the delay for this particular panel
 				delay = [meas for meas in delays.data if meas["label"] == delaylabel][0]
+				if blindness:
+					delay["mean"] -= blindmean
 				error = [meas for meas in errors.data if meas["label"] == delaylabel][0]
 				
 				paneldelays.append(delay["mean"])
@@ -183,16 +192,24 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 		
 			plt.xlim((centerdelay - rplot, centerdelay + rplot))
 			plt.ylim((ymin, nmeas+1.5))
-			
+
+			# Blindness display options
+			if blindness:
+				xlabel = "Blind delay [day]"
+			else:
+				xlabel = "Delay [day]"
+
+			# Tweaked display option (should disappear for an uniform display !!)
+			if tweakeddisplay:
+				plt.xticks(fontsize=15)
+				xlabelfontsize=18
+			else:
+				xlabelfontsiye=14
+
 			if i == n-1:
-				if tweakeddisplay:
-					plt.xlabel("Delay [day]", fontsize=18)
-					plt.xticks(fontsize=15)
-				else:
-					plt.xlabel("Delay [day]", fontsize=14)
+				plt.xlabel(xlabel, fontsize=xlabelfontsize)
+
 			if n != 2: # otherwise only one panel, no need
-				if tweakeddisplay:
-					plt.xticks(fontsize=15)
 				plt.annotate(delaylabel, xy=(0.03, 0.88-txtstep),  xycoords='axes fraction', fontsize=14, color="black")
 	
 			if refshifts != None:
@@ -217,7 +234,7 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 			if hlines != None:
 				for hline in hlines:
 					plt.axhline(hline, lw=0.5, color="gray", zorder=-30)
-					
+
 
 	
 	# The "legend" :
@@ -249,7 +266,7 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 	
 
 
-def newdelayplot2(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showlegend=True, text=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename=None, refshifts=None, refdelays=None, legendfromrefdelays=False, hatches=None, centershifts=None, ymin=0.2, hlines=None):
+def newdelayplot2(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showlegend=True, text=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename="screen", refshifts=None, refdelays=None, legendfromrefdelays=False, hatches=None, centershifts=None, ymin=0.2, hlines=None):
 	"""
 	Plots delay measurements from different methods, telescopes, sub-curves, etc in one single plot.
 	For this I use only ``delaycontainer`` objects, i.e. I don't do any "computation" myself.
@@ -498,7 +515,7 @@ def newdelayplot2(plotlist, rplot=7.0, displaytext=True, hidedetails=False, show
 			plt.figtext(x=line[0], y=line[1], s=line[2], **line[3])
 
 
-	if filename==None:
+	if filename=="screen":
 		plt.show()
 
 	else:
@@ -514,7 +531,7 @@ def normal(x, mu, sigma):
 	return (1.0/np.sqrt(2.0*np.pi*sigma*sigma)) * np.exp( - (x - mu)**2/(2*sigma*sigma))
 
 
-def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None, title=None, ytitle=0.95, niceplot=False, displaytext=True, figsize=(16, 9), left = 0.06, right=0.95, bottom=0.065, top=0.95, wspace=0.2, hspace=0.2, txtstep=0.04, majorticksstep=2, hideyaxis=True, trueshifts=None, filename=None, dataout=False):
+def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None, title=None, xtitle=0.5, ytitle=0.95, titlesize=18, niceplot=False, displaytext=True, figsize=(16, 9), left = 0.06, right=0.95, bottom=0.065, top=0.95, wspace=0.2, hspace=0.2, txtstep=0.04, majorticksstep=2, hideyaxis=True, trueshifts=None, filename=None, dataout=False, blindness=False):
 	"""
 	Comparing the delay distributions from different run result objects.
 	
@@ -572,9 +589,9 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 			
 			if i == n-1:
 				if n == 2: # Only one panel -> we write the object names into the xlabel
-					plt.xlabel("Delay %s%s [day]" % (labels[j], labels[i]))			
+					plt.xlabel("Delay %s%s [day]" % (labels[j], labels[i]), fontsize=14)
 				else:
-					plt.xlabel("Delay [day]")
+					plt.xlabel("Delay [day]", fontsize=14)
 			if showqs:
 				axscatter = ax.twinx()
 				
@@ -646,7 +663,7 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 					#print rr.name
 					#print delaylabel + "   " + delaytext
 					#ax.text(meddelay, np.max(y)/2.0, "%.1f +/- %.1f" % (meddelay, stddelay), horizontalalignment = "center", color = rr.plotcolour)
-					ax.annotate(delaytext, xy=(0.04, 0.75 - 0.1*irr),  xycoords='axes fraction', color = rr.plotcolour, fontsize=8)
+					ax.annotate(delaytext, xy=(0.04, 0.7 - 0.12*irr),  xycoords='axes fraction', color = rr.plotcolour, fontsize=10)
 					
 					
 			plt.xlim(histrange)
@@ -663,11 +680,23 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 			if hideyaxis:
 				ax.set_yticks([])
 
+			# make the ticks a little bit bigger than default
+			plt.xticks(fontsize=13)
+
+			# enforce blindness if wanted, by modifying the xticks labels (not touching the data)
+			if blindness:
+				labels = ax.xaxis.get_ticklabels()
+				locs = ax.xaxis.get_ticklocs()
+				meanloc = np.mean(locs)
+				blindlabels = []
+				for loc, label in zip(locs, labels):
+					blindlabels.append(str(loc-meanloc))
+				ax.xaxis.set_ticklabels(blindlabels)
 
 			# Looked ok on big plots :
 			#plt.annotate(delaylabel, xy=(0.03, 0.88),  xycoords='axes fraction', fontsize=12, color="black")
 			if n != 2: # otherwise we have only one single panel
-				plt.annotate(delaylabel, xy=(0.05, 0.84),  xycoords='axes fraction', fontsize=12, color="black")
+				plt.annotate(delaylabel, xy=(0.05, 0.84),  xycoords='axes fraction', fontsize=14, color="black")
 			
 			if trueshifts != None:
 				truedelay = trueshifts[i] - trueshifts[j]
@@ -702,7 +731,7 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 	
 	
 	if title != None:
-		plt.figtext(x = 0.5, y = ytitle, s = title, horizontalalignment="center", color="black", fontsize=18)
+		plt.figtext(x = xtitle, y = ytitle, s = title, horizontalalignment="center", color="black", fontsize=titlesize)
 
 	if filename == None:
 		plt.show()
@@ -1207,9 +1236,7 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 	return retdict
 
 
-
-
-def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plotrods=True, alpharods=0.2, ploterrorbars=True, sidebyside=True, errorrange=None, binclip=False, binclipr=10.0, title=None, xtitle=0.75, ytitle=0.95, titlesize=30, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, displayn=True, filename=None, dataout=False, tweakeddisplay=False):
+def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plotrods=True, alpharods=0.2, ploterrorbars=True, sidebyside=True, errorrange=None, binclip=False, binclipr=10.0, title=None, xtitle=0.75, ytitle=0.95, titlesize=30, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, displayn=True, filename=None, dataout=False, tweakeddisplay=False, blindness=False):
 	"""
 	
 	Plots measured delays versus true delays
@@ -1395,6 +1422,17 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plo
 			
 			if n != 2: # otherwise we have only 1 delay and panel
 				plt.annotate(delaylabel, xy=(0.03, 0.88-txtstep),  xycoords='axes fraction', fontsize=14, color="black")
+
+
+			# enforce blindness if wanted, by modifying the xticks labels (not touching the data)
+			if blindness:
+				labels = ax.xaxis.get_ticklabels()
+				locs = ax.xaxis.get_ticklocs()
+				meanloc = np.mean(locs)
+				blindlabels = []
+				for loc, label in zip(locs, labels):
+					blindlabels.append(str(loc-meanloc))
+				ax.xaxis.set_ticklabels(blindlabels)
 			
 			# That's it for this panel, back to the total figure :
 	
