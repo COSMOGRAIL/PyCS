@@ -330,11 +330,7 @@ def draw(lcs, spline, shotnoise=None, shotnoisefrac=1.0, tweakml=None, scaletwea
 	
 	return fakelcs
 	
-	
 
-
-
-		
 def multidraw(lcs, spline=None, optfctnots=None, onlycopy=False, n=20, npkl=5, simset="draw", simdir=None, shotnoise=None, shotnoisefrac=1.0, truetsr=8.0, tweakml=None, scaletweakresi=True, tweakspl=None, shuffle=True, verbose=True, trace=False):
 	"""
 	Even higher wrapper to produce mock + tweaked lightcurves, and save them into a directory (as pickle files),

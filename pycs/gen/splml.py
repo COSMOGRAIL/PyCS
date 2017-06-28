@@ -229,33 +229,45 @@ class SplineML():
 	# YES, there is place for setparams and getparams here !!!
 	# This allows to use spline ML with dispersion techniques.
 	# Hmm, I'm directly accessing the spline, easier.
-	
 
-def addtolc(lc, n = 5, knotstep=None, stab=True, stabgap=30.0, stabstep=3.0, stabmagerr=1.0,
+
+def addtolc(lc, targetlc=None, n = 5, knotstep=None, stab=True, stabgap=30.0, stabstep=3.0, stabmagerr=1.0,
 	bokeps = 10.0, boktests = 10, bokwindow = None):
 	"""
 	Adds a SplineML to the lightcurve.
 	SplineML splines have NO external stabilization points (stabext = 0.0) !
 	We ignore any mask of the lc, cut it before putting this ML.
 	This is just about putting things in place. Of course we cannot optimize anything here !
-	
+
+	If targetlc is not None, then pass me another light curve that already have a microlensing spline. I will "copy" that microlensing to your lc and adjust the knots coefficients accordingly.
+
 	The stab stuff inserts stab points into gaps only.
-	
+
+
 	We use uniknots, n is the number of uniform intervals you want.
 	Or specify knotstep : if this is specified, I don't use n.
 	
 	::
 	
 		pycs.gen.splml.addtolc(l, knotstep=200)
-		
 
 	"""
-
 	lcjds = lc.getjds()
 	jdoffset = lcjds[0] # We can do this, as jds is sorted.
 	lcjds -= jdoffset # so the first true datapoint of a ML spline is at 0.0
-	
-	dp = pycs.gen.spl.DataPoints(lcjds, np.zeros(len(lcjds)), np.ones(len(lcjds)), splitup=True, sort=True,
+
+	if targetlc == None:
+		dpmags = np.zeros(len(lcjds))
+		dpmagerrs = np.ones(len(lcjds))
+
+	else:
+		targetml = targetlc.ml
+		assert targetml.mltype == "spline"
+		dpmags = targetml.spline.eval(lcjds)
+		dpmags -= np.mean(dpmags)
+		dpmagerrs = np.ones(len(lcjds)) * np.median(targetml.spline.datapoints.magerrs) # This is a bit arbitrary...but seems we don't really care
+
+	dp = pycs.gen.spl.DataPoints(lcjds, dpmags, dpmagerrs, splitup=True, sort=True,
 		stab=stab, stabext=0.0, stabgap=stabgap, stabstep=stabstep, stabmagerr=stabmagerr)
 	
 	s = pycs.gen.spl.Spline(dp, bokeps=bokeps, boktests=boktests, bokwindow=bokwindow)
@@ -270,7 +282,11 @@ def addtolc(lc, n = 5, knotstep=None, stab=True, stabgap=30.0, stabstep=3.0, sta
 	# And we add the SplineML to our curve :
 	#lc.addml(SplineML(s, stab=stab, stabgap=stabgap, stabstep=stabstep, stabmagerr=stabmagerr))
 	lc.addml(SplineML(s))
-	
+
+	# Update the knots coeffs if you copied the ml from targetlc
+	if targetlc != None:
+		lc.ml.spline.optc()
+
 	
 # 	if knottype == "uni":
 # 		spline.uniknots(nint)

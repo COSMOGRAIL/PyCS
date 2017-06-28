@@ -4,6 +4,7 @@ These are the function to pass them to draw.draw or draw.multidraw.
 """
 
 import pycs.sim.src
+from numpy import arange, ones, array
 #import pycs.gen.splml
 
 
@@ -82,7 +83,72 @@ def tweakspl(spline, beta=-2.5, sigma=0.03, fmin=1/30.0, fmax=1/5.0, hann=False,
 	return newspline
 	
 
+def addspl(spl1, spl2, op='add'):
+	"""
+	Give me two splines, I return the addition/substraction of the two: spl1 +/- spl2
+
+	Important: I assume that the two splines have the correct jds ! The resulting spline
 	
-	
+	:param spl1: first spline 
+	:param spl2: second spline
+	:param op: 'add' for addition, 'sub' for subtraction
+	:return: spline
+	"""
+
+	print "I'm NOT WORKING :("
+	return
+
+	src1 = pycs.sim.src.Source(spl1, sampling = 0.2)
+	src2 = pycs.sim.src.Source(spl2, sampling = 0.2)
+
+	newspline = spl1.copy() # deep copy, on which we will tweak the datapoints
+
+	# defines the range on which the addition/subtraction happens
+	minjd = max(src1.jdmin, src2.jdmin)
+	maxjd = min(src1.jdmax, src2.jdmax)
+
+	subjds = newspline.datapoints.jds
+	subjdsbf = [jd for jd in subjds if jd<minjd]
+	subjdsin = [jd for jd in subjds if jd>=minjd and jd <=maxjd]
+	subjdsaf = [jd for jd in subjds if jd>maxjd]
+
+	#subjds = arange(minjd, maxjd, step=0.2)
+	# IMPORTANT ! I have to make sure that the two spline "overlap" in magnitude at their extrema points...and that the transition is smooth...?
+
+
+	mags1 = src1.eval(subjdsin)
+	mags2 = src2.eval(subjdsin)
+	submagerrs = 0.001 * ones(subjds.shape) # default value, should not affect the following
+
+	if op == 'add':
+		submagsin = mags1 + mags2
+	elif op == "sub":
+		submagsin = mags1 - mags2
+
+	submags = []
+	for mags in [src1.eval(subjdsbf), submagsin, src1.eval(subjdsaf)]:
+		for m in mags:
+			submags.append(m)
+
+
+	submags = array(submags)
+
+	# Build a new spline from this new jds and mags
+	newdatapoints = pycs.gen.spl.DataPoints(jds=subjds, mags=submags, magerrs=submagerrs)
+	newspline = pycs.gen.spl.Spline(datapoints=newdatapoints, bokeps=0.2)
+	#newspline.updatedp(newdatapoints=newdatapoints, dpmethod="stretch") # Nope
+
+	newspline.uniknots(nint=0.2, n=False)
+	#newspline.buildbounds()
+	#newspline.optc()
+	#newspline.bok()
+
+	#spl1.display()
+	newspline.display()
+	pycs.gen.lc.display([], [spl1, spl2, newspline])
+
+	print "allok"
+	import sys
+	sys.exit()
 	
 

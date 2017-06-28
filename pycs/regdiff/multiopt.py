@@ -26,7 +26,7 @@ def opt_ts(lcs, method="weights", pd=5, covkernel="matern", pow=1.5, amp=2.0, sc
 		print "Starting regdiff opt_ts, initial time delays :"
 		print "%s" % (pycs.gen.lc.getnicetimedelays(lcs, separator=" | "))	
 	
-	
+
 	rss = [pycs.regdiff.rslc.factory(l, pd=pd, covkernel=covkernel, pow=pow, amp=amp, scale=scale, errscale=errscale) for l in lcs]
 	# The time shifts are transfered to these rss, any microlensing is disregarded
 

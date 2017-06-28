@@ -342,7 +342,7 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 		#	print item["zruns"]
 
 
-	return stats
+
 	# Now we proceed with making plots.
 	
 	# The plots of the residuals statistics, one for each curve :
@@ -457,7 +457,7 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 			plotresiduals([optorigrlcs, optmockrlcs], jdrange=plotjdrange, nicelabel=False, showlegend=False, showsigmalines = False, errorbarcolour = "#999999", filename="fig_anaoptdrawn_%s_%s_resi_%i.pdf" % (simset, optset, i+1))	
 
 	
-	
+	return stats
 	
 	
 

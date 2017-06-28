@@ -1927,27 +1927,29 @@ def display(lclist=[], splist=[],
 		showlegend=False
 		showdates=True
 		errorbarcolour="#777777"
-		markersize=3.0
+		markersize=5.0
 		capsize=0
 		jdmintickstep=50
 		magmintickstep=0.2
 		showgrid=True
 		transparent=False
 
-	elif style in ["2m2", "2m2showdelays"]:
+	elif "2m2" in style:
 		figsize=(10,5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
 		showlogo=False
 		nicefont=True
 		showdelays=False
-		if style == "2m2showdelays":
+		if "showdelays" in style:
 			showdelays = True
 		showlegend=False
 		showdates=False
 		errorbarcolour="#777777"
-		markersize=3.0
+		markersize=5.0
 		capsize=0
 		jdmintickstep=50
+		if "largeticks" in style:
+			jdtickstep=100
 		magmintickstep=0.2
 		showgrid=False
 		transparent=False
@@ -2178,6 +2180,9 @@ def display(lclist=[], splist=[],
 	# Astronomers like minor tick marks :
 	minorxLocator = MultipleLocator(jdmintickstep)
 	axes.xaxis.set_minor_locator(minorxLocator)
+	if "largeticks" in style:
+		majorxLocator = MultipleLocator(jdtickstep)
+		axes.xaxis.set_major_locator(majorxLocator)
 	#minorLocator = MultipleLocator(1) # so to have a tick every day
 	#axes.xaxis.set_minor_locator(minorLocator)
 	

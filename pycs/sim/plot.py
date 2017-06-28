@@ -51,6 +51,7 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 	For this I use only ``delaycontainer`` objects, i.e. I don't do any "computation" myself.
 	
 	:param plotlist: Give me a list of tuples (delays, errorbars), where delays and errorbars are delaycontainer objects as written into pkl files by ``hists`` and ``meanvstrue``.
+	NEW : plotlist delaycont can handle asymmetric errors (e.g. to seamlessly compare pycs with other papers' results). Instead of the "tot" key, new "plus" and "minus" keys are used.
 	:type plotlist: list
 	
 	:param rplot: radius of delay axis, in days.
@@ -138,6 +139,11 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 			
 			# Going throuh plotlist :
 
+			if tweakeddisplay:
+				labelfontsize = 18
+			else:
+				labelfontsize = 14
+
 			if blindness:
 				blinddelays = []
 				for (ipl,(delays, errors)) in enumerate(plotlist):
@@ -155,8 +161,14 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 				paneldelays.append(delay["mean"])
 				
 				ypos = nmeas - ipl + delays.yshift
-				
-				plt.errorbar([delay["mean"]], [ypos], yerr=None, xerr=error["tot"], fmt='-', ecolor=delays.plotcolour, elinewidth=1.5, capsize=3, barsabove=False)
+
+				# treat two cases: symmetric error ("tot" kw) and asymmetric ("plus" and "minus" kw)
+
+				if "tot" in error: # then it is symmetric
+					xerr = error["tot"]
+				else:
+					xerr = np.array([[error["plus"], error["minus"]]]).T # damn you, stupid matplotlib
+				plt.errorbar([delay["mean"]], [ypos], yerr=None, xerr=xerr, fmt='-', ecolor=delays.plotcolour, elinewidth=1.5, capsize=3, barsabove=False)
 				if showran:
 					plt.errorbar([delay["mean"]], [ypos], yerr=None, xerr=error["ran"], fmt='-', ecolor=delays.plotcolour, elinewidth=0.5, capsize=2, barsabove=False)
 
@@ -170,17 +182,26 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 					plt.plot([delay["mean"] - error["bias"]], [ypos], marker="x", markersize=delays.markersize, markeredgecolor=delays.plotcolour, color=delays.plotcolour)
 
 				if hidedetails or (error["ran"] < 0.001 and error["sys"] < 0.001): # Then we ommit to write them.
-					delaytext = r"$%+.1f \pm %.1f$" % (delay["mean"], error["tot"])
+					if "tot" in error:
+						delaytext = r"$%+.1f \pm %.1f$" % (delay["mean"], error["tot"])
+					else:
+						delaytext = r"$%+.1f^{+%.1f}_{-%.1f}$" % (delay["mean"], error["plus"], error["minus"])
 				else:
-					delaytext = r"$%+.1f \pm %.1f\,(%.1f, %.1f)$" % (delay["mean"], error["tot"], error["ran"], error["sys"])
+					if "tot" in error:
+						delaytext = r"$%+.1f \pm %.1f\,(%.1f, %.1f)$" % (delay["mean"], error["tot"], error["ran"], error["sys"])
+					else: # no sys and random for the asymmetric guys...
+						delaytext = r"$%+.1f^{+%.1f}_{-%.1f}$" % (delay["mean"], error["plus"], error["minus"])
 				
 				if n==2: # For doubles, we include the technique name into the txt :
 					delaytext = r"%s : " % (delays.name) + delaytext	
 			
 				if displaytext:
-					ax.annotate(delaytext, xy=(delay["mean"], ypos + 0.3), color = delays.plotcolour, horizontalalignment="center", fontsize=14)
-				
-				print "%45s : %+6.2f +/- %.2f (%.2f, %.2f)" % (delays.name, delay["mean"], error["tot"], error["ran"], error["sys"])
+					ax.annotate(delaytext, xy=(delay["mean"], ypos + 0.3), color = delays.plotcolour, horizontalalignment="center", fontsize=labelfontsize)
+
+				if "tot" in error:
+					print "%45s : %+6.2f +/- %.2f (%.2f, %.2f)" % (delays.name, delay["mean"], error["tot"], error["ran"], error["sys"])
+				else:
+					print "%45s : %+6.2f + %.2f - %.2f" % (delays.name, delay["mean"], error["plus"], error["minus"])
 		
 			print "#"*80
 			# Now this panel is done. Some general settings :
@@ -739,7 +760,7 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 		plt.savefig(filename)
 
 
-def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclipr=10.0, figsize=(13, 13), left=0.06, right=0.97, top=0.97, bottom=0.04, wspace=0.3, hspace=0.3, method='indepbin', minsamples=10, printcovmat=False, detailplots=False, filepath=None, verbose=True):
+def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclipr=10.0, figsize=(13, 13), left=0.06, right=0.97, top=0.97, bottom=0.04, wspace=0.3, hspace=0.3, method='indepbin', minsamples=10, printdetails=True, printcovmat=True, detailplots=False, filepath=None, verbose=True):
 
 
 	assert (method in ['depbin', 'indepbin'])
@@ -865,6 +886,10 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 			else:
 				ax.annotate(delaylabel, xy=(0.78, 0.08),  xycoords='axes fraction', ha="center")
 			ax.set_xlim(plotrange)
+
+			majorLocator = MultipleLocator(int(r/2.0)+1)
+			ax.xaxis.set_major_locator(majorLocator)
+
 			ax.set_title(r'sys=%.2f | ran=%.2f' % (syserror, randerror)+'\n'+'tot=%.2f' % toterror, fontsize=10)
 
 
@@ -1053,7 +1078,7 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 			for ind, xbinlim in enumerate(xbinlims2d):
 				ax2.axvline(xbinlim, linestyle='--', color='black', alpha=0.5)
 				ax2.axhline(ybinlims2d[ind], linestyle='--', color='black', alpha=0.5)
-			showpoints=True
+			showpoints=False
 			if showpoints:
 				ax2.scatter(xtruetds, ytruetds, s=2, facecolor=rrlist[0].plotcolour, lw=0, alpha=0.1)
 
@@ -1168,38 +1193,38 @@ def newcovplot(rrlist, r=5, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 	text += '2D binning:  %ix%i bins' % (nbins2d, nbins2d) + '\n\n'
 	text += 'Min. number of samples in 2D binning:  %i samples' % minsamples + '\n\n\n\n'
 
+	if printdetails:
+		if len(covmat[0]) == 6:
+			mylist =  [str(e) for e in covmat[0]]+\
+					  [str(e) for e in covmat[1]]+\
+					  [str(e) for e in covmat[2]]+\
+					  [str(e) for e in covmat[3]]+\
+					  [str(e) for e in covmat[4]]+\
+					  [str(e) for e in covmat[5]]
+			mylist = [float(e) for e in mylist]
+		else:
+			print "Cov. matrix display not defined for matrices other than 6x6 !"
+			printcovmat = False
 
-	if len(covmat[0]) == 6:
-		mylist =  [str(e) for e in covmat[0]]+\
-				  [str(e) for e in covmat[1]]+\
-				  [str(e) for e in covmat[2]]+\
-				  [str(e) for e in covmat[3]]+\
-				  [str(e) for e in covmat[4]]+\
-				  [str(e) for e in covmat[5]]
-		mylist = [float(e) for e in mylist]
-	else:
-		print "Cov. matrix display not defined for matrices other than 6x6 !"
-		printcovmat = False
+		if printcovmat:
+			text += '     AB        AC        AD        BC        BD        CD \n'
+			text += '     '+'-----'*12+'\n'
+			text += 'AB | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n'\
+					'AC | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
+					'AD | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
+					'BC | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
+					'BD | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
+					'CD | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
+					% (mylist[0], mylist[1], mylist[2], mylist[3], mylist[4], mylist[5]
+											   , mylist[6], mylist[7], mylist[8], mylist[9], mylist[11], mylist[11]
+											   , mylist[12], mylist[13], mylist[14], mylist[15], mylist[16], mylist[17]
+											   , mylist[18], mylist[19], mylist[20], mylist[21], mylist[22], mylist[23]
+											   , mylist[24], mylist[25], mylist[26], mylist[27], mylist[28], mylist[29]
+											   , mylist[30], mylist[31], mylist[32], mylist[33], mylist[34], mylist[35])
 
-	if printcovmat:
-		text += '     AB        AC        AD        BC        BD        CD \n'
-		text += '     '+'-----'*12+'\n'
-		text += 'AB | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n'\
-				'AC | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
-				'AD | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
-				'BC | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
-				'BD | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
-				'CD | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
-				% (mylist[0], mylist[1], mylist[2], mylist[3], mylist[4], mylist[5]
-										   , mylist[6], mylist[7], mylist[8], mylist[9], mylist[11], mylist[11]
-										   , mylist[12], mylist[13], mylist[14], mylist[15], mylist[16], mylist[17]
-										   , mylist[18], mylist[19], mylist[20], mylist[21], mylist[22], mylist[23]
-										   , mylist[24], mylist[25], mylist[26], mylist[27], mylist[28], mylist[29]
-										   , mylist[30], mylist[31], mylist[32], mylist[33], mylist[34], mylist[35])
-
-		axinv.annotate(text, xy=(0.7 * (ncouples-1), -2.0),  xycoords='axes fraction', ha="left")
-	else:
-		axinv.annotate(text, xy=(0.7 * (ncouples-1), -1.0),  xycoords='axes fraction', ha="left")
+			axinv.annotate(text, xy=(0.7 * (ncouples-1), -2.0),  xycoords='axes fraction', ha="left")
+		else:
+			axinv.annotate(text, xy=(0.7 * (ncouples-1), -1.0),  xycoords='axes fraction', ha="left")
 
 
 	retdict["r"] = r

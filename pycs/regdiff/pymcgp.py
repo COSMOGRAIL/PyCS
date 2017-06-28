@@ -76,13 +76,14 @@ def regression(x, y, yerr, priormeanfct, covkernel='matern', pow=1.5, amp=2.0, s
 	pymc.gp.GPutils.observe(M, C, obs_mesh=obs_mesh, obs_V = obs_V, obs_vals = obs_vals)
 
 	def outfct(jds):
+		# Ok, so here is the issue. That fucker GPutils.point_eval does not want to be called through a process from multiprocess.Pool. It just stops its execution, and stares blankly at you.
 		(m_out, v_out) = pymc.gp.GPutils.point_eval(M, C, jds)
-		
 		newy = m_out
 		newyerr = np.sqrt(v_out)
 		
 		return (newy, newyerr)
-	
+
+
 	#print "Done"
 	return outfct
 

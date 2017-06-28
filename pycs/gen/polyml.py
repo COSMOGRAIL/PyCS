@@ -188,7 +188,6 @@ class seasonfct:
 		"""
 		Returns a longer description of the object.
 		"""
-		
 		if self.mltype == "poly":
 		
 			strlist=["Plain poly with %s params on %s :" % (str(self), str(self.season))]
@@ -233,6 +232,7 @@ class seasonfct:
 			raise RuntimeError, "Wrong number of parameters !"
 		
 	def getparams(self):
+		"MAIS MERDDDE"
 		return self.params 	# perhaps put a copy here ? Let's see how we use this.
 					# it would be nice to return pointers one day...
 		
