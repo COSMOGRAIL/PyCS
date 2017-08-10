@@ -127,7 +127,7 @@ class runresults:
 		
 		"""
 		
-		if qs != None:
+		if qs is not None:
 			self.qs = qs
 			if qs.shape[0] != len(lcslist):
 				raise RuntimeError("These qs don't have the right length !")
@@ -274,7 +274,7 @@ def collect(directory = "./test", plotcolour="#008800", name=None):
 	#		rr.qs = None
 	jrr = pycs.sim.run.joinresults(rrlist)
 	jrr.plotcolour = plotcolour
-	if name != None:
+	if name is not None:
 		jrr.name = name
 	print "OK, I have collected %i runs from %s" % (len(jrr), jrr.name)
 	return jrr
