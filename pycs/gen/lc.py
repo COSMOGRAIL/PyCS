@@ -2180,9 +2180,11 @@ def display(lclist=[], splist=[],
 	# Astronomers like minor tick marks :
 	minorxLocator = MultipleLocator(jdmintickstep)
 	axes.xaxis.set_minor_locator(minorxLocator)
-	if "largeticks" in style:
-		majorxLocator = MultipleLocator(jdtickstep)
-		axes.xaxis.set_major_locator(majorxLocator)
+
+	if style:
+		if "largeticks" in style:
+			majorxLocator = MultipleLocator(jdtickstep)
+			axes.xaxis.set_major_locator(majorxLocator)
 	#minorLocator = MultipleLocator(1) # so to have a tick every day
 	#axes.xaxis.set_minor_locator(minorLocator)
 	
