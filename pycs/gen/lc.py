@@ -1943,15 +1943,15 @@ def display(lclist=[], splist=[],
 		if "showdelays" in style:
 			showdelays = True
 		showlegend=False
-		showdates=False
+		#showdates=False
 		errorbarcolour="#777777"
-		markersize=5.0
+		markersize=7.0
 		capsize=0
 		jdmintickstep=50
 		if "largeticks" in style:
 			jdtickstep=100
 		magmintickstep=0.2
-		showgrid=False
+		#showgrid=False
 		transparent=False
 
 		
@@ -1979,7 +1979,6 @@ def display(lclist=[], splist=[],
 		showlogo=False
 		nicefont=True
 		showdelays=False
-		showlegend=True
 		showdates=True
 		errorbarcolour="#777777"
 		markersize=5.0
