@@ -423,7 +423,7 @@ We come to the last point of this first chapter : what to do if your colleague d
 It is easy to write lightcurve objects into plain rdb files, using :py:meth:`pycs.gen.lc.lightcurve.rdbexport` (click for details). This method nicely works together with :py:func:`pycs.gen.lc.rdbimport`, in the sense that "written" lightcurves can then be "read" again :
 ::
 	
-	l.rdbexport(filepath="test.txt", properties=["fwhm", "ellipticity"]) # l is a lightcurve object.
+	l.rdbexport(filename="test.txt", properties=["fwhm", "ellipticity"]) # l is a lightcurve object.
 	
 	imported_l = pycs.gen.lc.rdbimport(filepath="test.txt", telescopename="Test", object="A", plotcolour="blue")
 
@@ -439,6 +439,6 @@ To see what properties are available, remember that you can use
 
 .. note:: As suggested by these functions, you should always write one file per lightcurve, when working with pycs. This is indeed natural, as you might have deleted or masked different points of a lightcurve. PyCS can perfectly process lightcurves of different lengths ! But on some occasions, you may want to to write several lightcurves into one single flat ascii file. For instance to submit to CDS... See function :py:func:`pycs.gen.util.multilcsexport`.
 
-As you probably expext, when writing a lightcurve object into an ASCII file, all "shifts" (and also microlensing models which we will see later) get applied to the datapoints before these are written to disk. Of course, when you then read the lightcurve again from this ASCII file, PyCS will no longer be aware that your lightcurve has previously been shifted.
+As you probably expect, when writing a lightcurve object into an ASCII file, all "shifts" (and also microlensing models which we will see later) get applied to the datapoints before these are written to disk. Of course, when you then read the lightcurve again from this ASCII file, PyCS will no longer be aware that your lightcurve has previously been shifted.
 
 
