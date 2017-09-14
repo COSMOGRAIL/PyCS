@@ -14,14 +14,14 @@ The idea is the following : you provide some real light curves, and a spline usu
 
 The functions of the module :py:mod:`pycs.sim.draw` will use your curves' time/mag/flux shifts, as well as their sampling, errorbars, and microlensing, to draw mock curves *from the spline you give them*. This means that if we would **not** add noise to these mock curves, they would *perfectly match to the spline*, given all the shifts that your real curves had.
 
-Here comes an example. The function to "manually" draw some mock curves has the funny name :py:func:`pycs.sim.draw.draw`. It takes a list of light curves as well as a spline as input, and returns a corresponding list of mocke curves.
+Here comes an example. The function to "manually" draw some mock curves has the funny name :py:func:`pycs.sim.draw.draw`. It takes a list of light curves as well as a spline as input, and returns a corresponding list of mock curves. To use this option, and for practical reasons that will become clear later, we need to "save" the residuals (:py:func:`pycs.sim.draw.saveresiduals`) of your lcs before drawing the mock curves.
 
 ::
 	
 	(lcs, spline) = pycs.gen.util.readpickle("optspl.pkl")
 	# Some lightcurves, and a spline to play with.
 	
-	
+	pycs.sim.draw.saveresiduals(lcs, spline)
 	mocklcs = pycs.sim.draw.draw(lcs, spline, shotnoise=None)
 	# We draw our first mock curves, here without adding any noise !
 		
@@ -53,7 +53,7 @@ Adding some noise
 -----------------
 
 Of course, for about any purpose, we want our mock curves to be noisy. The first trivial way to do this is to add some random "white" (i.e., independent) noise to each magnitude measurement.
-This could be done by drawing random gaussian errors according to the errorbars of each point (option shotnoise="magerrs" below), or, to avoid explicitly using the errorbars, we could use the actual observed mismatch between your shifted lcs and the spline. To use this option, and for practical reasons that will become clear later, we need to "save" the residuals (:py:func:`pycs.sim.draw.saveresiduals`) of your lcs before drawing the mock curves.
+This could be done by drawing random gaussian errors according to the errorbars of each point (option shotnoise="magerrs" below), or, to avoid explicitly using the errorbars, we could use the actual observed mismatch between your shifted lcs and the spline, which are the residuals we saved just before.
 
 ::
 	

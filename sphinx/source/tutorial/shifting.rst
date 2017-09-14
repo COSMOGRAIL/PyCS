@@ -199,7 +199,9 @@ See the paper for a more detailed description of the idea.
 In practice, as for the dispersion method and the splines, there is a simple top-level wrapper function, that you can add to your ``myopt.py`` :
 
 ::
-	
+	# we need to call the regdiff module explicitely
+	import pycs.regdiff
+
 	def regdiff(lcs):
 		return pycs.regdiff.multiopt.opt_ts(lcs, pd=5, verbose=True)
 
@@ -208,7 +210,7 @@ But before blindly using the above optimizer, it is a good idea to test by yours
 It is easy to perform a regression "manually", i.e. to obtain such a regularly sampled light curve starting from a usual light curve. The function that performs this GPR is :py:func:`pycs.regdiff.rslc.factory`, and you could for instance directly apply this directly to all your light curves :
 
 ::
-	
+
 	myrslcs = [pycs.regdiff.rslc.factory(l, pd=2) for l in lcs]
 	# As this can take a minute, you might want to save the results :
 	pycs.gen.util.writepickle(myrslcs, "myrslcs.pkl")
