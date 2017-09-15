@@ -339,8 +339,12 @@ class Spline():
 		self.lastr2stab = 0.0 # with stab points (usually not so interesting)
 		
 		# If you did not give me a t&c, I'll make some default ones for you :
-		if (self.t == None):
-			self.uniknots(2) # This also puts self.c to 0s
+		try:
+			if (self.t == None):
+				self.uniknots(2) # This also puts self.c to 0s
+		except:
+			if (len(self.t) == 0):
+				self.uniknots(2) # This also puts self.c to 0s
 		
 		
 	def __str__(self):
