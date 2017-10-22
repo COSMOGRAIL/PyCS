@@ -340,7 +340,7 @@ class Spline():
 		
 		# If you did not give me a t&c, I'll make some default ones for you :
 		try:
-			if (self.t == None):
+			if (self.t is None):
 				self.uniknots(2) # This also puts self.c to 0s
 		except:
 			if (len(self.t) == 0):

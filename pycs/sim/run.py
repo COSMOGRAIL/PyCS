@@ -282,7 +282,7 @@ def collect(directory = "./test", plotcolour="#008800", name=None):
 
 
 
-def multirun(simset, lcs, optfct, optset="multirun", tsrand=10.0, analyse = True, shuffle=True, keepopt=False, trace=False, verbose=True):
+def multirun(simset, lcs, optfct, optset="multirun", tsrand=10.0, analyse = True, shuffle=True, keepopt=False, trace=False, verbose=True, destpath = "./"):
 	"""
 	Top level wrapper to get delay "histograms" : I will apply the optfct to optimize the shifts
 	between curves that you got from :py:func:`pycs.sim.draw.multidraw`, and save the results in
@@ -320,7 +320,7 @@ def multirun(simset, lcs, optfct, optset="multirun", tsrand=10.0, analyse = True
 	"""
 	
 	# We look for the sims directory OH GOD THIS IS SO UGLY !
-	simdir = "sims_%s" % (simset)
+	simdir = destpath + "sims_%s" % (simset)
 	if not os.path.isdir(simdir):
 		raise RuntimeError("Sorry, I cannot find the directory %s" % simset)
 		
@@ -330,7 +330,7 @@ def multirun(simset, lcs, optfct, optset="multirun", tsrand=10.0, analyse = True
 	
 	
 	# We prepare the destination directory	
-	destdir = "sims_%s_opt_%s" % (simset, optset)
+	destdir = destpath+"sims_%s_opt_%s" % (simset, optset)
 	if verbose:
 		print "I'll write my results into the directory %s." % (destdir)
 	

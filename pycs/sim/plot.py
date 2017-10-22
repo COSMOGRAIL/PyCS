@@ -552,7 +552,7 @@ def normal(x, mu, sigma):
 	return (1.0/np.sqrt(2.0*np.pi*sigma*sigma)) * np.exp( - (x - mu)**2/(2*sigma*sigma))
 
 
-def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None, title=None, xtitle=0.5, ytitle=0.95, titlesize=18, niceplot=False, displaytext=True, figsize=(16, 9), left = 0.06, right=0.95, bottom=0.065, top=0.95, wspace=0.2, hspace=0.2, txtstep=0.04, majorticksstep=2, hideyaxis=True, trueshifts=None, filename=None, dataout=False, blindness=False):
+def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None, title=None, xtitle=0.5, ytitle=0.95, titlesize=18, niceplot=False, displaytext=True, figsize=(16, 9), left = 0.06, right=0.95, bottom=0.065, top=0.95, wspace=0.2, hspace=0.2, txtstep=0.04, majorticksstep=2, hideyaxis=True, trueshifts=None, filename=None, dataout=False, blindness=False, outdir = "./"):
 	"""
 	Comparing the delay distributions from different run result objects.
 	
@@ -727,7 +727,7 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 		for rr in rrlist:
 			
 			dc = delaycontainer(data = rr.tmpdata, name = rr.name, plotcolour = rr.plotcolour, objects=labels[:])	
-			pycs.gen.util.writepickle(dc, "%s_delays.pkl" % (rr.autoname))
+			pycs.gen.util.writepickle(dc, outdir+ "%s_delays.pkl" % (rr.autoname))
 			rr.tmpdata = None
 	
 	labelspacetop = 0.0
@@ -1261,7 +1261,7 @@ def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 	return retdict
 
 
-def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plotrods=True, alpharods=0.2, ploterrorbars=True, sidebyside=True, errorrange=None, binclip=False, binclipr=10.0, title=None, xtitle=0.75, ytitle=0.95, titlesize=30, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, displayn=True, filename=None, dataout=False, tweakeddisplay=False, blindness=False):
+def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plotrods=True, alpharods=0.2, ploterrorbars=True, sidebyside=True, errorrange=None, binclip=False, binclipr=10.0, title=None, xtitle=0.75, ytitle=0.95, titlesize=30, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, displayn=True, filename=None, dataout=False, tweakeddisplay=False, blindness=False, outdir = "./"):
 	"""
 	
 	Plots measured delays versus true delays
@@ -1465,7 +1465,7 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plo
 		for rr in rrlist:
 			
 			dc = delaycontainer(data = rr.tmpdata, name = rr.name, plotcolour = rr.plotcolour, objects=labels[:])	
-			pycs.gen.util.writepickle(dc, "%s_errorbars.pkl" % (rr.autoname))
+			pycs.gen.util.writepickle(dc,outdir+ "%s_errorbars.pkl" % (rr.autoname))
 			rr.tmpdata = None
 	
 	labelspacetop = 0.0

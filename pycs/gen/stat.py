@@ -256,7 +256,7 @@ def mapresistats(rls):
 
 
 
-def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npkl=1000, plots=True, nplots=3, r=0.11, plotjdrange=None, plotcurveindexes=None, showplot=False):
+def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npkl=1000, plots=True, nplots=3, r=0.11, plotjdrange=None, plotcurveindexes=None, showplot=False, directory = "./"):
 	"""
 	Not flexible but very high level function to analyse the spline-fit-residuals of drawn curves and comparing them to the
 	real observations.
@@ -288,7 +288,7 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 		curve["optorigrlc"] = optorigrlc
 	
 	# We read all the optimized mock curves :
-	pkls = sorted(glob.glob("sims_%s_opt_%s/*_opt.pkl" % (simset, optset)))
+	pkls = sorted(glob.glob(directory + "sims_%s_opt_%s/*_opt.pkl" % (simset, optset)))
 
 
 	optmocksplinelist = []
@@ -430,7 +430,7 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 			plt.axvline(curve["origresistats"]["zruns"], color="green", linewidth=2.0, alpha=0.7)
 			
 			plt.xlabel(r"$z_{\mathrm{r}}$", fontsize=18)
-			plt.xlim(-9.0, 2.0)
+			plt.xlim(-5.0, 5.0)
 			
 			#plt.text(-9.0, 0.85*plt.gca().get_ylim()[1], curve["optorigrlc"].object, fontsize=20)
 			plt.gca().get_yaxis().set_ticks([])
