@@ -165,7 +165,7 @@ We have 3 elementary methods to do this :
 
 ::
 	
-	l.shiftime(5.0) # Shifts the curve by +5 days with respect to its current shift.
+	l.shifttime(5.0) # Shifts the curve by +5 days with respect to its current shift.
 	l.shiftmag(-0.2) # Shifts the curve by -0.2 mags (i.e., it gets brighter) with respect to its current shift.
 	
 	l.shiftflux(2000.0) # "Shifts" the curve by +2000.0 electrons with respect to its current shift.
