@@ -760,8 +760,9 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 		plt.savefig(filename)
 
 
-def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclipr=10.0, figsize=(13, 13), left=0.06, right=0.97, top=0.97, bottom=0.04, wspace=0.3, hspace=0.3, method='indepbin', minsamples=10, printdetails=True, printcovmat=True, detailplots=False, filepath=None, verbose=True):
+def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclipr=10.0, figsize=(13, 13), left=0.06, right=0.97, top=0.97, bottom=0.04, wspace=0.3, hspace=0.3, method='indepbin', minsamples=10, showplots=True, printdetails=True, printcovmat=True, detailplots=False, filepath=None, verbose=True):
 
+	#TODO: there is no binclip in depbin ! Should I implement it ?
 
 	assert (method in ['depbin', 'indepbin'])
 	retdict = {}  # we put all the intermediate products in a dict that we return
@@ -769,6 +770,14 @@ def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 	nimages = rrlist[0].nimages()
 	imginds = np.arange(nimages)
 	labels = rrlist[0].labels
+
+	if nimages == 4:  # then it's a quad
+		covmatsize = 6
+	elif nimages == 3:  # then it's a folded quad
+		covmatsize = 3
+	else:  # then it's a double
+		print "This function does not work for doubles"
+		print "I kindly remind you that the covariance between a variable and itself is called variance, and there are simpler functions to compute that in PyCS. Try newdelayplot for instance."
 
 	couplelist = [(i, j) for j in imginds for i in imginds if i > j]
 	ncouples = len(couplelist)
@@ -821,9 +830,8 @@ def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 
 
 		### fill the diagonal element
-
-		ax1 = allcovplot.add_subplot(ncouples, ncouples, 6*ii + (ii+1))
-		ax2 = bincovplot.add_subplot(ncouples, ncouples, 6*ii + (ii+1))
+		ax1 = allcovplot.add_subplot(ncouples, ncouples, covmatsize*ii + (ii+1))
+		ax2 = bincovplot.add_subplot(ncouples, ncouples, covmatsize*ii + (ii+1))
 		majorLocator = MultipleLocator(1.0)
 
 		for ax in [ax1, ax2]:
@@ -1216,7 +1224,7 @@ def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 					'BD | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
 					'CD | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
 					% (mylist[0], mylist[1], mylist[2], mylist[3], mylist[4], mylist[5]
-											   , mylist[6], mylist[7], mylist[8], mylist[9], mylist[11], mylist[11]
+											   , mylist[6], mylist[7], mylist[8], mylist[9], mylist[10], mylist[11]
 											   , mylist[12], mylist[13], mylist[14], mylist[15], mylist[16], mylist[17]
 											   , mylist[18], mylist[19], mylist[20], mylist[21], mylist[22], mylist[23]
 											   , mylist[24], mylist[25], mylist[26], mylist[27], mylist[28], mylist[29]
@@ -1238,7 +1246,8 @@ def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 		allcovplot.savefig(os.path.join(filepath, "allcov.png"))
 
 	else:
-		plt.show()
+		if showplots:
+			plt.show()
 
 	# now let's compare indepbins and depbins
 	if verbose:
@@ -1251,10 +1260,13 @@ def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 		print "-"*35
 		print "AB - %.2f - %.2f - %.1f%%" % (indepbins[0], depbins[0], (max(indepbins[0], depbins[0])-min(indepbins[0], depbins[0])) / max(indepbins[0], depbins[0])*100)
 		print "AC - %.2f - %.2f - %.1f%%" % (indepbins[1], depbins[1], (max(indepbins[1], depbins[1])-min(indepbins[1], depbins[1])) / max(indepbins[1], depbins[1])*100)
-		print "BC - %.2f - %.2f - %.1f%%" % (indepbins[3], depbins[3], (max(indepbins[3], depbins[3])-min(indepbins[3], depbins[3])) / max(indepbins[3], depbins[3])*100)
-		print "AD - %.2f - %.2f - %.1f%%" % (indepbins[2], depbins[2], (max(indepbins[2], depbins[2])-min(indepbins[2], depbins[2])) / max(indepbins[2], depbins[2])*100)
-		print "BD - %.2f - %.2f - %.1f%%" % (indepbins[4], depbins[4], (max(indepbins[4], depbins[4])-min(indepbins[4], depbins[4])) / max(indepbins[4], depbins[4])*100)
-		print "CD - %.2f - %.2f - %.1f%%" % (indepbins[5], depbins[5], (max(indepbins[5], depbins[5])-min(indepbins[5], depbins[5])) / max(indepbins[5], depbins[5])*100)
+		if nimages == 4:
+			print "BC - %.2f - %.2f - %.1f%%" % (indepbins[3], depbins[3], (max(indepbins[3], depbins[3])-min(indepbins[3], depbins[3])) / max(indepbins[3], depbins[3])*100)
+			print "AD - %.2f - %.2f - %.1f%%" % (indepbins[2], depbins[2], (max(indepbins[2], depbins[2])-min(indepbins[2], depbins[2])) / max(indepbins[2], depbins[2])*100)
+			print "BD - %.2f - %.2f - %.1f%%" % (indepbins[4], depbins[4], (max(indepbins[4], depbins[4])-min(indepbins[4], depbins[4])) / max(indepbins[4], depbins[4])*100)
+			print "CD - %.2f - %.2f - %.1f%%" % (indepbins[5], depbins[5], (max(indepbins[5], depbins[5])-min(indepbins[5], depbins[5])) / max(indepbins[5], depbins[5])*100)
+		elif nimages == 3:
+			print "BC - %.2f - %.2f - %.1f%%" % (indepbins[2], depbins[2], (max(indepbins[2], depbins[2])-min(indepbins[2], depbins[2])) / max(indepbins[2], depbins[2])*100)			
 		print "-"*35
 
 	retdict["covmat"] = covmat

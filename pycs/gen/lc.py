@@ -1937,7 +1937,8 @@ def display(lclist=[], splist=[],
 	elif "2m2" in style:
 		figsize=(10,5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
-		showlogo=False
+		showlogo=True
+		logopos="right"
 		nicefont=True
 		showdelays=False
 		if "showdelays" in style:
