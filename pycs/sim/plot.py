@@ -185,7 +185,7 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 				if "tot" in error: # then it is symmetric
 					xerr = error["tot"]
 				else:
-					xerr = np.array([[error["plus"], error["minus"]]]).T
+					xerr = np.array([[error["minus"], error["plus"]]]).T
 
 				plt.errorbar([delay["mean"]], [ypos], yerr=None, xerr=xerr, fmt='-', ecolor=delays.plotcolour, elinewidth=1.5, capsize=3, barsabove=False)
 				if showran:
