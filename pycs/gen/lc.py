@@ -540,9 +540,9 @@ class lightcurve:
 	
 	def applyfluxshift(self):	
 		"""
-		It adds the magshift-float to the present mags, then puts this magshift-float to 0. So that "nothing" changes as seen from
+		It adds the fluxshift-float to the present flux, then puts this fluxshift-float to 0. So that "nothing" changes as seen from
 		the outside.
-		This is used for instance when you want to merge different lightcurves with different magshifts.
+		This is used for instance when you want to merge different lightcurves with different fluxshifts.
 		Needless to say, use this carefully, only if it really makes sense for what you want to do.
 		
 		Note that we do not touch microlensing here, it remains in place and does not change its meaning in any way. 
