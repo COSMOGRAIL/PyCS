@@ -45,7 +45,7 @@ class delaycontainer:
 		self.yshift = 0.0 # allows to "group" measurements
 
 
-def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showlegend=True, text=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename=None, refshifts=None, refdelays=None, legendfromrefdelays=False, hatches=None, centershifts=None, ymin=0.2, hlines=None, tweakeddisplay=False, blindness=False, horizontaldisplay=False, showxlabelhd=True):
+def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename=None, refshifts=None, refdelays=None, legendfromrefdelays=False, hatches=None, centershifts=None, ymin=0.2, hlines=None, tweakeddisplay=False, blindness=False, horizontaldisplay=False, showxlabelhd=True):
 	"""
 	Plots delay measurements from different methods, telescopes, sub-curves, etc in one single plot.
 	For this I use only ``delaycontainer`` objects, i.e. I don't do any "computation" myself.
@@ -187,7 +187,11 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 				else:
 					xerr = np.array([[error["minus"], error["plus"]]]).T
 
-				plt.errorbar([delay["mean"]], [ypos], yerr=None, xerr=xerr, fmt='-', ecolor=delays.plotcolour, elinewidth=1.5, capsize=3, barsabove=False)
+				if hasattr(delays, 'elinewidth'):
+					elinewidth = delays.elinewidth
+				else:
+					elinewidth = 1.5
+				plt.errorbar([delay["mean"]], [ypos], yerr=None, xerr=xerr, fmt='-', ecolor=delays.plotcolour, elinewidth=elinewidth, capsize=3, barsabove=False)
 				if showran:
 					plt.errorbar([delay["mean"]], [ypos], yerr=None, xerr=error["ran"], fmt='-', ecolor=delays.plotcolour, elinewidth=0.5, capsize=2, barsabove=False)
 
@@ -210,12 +214,22 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 						delaytext = r"$%+.1f \pm %.1f\,(%.1f, %.1f)$" % (delay["mean"], error["tot"], error["ran"], error["sys"])
 					else: # no sys and random for the asymmetric guys...
 						delaytext = r"$%+.1f^{+%.1f}_{-%.1f}$" % (delay["mean"], error["plus"], error["minus"])
-				
+
+				# if you want to hide the error...
+				if not showerr:
+					delaytext = r"$%+.1f$" % delay["mean"]
+
+
 				if n==2: # For doubles, we include the technique name into the txt :
 					delaytext = r"%s : " % (delays.name) + delaytext	
-			
+
+
 				if displaytext:
-					ax.annotate(delaytext, xy=(delay["mean"], ypos + 0.3), color = delays.plotcolour, horizontalalignment="center", fontsize=labelfontsize)
+					if hasattr(delays, 'labelfontsize'):
+						thislabelfontsize = delays.labelfontsize
+					else:
+						thislabelfontsize = labelfontsize
+					ax.annotate(delaytext, xy=(delay["mean"], ypos + 0.3), color = delays.plotcolour, horizontalalignment="center", fontsize=thislabelfontsize)
 
 				if "tot" in error:
 					print "%45s : %+6.2f +/- %.2f (%.2f, %.2f)" % (delays.name, delay["mean"], error["tot"], error["ran"], error["sys"])
@@ -295,7 +309,11 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 			if not tweakeddisplay:
 				plt.figtext(x = right, y = top - txtstep*ipl, s = line, verticalalignment="top", horizontalalignment="right", color=delays.plotcolour, fontsize=14)
 			else:
-				plt.figtext(x = 0.75, y = top - txtstep*ipl -0.1, s = line, verticalalignment="top", horizontalalignment="center", color=delays.plotcolour, fontsize=16) # for 3-delay plots
+				if hasattr(delays, 'legendfontsize'):
+					lfontsize = delays.legendfontsize
+				else:
+					lfontsize = 16
+				plt.figtext(x = 0.75, y = top - txtstep*ipl -0.1, s = line, verticalalignment="top", horizontalalignment="center", color=delays.plotcolour, fontsize=lfontsize) # for 3-delay plots
 		if legendfromrefdelays:
 			for (ipl,(delays, errors)) in enumerate(refdelays):
 				line = "%s" % (delays.name)
