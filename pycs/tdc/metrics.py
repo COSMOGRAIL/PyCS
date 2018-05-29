@@ -1,5 +1,5 @@
 """
-Stuff related to the TDC metrics
+Functions related to the TDC metrics
 """
 
 
@@ -7,29 +7,39 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-import sys
-
 
 ############## Here, we work with estimates objects ##############
 
 def fN(estimates):
+	"""
+	@param estimates: list of Estimate objects
+	@return: length of the estimates list
+	"""
 	return float(len(estimates))
 
 def f(estimates, N):
+	"""
+	@param estimates: list of Estimate objects
+	@param N: maximum number of Estimates expected
+	@return: fractional length of the estimates list with respect to N
+	"""
 	return float(len(estimates))/float(N)
 
 def P(estimates):
 	"""
-	APPROXIMATION of the P metric...
+	@param estimates: list of Estimate objects
+	@return: Approximation of the P metric...
 	"""
 	return (1.0/fN(estimates)) * np.sum(np.fabs(np.array([e.tderr/e.td for e in estimates])))
-	#return (1.0/56.0)* np.sum(np.fabs(np.array([e.tderr/e.td for e in estimates])))
 	
 	
 def sortbyP(estimates):
 	"""
 	I sort your estimates according to their claimed precision
 	lowest "precision" (== highest tderr/td) first -> select from end !
+
+	@param estimates: list of Estimate objects
+	@return: sorted list of Estimate objects.
 	"""
 	return sorted(estimates, key = lambda e: np.fabs(e.tderr/e.td))[::-1]
 
@@ -37,6 +47,9 @@ def sortbyabstd(estimates):
 	"""
 	I sort your estimates according to the absolute value of their time delay.
 	lowest "precision" (== lowest delays) first -> select from end !
+
+	@param estimates: list of Estimate objects
+	@return: sorted list of Estimate objects.
 	"""
 	return sorted(estimates, key = lambda e: abs(e.td))
 
@@ -45,14 +58,16 @@ def sortbyabstd(estimates):
 def maxPplot(estslist, N, filepath=None):
 	"""
 	Give me a list of estimate-lists, I plot P as a function of f
-	N is the total number of curves (e.g. 56 for tdc0) (defines f=1)
+
+	@param estslist: list of lists of Estimate objects
+	@param N: total number of curves (e.g. 56 for tdc0) (defines f=1)
+	@param filepath: if not None, it defines the path where I will save the plot
 	"""
 	
 	for ests in estslist:
 		estscp = ests[:] # Important, we work on a copy, do not modify the original !
 		for e in estscp:
 			if e.td == 0.0: # We want to avoid that...
-				#print e
 				e.td = 0.1
 		ests = sortbyP(estscp)
 		fs = []
@@ -81,14 +96,11 @@ def maxPplot(estslist, N, filepath=None):
 ############## Here, we work with the database from analyse_results ##############
 
 
-
 def getP(db, method, median=False):
 	"""
 	Compute P and Perr - std(P)/sqrt(len(P)) - for a given method stored in the database
 	"""
 	subdb = [item for item in db if "%s_P" %(method) in item]
-	#key = "%s_P" %method
-	#print 'I RETURN: ',sum([item["%s_P" %(method)] for item in subdb]) / float(len(subdb))
 	Ps = [item["%s_P" %(method)] for item in subdb]
 	nest = float(len(subdb))
 	Perr = np.std(Ps)/np.sqrt(nest)

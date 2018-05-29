@@ -15,8 +15,6 @@ import copy as pythoncopy
 class Estimate:
 	"""
 	Class to hold delay estimates for TDC curves, as obtained by various delay estimators.
-
-
 	"""
 	
 	def __init__(self, set="tdc0", rung=0, pair=1, method="None", methodpar="None", td=0.0, tderr=0.0, ms=0.0, confidence=0, timetaken=0.0):
@@ -443,86 +441,8 @@ def multicombine(estimates, method='meanstd'):
 	
 	checkunique(newests)
 	return newests		
-	
-	
 
-# The following functions are not TDC1-approved...
-	
-# def writesubmission(estimates, filepath):
-# 	"""
-# 	Write a submissible TDC file from a list of estimates
-# 	It takes td and tderr of estimates
-# 		
-# 	The delay td is in positive units (?)
-# 	"""
-# 	
-# 	#if os.path.exists(filepath):
-# 	#	print "WARNING, THAT FILE EXISTS !"
-# 	#	return
-# 	
-# 	checkunique(estimates)
-# 	sort(estimates)
-# 	for estimate in estimates:
-# 		if estimate.confidence >= 4:
-# 			print estimate
-# 			raise RuntimeError("Bad confidence in your submission !")
-# 	
-# 	tdcfile = open(filepath, "w")
-# 	
-# 	tdcfile.write("# TDC submission written by PyCS\n")
-# 	tdcfile.write("# %s\n" % (datetime.datetime.now()))
-# 	tdcfile.write("# \n")
-# 	tdcfile.write("# (Some room for your comment...)\n")
-# 	tdcfile.write("# \n")
-# 	tdcfile.write("# \n")
-# 	tdcfile.write("# datafile              dt      dterr\n")
-# 	
-# 	
-# 	
-# 	estids = [est.fullid for est in estimates]
-# 	
-# 	#tdc0 parameters...
-# 	nrungs = 7
-# 	npairs = 8
-# 		
-# 	for nrung in np.arange(nrungs):
-# 		for npair in np.arange(npairs):	
-# 						
-# 			name = 'tdc0_rung%i_pair%i.txt' % (nrung, npair+1)			
-# 			try:				
-# 				ind=estids.index(name)
-# 				tdcfile.write("%s\t%.2f\t%.2f\n" % (name, -estimates[ind].td, estimates[ind].tderr))
-# 				# --- WARNING --- The TDC convention for the delays is the inverse of PyCS, thus the "-" sign above				
-# 			except:				
-# 				tdcfile.write("%s\t-99\t-99\n" % (name))
-# 	
-# 	tdcfile.close()	
-# 	
-# 
-# def readsubmission(filepath, set="tdc0"):
-# 	"""
-# 	Returns a list of estimates from a TDC submission
-# 	"""
-# 	f = open(filepath, 'rb')
-# 	f = filter(lambda row: row[0]!='#' and len(row) > 2, f)
-# 	reader = csv.reader(f, delimiter='\t', quotechar='"')
-# 	estimates = []
-# 	for row in reader:
-# 		name = row[0].split(".")[0].split("_")
-# 		#print name
-# 		set = name[0]
-# 		rung = int(name[1][4:])
-# 		pair = int(name[2][4:])
-# 		td = -float(row[1])
-# 		tderr = float(row[2])
-# 		method = os.path.basename(filepath)
-# 		# --- WARNING --- The TDC convention for the delays is the inverse of PyCS, thus the "-" sign above
-# 		if tderr > 0.0:
-# 			estimates.append(Estimate(rung=rung, pair=pair, td=td, tderr=tderr, confidence=0, method=method))
-# 	
-# 	print "Read %i estimates from %s" % (len(estimates), filepath)
-# 	return estimates
-		
+
 def show(estimates):
 
 	'''
@@ -850,10 +770,6 @@ def interactivebigplot(estimates, shadedestimates = None, plotpath = None, inter
 	
 	else:
 		interactiveplot(estids)
-
-
-
-
 
 
 def bigplot(estimates, shadedestimates = None, plotpath = None, minradius=100):
