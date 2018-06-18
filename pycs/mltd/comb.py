@@ -15,7 +15,6 @@ To combine various distributions, they need to be "linearized" on the same basis
 .. todo:: Use the terminology of the PG1115 paper: an estimate is a time-delay measurement + uncertainty, a Group is all the estimates between all possible pairs, and a series is a list of groups. Group should be the Class here.
 """
 
-
 def confinterval(xs, weights=None, conflevel=0.68, cumulative=False, testmode=True):
 	"""
 	Hand-made quantile/percentile computation tool
@@ -35,6 +34,11 @@ def confinterval(xs, weights=None, conflevel=0.68, cumulative=False, testmode=Tr
 		nbins = 10000
 
 	hist, bin_edges = np.histogram(xs, weights=weights, bins=nbins)
+
+	#plt.hist(xs, weights=weights)
+	#plt.show()
+	#sys.exit()
+
 
 	if not cumulative:
 		frac = 0.
