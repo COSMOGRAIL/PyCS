@@ -53,7 +53,7 @@ class Group():
 
 	"""
 
-	def __init__(self, labels, medians, errors_up, errors_down, name, binslist=None, lins=None, nicename=None):
+	def __init__(self, labels, medians, errors_up, errors_down, name, binslist=None, lins=None, nicename=None, ran_errors=None, sys_errors=None):
 
 		# start with some assertion tests
 		assert (len(labels) == len(medians) == len(errors_up) == len(errors_down))
@@ -70,6 +70,8 @@ class Group():
 		self.binslist = binslist
 		self.nicename = nicename
 		self.lins = lins
+		self.ran_errors = ran_errors
+		self.sys_errors = sys_errors
 
 	def linearize(self, testmode=True, verbose=True):
 		"""
@@ -176,6 +178,8 @@ def getresults(csc):
 
 	.. warning:: This works **only** if you already collected the runresults in delaycontainer, using e.g. the :py:func:`pycs.sim.plot.hists` and :py:func:`pycs.sim.plot.measvstrue` functions.
 
+	I also save the random and systematic component of the error, in case you want to display them later on.
+
 	@param cscontainer: CScontainer object
 	@return: a Group object
 	"""
@@ -193,13 +197,17 @@ def getresults(csc):
 	labels = [d["label"] for d in result[0].data]
 	means = []
 	errors = []
+	ranerrors = []
+	syserrors = []
 
 	for label in labels:
 		means.append([d["mean"] for d in result[0].data if d["label"] == label][0])
 		errors.append([d["tot"] for d in result[1].data if d["label"] == label][0])
+		ranerrors.append([d["ran"] for d in result[1].data if d["label"] == label][0])
+		syserrors.append([d["sys"] for d in result[1].data if d["label"] == label][0])
 
 	# create a Group out of them
-	return Group(labels=labels, medians=means, errors_up=errors, errors_down=errors, name=csc.name)
+	return Group(labels=labels, medians=means, errors_up=errors, errors_down=errors, ran_errors=ranerrors, sys_errors=syserrors, name=csc.name)
 
 
 def asgetresults(weightslist, testmode=True):
