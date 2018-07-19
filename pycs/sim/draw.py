@@ -178,8 +178,7 @@ def draw(lcs, spline, shotnoise=None, shotnoisefrac=1.0, tweakml=None, scaletwea
 	# Nevertheless, I work on a copy, as I'll call sample().
 	copylcs = [l.copy() for l in lcs]
 	fakelcs = []
-	
-	
+
 	
 	for i, l in enumerate(copylcs):
 
@@ -213,7 +212,7 @@ def draw(lcs, spline, shotnoise=None, shotnoisefrac=1.0, tweakml=None, scaletwea
 		sample(l, tweakedspline)
 		
 		# Rescale the residuals ?
-		
+
 		# seems tempting here to do an "autoscaling" so that the sigma of the drawn residuals automatically matches the observed ones.
 		# This is not possible, as we first need to redo the spline curve shifting to make a fair comparision !
 		
