@@ -18,7 +18,7 @@ import pycs.gen.util
 
 
 
-def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename=None, refgroup=None, legendfromrefgroup=False, centerdelays=None, ymin=0.2, hlines=None, blindness=False, horizontaldisplay=False, showxlabelhd=True):
+def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename=None, refgroup=None, legendfromrefgroup=False, centerdelays=None, ymin=0.2, hlines=None, blindness=False, horizontaldisplay=False, showxlabelhd=True):
 	"""
 	Plots delay measurements from different methods, telescopes, sub-curves, etc in one single plot.
 
@@ -65,7 +65,10 @@ def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias
 	"""
 
 	pairs = plotlist[0].labels
-	objects = sorted(list(set("".join(pairs))))
+	if autoobj == None:
+		objects = sorted(list(set("".join(pairs))))
+	else:
+		objects = autoobj
 	n = len(objects)
 	nmeas = len(plotlist)
 	print "Objects : %s" % (", ".join(objects))

@@ -16,6 +16,25 @@ import scipy.ndimage
 
 import pycs.gen.util
 
+
+
+
+def mad(xs):
+	"""
+	Return the median absolute deviation. Write it myself here instead of importing it from astropy, since it will add another depenency. Work with 1d array only
+
+	@todo: for PyCS 3, will use astropy as a default module (good) and use their functions
+
+	:param xs: list of values
+	:return: median absolute deviation
+	"""
+
+	median = np.median(xs)
+	mad = np.median([np.abs(x-median) for x in xs])
+
+	return mad
+
+
 class delaycontainer:
 	"""
 	Stores the delay or error bar measurement(s) (one for each curve pair).
@@ -93,6 +112,9 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 
 	:param showxlabelhd: display or not the x label when horizontal display is True
 	:type showxlabelhd: boolean
+
+
+	.. warning:: Altough the code says I'm plotting mean and std for the measured delays, I might be using median and mad instead! This depends on how ``hists`` was called! Be careful with this...
 
 	"""
 	
@@ -600,7 +622,7 @@ def normal(x, mu, sigma):
 	return (1.0/np.sqrt(2.0*np.pi*sigma*sigma)) * np.exp( - (x - mu)**2/(2*sigma*sigma))
 
 
-def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None, title=None, xtitle=0.5, ytitle=0.95, titlesize=18, niceplot=False, displaytext=True, figsize=(16, 9), left = 0.06, right=0.95, bottom=0.065, top=0.95, wspace=0.2, hspace=0.2, txtstep=0.04, majorticksstep=2, hideyaxis=True, trueshifts=None, filename=None, dataout=False, blindness=False):
+def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None, title=None, xtitle=0.5, ytitle=0.95, titlesize=18, niceplot=False, displaytext=True, figsize=(16, 9), left = 0.06, right=0.95, bottom=0.065, top=0.95, wspace=0.2, hspace=0.2, txtstep=0.04, majorticksstep=2, hideyaxis=True, trueshifts=None, filename=None, dataout=False, blindness=False, usemedian=False):
 	"""
 	Comparing the delay distributions from different run result objects.
 	
@@ -610,7 +632,15 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 	:param showqs: If True, I overplot the qs as scatter points.
 	
 	:param dataout: True means that I'll write the pkl file needed to make the delayplot.
-	
+
+	:param removeoutliers: True means I remove estimates that are the farthest from the median. Use this with CAUTION !!!
+
+	:param usemedian: if True, use the median and median absolute deviation instead of mean and std.
+
+	.. warning:: To avoid rewriting newdelayplot, if usemedian is True then I write the median and mad in the mean and std fields of the pickles. This is dangerous (and a bit stupid and lazy), but since hists() and newdelayplot() are usually called one after the other it should not create too much confusion.
+
+	.. note:: Actually, using median and mad as default estimators might be smarter...? To meditate for PyCS 3.0...
+
 	"""
 		
 	n = rrlist[0].nimages()
@@ -679,13 +709,18 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 					delays = rr.truetsarray[:,i] - rr.truetsarray[:,j]
 				else:
 					delays = rr.tsarray[:,i] - rr.tsarray[:,j]
-				
+
+
 				meddelay = np.median(delays)
+				maddelay = mad(delays)
 				meandelay = np.mean(delays)
 				stddelay = np.std(delays)
 				
 				# We save these :
-				rr.tmpdata.append({"label":delaylabel, "mean":meandelay, "med":meddelay, "std":stddelay})
+				if usemedian:
+					rr.tmpdata.append({"label":delaylabel, "mean":meddelay, "med":meddelay, "std":maddelay})
+				else:
+					rr.tmpdata.append({"label":delaylabel, "mean":meandelay, "med":meddelay, "std":stddelay})
 				
 				#(counts, bins, patches) = ax.hist(delays, bins=nbins, range=histrange, histtype="step", color=colours[irr % len(colours)], normed=True)
 				(counts, bins, patches) = ax.hist(delays, bins=nbins, range=histrange, histtype="bar", color=rr.plotcolour, alpha = 0.4, lw=0, normed=True)
@@ -727,8 +762,12 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 						x = np.linspace(histrange[0], histrange[1], 100)
 						y = normal(x, meandelay, stddelay)
 						ax.plot(x, y, linestyle="-", color = rr.plotcolour)
-					
-					delaytext = r"%+.1f $\pm$ %.1f" % (meandelay, stddelay)
+
+					if not usemedian:
+						delaytext = r"%+.1f $\pm$ %.1f" % (meandelay, stddelay)
+					else:
+						delaytext = r"%+.1f $\pm$ %.1f" % (meddelay, maddelay)
+
 					#print rr.name
 					#print delaylabel + "   " + delaytext
 					#ax.text(meddelay, np.max(y)/2.0, "%.1f +/- %.1f" % (meddelay, stddelay), horizontalalignment = "center", color = rr.plotcolour)

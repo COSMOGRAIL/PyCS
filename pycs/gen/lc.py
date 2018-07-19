@@ -1083,7 +1083,7 @@ def factory(jds, mags, magerrs=None, telescopename="Unknown", object="Unknown", 
 	return newlc
 
 
-def flexibleimport(filepath, jdcol=1, magcol=2, errcol=3, startline=1, flagcol=None, propertycols=None, telescopename="Unknown", object="Unknown", plotcolour="red", verbose = True):
+def flexibleimport(filepath, jdcol=1, magcol=2, errcol=3, startline=1, flagcol=None, propertycols=None, telescopename="Unknown", object="Unknown", plotcolour="red", verbose = True, absmagerrs=False):
 	"""
 	The general form of file reading. We read only one lightcurve object.
 	To comment a line in the input file, start the line with # like in python.
@@ -1151,6 +1151,8 @@ def flexibleimport(filepath, jdcol=1, magcol=2, errcol=3, startline=1, flagcol=N
 				propdict[propname] = str(elements[propcol-1])
 		properties.append(propdict)
 
+	if absmagerrs:
+		magerrs = np.abs(np.array(magerrs))
 
 	# Make a brand new lightcurve object :
 	newlc = factory(np.array(jds), np.array(mags), magerrs=np.array(magerrs), telescopename=telescopename, object=object)
@@ -1166,7 +1168,7 @@ def flexibleimport(filepath, jdcol=1, magcol=2, errcol=3, startline=1, flagcol=N
 
 
 
-def rdbimport(filepath, object="Unknown", magcolname="mag", magerrcolname="magerr", telescopename="Unknown", plotcolour="red", mhjdcolname="mhjd", flagcolname = None, propertycolnames = "lcmanip", verbose = True):
+def rdbimport(filepath, object="Unknown", magcolname="mag", magerrcolname="magerr", telescopename="Unknown", plotcolour="red", mhjdcolname="mhjd", flagcolname = None, propertycolnames = "lcmanip", verbose = True, absmagerrs=False):
 	"""
 	The relaxed way to import lightcurves, especially those from cosmouline, provided they come as rdb files.
 	Don't care about column indices, just give the column headers that you want to read.
@@ -1223,7 +1225,7 @@ def rdbimport(filepath, object="Unknown", magcolname="mag", magerrcolname="mager
 	else:
 		propertycols = None
 
-	newlc = flexibleimport(filepath, jdcol=jdcol, magcol=magcol, errcol=errcol, startline=3, flagcol=flagcol, propertycols=propertycols, telescopename=telescopename, object=object, verbose=verbose)
+	newlc = flexibleimport(filepath, jdcol=jdcol, magcol=magcol, errcol=errcol, startline=3, flagcol=flagcol, propertycols=propertycols, telescopename=telescopename, object=object, verbose=verbose, absmagerrs=absmagerrs)
 	newlc.plotcolour = plotcolour
 	return newlc
 
