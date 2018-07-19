@@ -105,7 +105,7 @@ If you want to go straight to some more or less automatic plots showing the resu
 		pycs.sim.run.collect("sims_copies_opt_regdiff1", "green", "Regdiff")
 	]
 	
-	pycs.sim.plot.hists(copiesres, r=30.0, nbins=100)
+	pycs.sim.plot.hists(copiesres, r=30.0, nbins=100, dataout =True)
 	
 	
 	simres = [
@@ -115,11 +115,21 @@ If you want to go straight to some more or less automatic plots showing the resu
 	]
 	
 	
-	pycs.sim.plot.hists(simres, r=30.0, nbins=100)
+	pycs.sim.plot.hists(simres, r=30.0, nbins=100, dataout =True)
 	
-	pycs.sim.plot.measvstrue(simres, r=5.0, nbins = 10, plotpoints=True, ploterrorbars=True, sidebyside=True, errorrange=8, binclip=False, binclipr=20.0)
+	pycs.sim.plot.measvstrue(simres, r=5.0, nbins = 10, plotpoints=True, ploterrorbars=True, sidebyside=True, errorrange=8, binclip=False, binclipr=20.0, dataout =True)
 	
-	pycs.sim.plot.delayplot(copiesres, simres, rplot=30.0, rbins=5.0, nbins = 10, binclipr=100.0, displaytext=True, total=False)
+	delays_disp = pycs.gen.util.readpickle( "sims_copies_opt_disp1_delays.pkl")
+	delays_spl = pycs.gen.util.readpickle( "sims_copies_opt_spl1_delays.pkl")
+	delays_regdiff = pycs.gen.util.readpickle( "sims_copies_opt_regdiff1_delays.pkl")
+	
+	errorbar_disp = pycs.gen.util.readpickle( "sims_sim1tsr5_opt_disp1_errorbars.pkl")
+	errorbar_spl = pycs.gen.util.readpickle( "sims_sim1tsr5_opt_spl1_errorbars.pkl")
+	errorbar_regdiff = pycs.gen.util.readpickle( "sims_sim1tsr5_opt_regdiff_errorbars.pkl")
+	
+	totcontainer = [(delays_disp,errorbar_disp),(delays_spl,errorbar_spl),(delays_regdiff,errorbar_regdiff)]
+	
+	pycs.sim.plot.newdelayplot(totcontainer, rplot=6.0, displaytext=True)
 	
 	
 	

@@ -45,11 +45,8 @@ class delaycontainer:
 		self.yshift = 0.0 # allows to "group" measurements
 
 
-def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True,
-				 showlegend=True, text=None, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15,
-				 hspace=0.3, txtstep=0.04, majorticksstep=2, filename=None, refshifts=None, refdelays=None,
-				 legendfromrefdelays=False, hatches=None, centershifts=None, ymin=0.2, hlines=None,
-				 tweakeddisplay=False, blindness=False, horizontaldisplay=False, showxlabelhd=True):
+
+def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename=None, refshifts=None, refdelays=None, legendfromrefdelays=False, hatches=None, centershifts=None, ymin=0.2, hlines=None, tweakeddisplay=False, blindness=False, horizontaldisplay=False, showxlabelhd=True):
 	"""
 	Plots delay measurements from different methods, telescopes, sub-curves, etc in one single plot.
 	For this I use only ``delaycontainer`` objects, i.e. I don't do any "computation" myself.
@@ -65,6 +62,7 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 
 	:param hidedetails: Do not show (ran, sys) in labels
 	:type hidedetails: boolean
+
 	:param refshifts: This is a list of dicts like {"colour":"gray", "shifts":(0, 0, 0, 90)}. Will be plotted as dashed vertical lines.
 	:type refshifts: list
 
@@ -72,9 +70,10 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 	:type refdelays: list
 	:param legendfromrefdelays: if you want to display the refdelays name in the legend panel
 	:type legendfromrefdelays: boolean
+
 	:param hatches: list of hatch keyword for the refdelays plotting
 	:type hatches: list
-
+	
 	:param showbias: draws a little cross at the position of the delay "corrected" for the bias.
 	:type showbias: boolean
 
@@ -85,12 +84,17 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 		Text that you want to display, in the form : [line1, line2, line3 ...]
 		where line_i is (x, y, text, kwargs) where kwargs is e.g. {"fontsize":18} and x and y are relative positions (from 0 to 1).
 	:type text: list
+
 	:param blindness: Shift the measurements by their mean, so the displayed value are centered around 0
 	:type blindness: boolean
+
 	:param horizontaldisplay: display the delay panels on a single line. Works only for three-delay containers.
 	:type horizontaldisplay: boolean
+
 	:param showxlabelhd: display or not the x label when horizontal display is True
 	:type showxlabelhd: boolean
+
+
 	"""
 
 	# Some checks :
@@ -103,10 +107,12 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 	nmeas = len(plotlist)
 	print "Objects : %s" % (", ".join(objects))
 
+
 	if horizontaldisplay and n != 3:
 		print "Horizontal display works only for three delays, you have %i" % n
 		print "Switching back to regular display"
 		horizontaldisplay = False
+
 
 	for (delays, errors) in plotlist:
 		if delays.plotcolour != errors.plotcolour:
@@ -125,6 +131,7 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 			if (i == 0) or (j == n - 1):
 				continue  # No plot
 
+
 			if not horizontaldisplay:
 				axisNum += 1
 
@@ -135,6 +142,7 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 				axisNum += 1
 				ax = plt.subplot(1, n, axisNum)
 			else:
+
 				ax = plt.subplot(n - 1, n - 1, axisNum)
 
 			# We will express the delays "i - j"
@@ -178,6 +186,7 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 
 				# treat two cases: symmetric error ("tot" kw) and asymmetric ("plus" and "minus" kw)
 				if "tot" in error:  # then it is symmetric
+
 					xerr = error["tot"]
 				else:
 					xerr = np.array([[error["minus"], error["plus"]]]).T
@@ -186,8 +195,9 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 					elinewidth = delays.elinewidth
 				else:
 					elinewidth = 1.5
-				plt.errorbar([delay["mean"]], [ypos], yerr=None, xerr=xerr, fmt='-', ecolor=delays.plotcolour,
-							 elinewidth=elinewidth, capsize=3, barsabove=False)
+
+				plt.errorbar([delay["mean"]], [ypos], yerr=None, xerr=xerr, fmt='-', ecolor=delays.plotcolour, elinewidth=elinewidth, capsize=3, barsabove=False)
+
 				if showran:
 					plt.errorbar([delay["mean"]], [ypos], yerr=None, xerr=error["ran"], fmt='-',
 								 ecolor=delays.plotcolour, elinewidth=0.5, capsize=2, barsabove=False)
@@ -219,16 +229,20 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 				if not showerr:
 					delaytext = r"$%+.1f$" % delay["mean"]
 
+
 				if n == 2:  # For doubles, we include the technique name into the txt :
 					delaytext = r"%s : " % (delays.name) + delaytext
+
 
 				if displaytext:
 					if hasattr(delays, 'labelfontsize'):
 						thislabelfontsize = delays.labelfontsize
 					else:
 						thislabelfontsize = labelfontsize
+
 					ax.annotate(delaytext, xy=(delay["mean"], ypos + 0.3), color=delays.plotcolour,
 								horizontalalignment="center", fontsize=thislabelfontsize)
+
 
 				if "tot" in error:
 					print "%45s : %+6.2f +/- %.2f (%.2f, %.2f)" % (
@@ -261,6 +275,7 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 				xlabelfontsize = 14
 
 			if i == n - 1 and not horizontaldisplay:
+
 				plt.xlabel(xlabel, fontsize=xlabelfontsize)
 			elif horizontaldisplay:
 				if showxlabelhd:
@@ -268,9 +283,11 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 				else:
 					ax.get_xaxis().set_ticks([])
 
+
 			if n != 2:  # otherwise only one panel, no need
 				plt.annotate(delaylabel, xy=(0.03, 0.88 - txtstep), xycoords='axes fraction', fontsize=14,
 							 color="black")
+
 
 			if refshifts != None:
 				for item in refshifts:
@@ -279,29 +296,25 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 
 			if refdelays != None:
 				try:  # if refdelays are in the form of delays and errors containers:
-					for (ipl, (delays, errors)) in enumerate(refdelays):
+
+					for (ipl,(delays, errors)) in enumerate(refdelays):
 
 						# Getting the delay for this particular panel
 						delay = [meas for meas in delays.data if meas["label"] == delaylabel][0]
 						error = [meas for meas in errors.data if meas["label"] == delaylabel][0]
 
-						if hatches != None:
-							plt.axvspan(delay["mean"] - error["tot"], delay["mean"] + error["tot"],
-										facecolor=delays.plotcolour, alpha=0.25, zorder=-20, edgecolor="none",
-										linewidth=0, hatch=hatches[ipl])
+						if hatches!=None:
+							plt.axvspan(delay["mean"]-error["tot"], delay["mean"]+error["tot"], facecolor=delays.plotcolour, alpha=0.25, zorder=-20, edgecolor="none", linewidth=0, hatch=hatches[ipl])
 						else:
-							plt.axvspan(delay["mean"] - error["tot"], delay["mean"] + error["tot"],
-										facecolor=delays.plotcolour, alpha=0.25, zorder=-20, edgecolor="none",
-										linewidth=0)
-						plt.axvline(delay["mean"], color=delays.plotcolour, linestyle="--", dashes=(5, 5), lw=1.0,
-									zorder=-20)
-				# plt.axvline(delay["mean"], color=item.plotcolour, linestyle="-", lw=2, alpha=0.5, zorder=-20)
+							plt.axvspan(delay["mean"]-error["tot"], delay["mean"]+error["tot"], facecolor=delays.plotcolour, alpha=0.25, zorder=-20, edgecolor="none", linewidth=0)
+						plt.axvline(delay["mean"], color=delays.plotcolour, linestyle="--", dashes=(5, 5), lw=1.0, zorder=-20)
+						#plt.axvline(delay["mean"], color=item.plotcolour, linestyle="-", lw=2, alpha=0.5, zorder=-20)
 				except:  # then refdelays is a list of flat delays
-					(delay, errors) = refdelays[axisNum - 1]
+					(delay, errors) = refdelays[axisNum-1]
 
-					plt.axvspan(delay - errors[1], delay + errors[0], facecolor="gray", alpha=0.15, zorder=-20,
-								edgecolor="none", linewidth=0)
+					plt.axvspan(delay-errors[1], delay+errors[0], facecolor="gray", alpha=0.15, zorder=-20, edgecolor="none", linewidth=0)
 					plt.axvline(delay, color="gray", linestyle='--', dashes=(5, 5), lw=1.0, zorder=-20, alpha=0.4)
+			
 
 			if hlines != None:
 				for hline in hlines:
@@ -319,9 +332,11 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 					lfontsize = delays.legendfontsize
 				else:
 					lfontsize = 16
+
 				plt.figtext(x=0.75, y=top - txtstep * ipl - 0.1, s=line, verticalalignment="top",
 							horizontalalignment="center", color=delays.plotcolour,
 							fontsize=lfontsize)  # for 3-delay plots
+
 		if legendfromrefdelays:
 			for (ipl, (delays, errors)) in enumerate(refdelays):
 				line = "%s" % (delays.name)
@@ -812,8 +827,9 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 		plt.savefig(filename)
 
 
-def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclipr=10.0, figsize=(13, 13), left=0.06, right=0.97, top=0.97, bottom=0.04, wspace=0.3, hspace=0.3, method='indepbin', minsamples=10, printdetails=True, printcovmat=True, detailplots=False, filepath=None, verbose=True):
+def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclipr=10.0, figsize=(13, 13), left=0.06, right=0.97, top=0.97, bottom=0.04, wspace=0.3, hspace=0.3, method='indepbin', minsamples=10, showplots=True, printdetails=True, printcovmat=True, detailplots=False, filepath=None, verbose=True):
 
+	#TODO: there is no binclip in depbin ! Should I implement it ?
 
 	assert (method in ['depbin', 'indepbin'])
 	retdict = {}  # we put all the intermediate products in a dict that we return
@@ -821,6 +837,14 @@ def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 	nimages = rrlist[0].nimages()
 	imginds = np.arange(nimages)
 	labels = rrlist[0].labels
+
+	if nimages == 4:  # then it's a quad
+		covmatsize = 6
+	elif nimages == 3:  # then it's a folded quad
+		covmatsize = 3
+	else:  # then it's a double
+		print "This function does not work for doubles"
+		print "I kindly remind you that the covariance between a variable and itself is called variance, and there are simpler functions to compute that in PyCS. Try newdelayplot for instance."
 
 	couplelist = [(i, j) for j in imginds for i in imginds if i > j]
 	ncouples = len(couplelist)
@@ -873,9 +897,8 @@ def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 
 
 		### fill the diagonal element
-
-		ax1 = allcovplot.add_subplot(ncouples, ncouples, 6*ii + (ii+1))
-		ax2 = bincovplot.add_subplot(ncouples, ncouples, 6*ii + (ii+1))
+		ax1 = allcovplot.add_subplot(ncouples, ncouples, covmatsize*ii + (ii+1))
+		ax2 = bincovplot.add_subplot(ncouples, ncouples, covmatsize*ii + (ii+1))
 		majorLocator = MultipleLocator(1.0)
 
 		for ax in [ax1, ax2]:
@@ -1268,7 +1291,7 @@ def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 					'BD | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
 					'CD | %.2f    %.2f    %.2f    %.2f    %.2f    %.2f \n     |\n' \
 					% (mylist[0], mylist[1], mylist[2], mylist[3], mylist[4], mylist[5]
-											   , mylist[6], mylist[7], mylist[8], mylist[9], mylist[11], mylist[11]
+											   , mylist[6], mylist[7], mylist[8], mylist[9], mylist[10], mylist[11]
 											   , mylist[12], mylist[13], mylist[14], mylist[15], mylist[16], mylist[17]
 											   , mylist[18], mylist[19], mylist[20], mylist[21], mylist[22], mylist[23]
 											   , mylist[24], mylist[25], mylist[26], mylist[27], mylist[28], mylist[29]
@@ -1290,7 +1313,8 @@ def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 		allcovplot.savefig(os.path.join(filepath, "allcov.png"))
 
 	else:
-		plt.show()
+		if showplots:
+			plt.show()
 
 	# now let's compare indepbins and depbins
 	if verbose:
@@ -1303,10 +1327,13 @@ def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 		print "-"*35
 		print "AB - %.2f - %.2f - %.1f%%" % (indepbins[0], depbins[0], (max(indepbins[0], depbins[0])-min(indepbins[0], depbins[0])) / max(indepbins[0], depbins[0])*100)
 		print "AC - %.2f - %.2f - %.1f%%" % (indepbins[1], depbins[1], (max(indepbins[1], depbins[1])-min(indepbins[1], depbins[1])) / max(indepbins[1], depbins[1])*100)
-		print "BC - %.2f - %.2f - %.1f%%" % (indepbins[3], depbins[3], (max(indepbins[3], depbins[3])-min(indepbins[3], depbins[3])) / max(indepbins[3], depbins[3])*100)
-		print "AD - %.2f - %.2f - %.1f%%" % (indepbins[2], depbins[2], (max(indepbins[2], depbins[2])-min(indepbins[2], depbins[2])) / max(indepbins[2], depbins[2])*100)
-		print "BD - %.2f - %.2f - %.1f%%" % (indepbins[4], depbins[4], (max(indepbins[4], depbins[4])-min(indepbins[4], depbins[4])) / max(indepbins[4], depbins[4])*100)
-		print "CD - %.2f - %.2f - %.1f%%" % (indepbins[5], depbins[5], (max(indepbins[5], depbins[5])-min(indepbins[5], depbins[5])) / max(indepbins[5], depbins[5])*100)
+		if nimages == 4:
+			print "BC - %.2f - %.2f - %.1f%%" % (indepbins[3], depbins[3], (max(indepbins[3], depbins[3])-min(indepbins[3], depbins[3])) / max(indepbins[3], depbins[3])*100)
+			print "AD - %.2f - %.2f - %.1f%%" % (indepbins[2], depbins[2], (max(indepbins[2], depbins[2])-min(indepbins[2], depbins[2])) / max(indepbins[2], depbins[2])*100)
+			print "BD - %.2f - %.2f - %.1f%%" % (indepbins[4], depbins[4], (max(indepbins[4], depbins[4])-min(indepbins[4], depbins[4])) / max(indepbins[4], depbins[4])*100)
+			print "CD - %.2f - %.2f - %.1f%%" % (indepbins[5], depbins[5], (max(indepbins[5], depbins[5])-min(indepbins[5], depbins[5])) / max(indepbins[5], depbins[5])*100)
+		elif nimages == 3:
+			print "BC - %.2f - %.2f - %.1f%%" % (indepbins[2], depbins[2], (max(indepbins[2], depbins[2])-min(indepbins[2], depbins[2])) / max(indepbins[2], depbins[2])*100)			
 		print "-"*35
 
 	retdict["covmat"] = covmat
