@@ -2268,7 +2268,7 @@ def display(lclist=[], splist=[],
 	
 	
 	if showgrid:
-		plt.grid(zorder=20)
+		plt.grid(zorder=20, linestyle = 'dotted')
 	
 	if text != None:
 		for line in text:

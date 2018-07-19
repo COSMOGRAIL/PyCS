@@ -340,7 +340,7 @@ class Spline():
 		
 		# If you did not give me a t&c, I'll make some default ones for you :
 		try:
-			if (self.t == None):
+			if (self.t is None):
 				self.uniknots(2) # This also puts self.c to 0s
 		except:
 			if (len(self.t) == 0):
@@ -572,6 +572,7 @@ class Spline():
 		minspace = np.min(knotspacings)
 		if verbose :
 			print "Minimal knot spacing : %.3f" % (minspace)
+
 		if minspace < self.bokeps - 0.00001: # Rounding errors, we decrease epsilon a bit...
 			# If this does still happens, then it was not just a rounding error ...
 			# Yes it still happens, due to updatedp stretch ...
@@ -1050,7 +1051,7 @@ class Spline():
 				plt.plot(self.datapoints.jds, self.datapoints.mags, "b,")
 				
 	
-		if (self.t != None) :
+		if (np.any(self.t) != None) :
 			
 			if getattr(self, "showknots", True) == True:
 				for knot in self.t:
@@ -1062,7 +1063,7 @@ class Spline():
 			plt.plot(xs, ys, "b-")
 		
 		if showbounds :
-			if (self.l != None) and (self.u != None) :
+			if (np.any(self.l) != None) and (np.any(self.u) != None) :
 				for l in self.l:
 					plt.axvline(l, color="blue", dashes=(4, 4))
 				for u in self.u:
