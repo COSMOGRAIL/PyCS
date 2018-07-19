@@ -64,29 +64,29 @@ class delaycontainer:
 		self.yshift = 0.0 # allows to "group" measurements
 
 
+
 def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename=None, refshifts=None, refdelays=None, legendfromrefdelays=False, hatches=None, centershifts=None, ymin=0.2, hlines=None, tweakeddisplay=False, blindness=False, horizontaldisplay=False, showxlabelhd=True):
 	"""
 	Plots delay measurements from different methods, telescopes, sub-curves, etc in one single plot.
 	For this I use only ``delaycontainer`` objects, i.e. I don't do any "computation" myself.
-	
+
 	:param plotlist: Give me a list of tuples (delays, errorbars), where delays and errorbars are delaycontainer objects as written into pkl files by ``hists`` and ``meanvstrue``.
 	NEW : plotlist delaycont can handle asymmetric errors (e.g. to seamlessly compare pycs with other papers' results). Instead of the "tot" key, new "plus" and "minus" keys are used.
 	:type plotlist: list
-	
+
 	:param rplot: radius of delay axis, in days.
-	
+
 	:param displaytext: Show labels with technique names and values of delays
 	:type displaytext: boolean
-	
+
 	:param hidedetails: Do not show (ran, sys) in labels
 	:type hidedetails: boolean
 
 	:param refshifts: This is a list of dicts like {"colour":"gray", "shifts":(0, 0, 0, 90)}. Will be plotted as dashed vertical lines.
 	:type refshifts: list
-	
+
 	:param refdelays: a list of tuples (delays, errorbars) to be plotted as shaded vertical zones.
 	:type refdelays: list
-
 	:param legendfromrefdelays: if you want to display the refdelays name in the legend panel
 	:type legendfromrefdelays: boolean
 
@@ -95,13 +95,13 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 	
 	:param showbias: draws a little cross at the position of the delay "corrected" for the bias.
 	:type showbias: boolean
-	
+
 	:param showran: draws "minor" error bar ticks using the random error only.
 	:type showran: boolean
-	
+
 	:param text:
 		Text that you want to display, in the form : [line1, line2, line3 ...]
-		where line_i is (x, y, text, kwargs) where kwargs is e.g. {"fontsize":18} and x and y are relative positions (from 0 to 1). 
+		where line_i is (x, y, text, kwargs) where kwargs is e.g. {"fontsize":18} and x and y are relative positions (from 0 to 1).
 	:type text: list
 
 	:param blindness: Shift the measurements by their mean, so the displayed value are centered around 0
@@ -114,42 +114,45 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 	:type showxlabelhd: boolean
 
 
+
 	.. warning:: Altough the code says I'm plotting mean and std for the measured delays, I might be using median and mad instead! This depends on how ``hists`` was called! Be careful with this...
 
 	"""
-	
+
 	# Some checks :
 	objects = plotlist[0][0].objects
 	for (delays, errors) in plotlist:
 		if delays.objects != objects or errors.objects != objects:
 			raise RuntimeError("Don't ask me to overplot stuff from different objects !")
-	
+
 	n = len(objects)
 	nmeas = len(plotlist)
 	print "Objects : %s" % (", ".join(objects))
 
-	if horizontaldisplay and n!=3:
+
+	if horizontaldisplay and n != 3:
 		print "Horizontal display works only for three delays, you have %i" % n
 		print "Switching back to regular display"
 		horizontaldisplay = False
-	
+
+
 	for (delays, errors) in plotlist:
 		if delays.plotcolour != errors.plotcolour:
 			raise RuntimeError("Hmm, plotcolours of delays and errors don't correspond !")
 		print "Delays : %s <-> Errors : %s" % (delays.name, errors.name)
-		
-	
+
 	fig = plt.figure(figsize=figsize)
 	fig.subplots_adjust(left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace)
 
 	axisNum = 0
-	print "#"*80
-	for i in range(n): # A, B, C, D and so on
+	print "#" * 80
+	for i in range(n):  # A, B, C, D and so on
 		for j in range(n):
-			
-			#print i, j
-			if (i == 0) or (j == n-1) :
-				continue # No plot
+
+			# print i, j
+			if (i == 0) or (j == n - 1):
+				continue  # No plot
+
 
 			if not horizontaldisplay:
 				axisNum += 1
@@ -161,22 +164,23 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 				axisNum += 1
 				ax = plt.subplot(1, n, axisNum)
 			else:
-				ax = plt.subplot(n-1, n-1, axisNum)
-		
+
+				ax = plt.subplot(n - 1, n - 1, axisNum)
+
 			# We will express the delays "i - j"
-			delaylabel="%s%s" % (objects[j], objects[i])
+			delaylabel = "%s%s" % (objects[j], objects[i])
 			print "           Delay %s" % (delaylabel)
-			
+
 			# General esthetics :
 			ax.get_yaxis().set_ticks([])
 			minorLocator = MultipleLocator(1.0)
 			majorLocator = MultipleLocator(majorticksstep)
 			ax.xaxis.set_minor_locator(minorLocator)
 			ax.xaxis.set_major_locator(majorLocator)
-		
+
 			# To determine the plot range :
 			paneldelays = []
-			
+
 			# Going throuh plotlist :
 
 			if tweakeddisplay:
@@ -186,25 +190,25 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 
 			if blindness:
 				blinddelays = []
-				for (ipl,(delays, errors)) in enumerate(plotlist):
+				for (ipl, (delays, errors)) in enumerate(plotlist):
 					blinddelays.append([meas for meas in delays.data if meas["label"] == delaylabel][0]["mean"])
 					blindmean = np.mean(blinddelays)
 
-			for (ipl,(delays, errors)) in enumerate(plotlist):
-				
+			for (ipl, (delays, errors)) in enumerate(plotlist):
+
 				# Getting the delay for this particular panel
 				delay = [meas for meas in delays.data if meas["label"] == delaylabel][0]
 				if blindness:
 					delay["mean"] -= blindmean
 				error = [meas for meas in errors.data if meas["label"] == delaylabel][0]
-				
+
 				paneldelays.append(delay["mean"])
-				
+
 				ypos = nmeas - ipl + delays.yshift
 
-
 				# treat two cases: symmetric error ("tot" kw) and asymmetric ("plus" and "minus" kw)
-				if "tot" in error: # then it is symmetric
+				if "tot" in error:  # then it is symmetric
+
 					xerr = error["tot"]
 				else:
 					xerr = np.array([[error["minus"], error["plus"]]]).T
@@ -213,28 +217,34 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 					elinewidth = delays.elinewidth
 				else:
 					elinewidth = 1.5
+
 				plt.errorbar([delay["mean"]], [ypos], yerr=None, xerr=xerr, fmt='-', ecolor=delays.plotcolour, elinewidth=elinewidth, capsize=3, barsabove=False)
+
 				if showran:
-					plt.errorbar([delay["mean"]], [ypos], yerr=None, xerr=error["ran"], fmt='-', ecolor=delays.plotcolour, elinewidth=0.5, capsize=2, barsabove=False)
+					plt.errorbar([delay["mean"]], [ypos], yerr=None, xerr=error["ran"], fmt='-',
+								 ecolor=delays.plotcolour, elinewidth=0.5, capsize=2, barsabove=False)
 
-				
 				if delays.marker == None or delays.marker == ".":
-					plt.plot([delay["mean"]], [ypos], marker='o', markersize=delays.markersize, markeredgecolor=delays.plotcolour, color=delays.plotcolour)
+					plt.plot([delay["mean"]], [ypos], marker='o', markersize=delays.markersize,
+							 markeredgecolor=delays.plotcolour, color=delays.plotcolour)
 				else:
-					plt.plot([delay["mean"]], [ypos], marker=delays.marker, markersize=delays.markersize, markeredgecolor=delays.plotcolour, color=delays.plotcolour)
-				
-				if showbias:
-					plt.plot([delay["mean"] - error["bias"]], [ypos], marker="x", markersize=delays.markersize, markeredgecolor=delays.plotcolour, color=delays.plotcolour)
+					plt.plot([delay["mean"]], [ypos], marker=delays.marker, markersize=delays.markersize,
+							 markeredgecolor=delays.plotcolour, color=delays.plotcolour)
 
-				if hidedetails or (error["ran"] < 0.001 and error["sys"] < 0.001): # Then we ommit to write them.
+				if showbias:
+					plt.plot([delay["mean"] - error["bias"]], [ypos], marker="x", markersize=delays.markersize,
+							 markeredgecolor=delays.plotcolour, color=delays.plotcolour)
+
+				if hidedetails or (error["ran"] < 0.001 and error["sys"] < 0.001):  # Then we ommit to write them.
 					if "tot" in error:
 						delaytext = r"$%+.1f \pm %.1f$" % (delay["mean"], error["tot"])
 					else:
 						delaytext = r"$%+.1f^{+%.1f}_{-%.1f}$" % (delay["mean"], error["plus"], error["minus"])
 				else:
 					if "tot" in error:
-						delaytext = r"$%+.1f \pm %.1f\,(%.1f, %.1f)$" % (delay["mean"], error["tot"], error["ran"], error["sys"])
-					else: # no sys and random for the asymmetric guys...
+						delaytext = r"$%+.1f \pm %.1f\,(%.1f, %.1f)$" % (
+						delay["mean"], error["tot"], error["ran"], error["sys"])
+					else:  # no sys and random for the asymmetric guys...
 						delaytext = r"$%+.1f^{+%.1f}_{-%.1f}$" % (delay["mean"], error["plus"], error["minus"])
 
 				# if you want to hide the error...
@@ -242,8 +252,8 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 					delaytext = r"$%+.1f$" % delay["mean"]
 
 
-				if n==2: # For doubles, we include the technique name into the txt :
-					delaytext = r"%s : " % (delays.name) + delaytext	
+				if n == 2:  # For doubles, we include the technique name into the txt :
+					delaytext = r"%s : " % (delays.name) + delaytext
 
 
 				if displaytext:
@@ -251,23 +261,27 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 						thislabelfontsize = delays.labelfontsize
 					else:
 						thislabelfontsize = labelfontsize
-					ax.annotate(delaytext, xy=(delay["mean"], ypos + 0.3), color = delays.plotcolour, horizontalalignment="center", fontsize=thislabelfontsize)
+
+					ax.annotate(delaytext, xy=(delay["mean"], ypos + 0.3), color=delays.plotcolour,
+								horizontalalignment="center", fontsize=thislabelfontsize)
+
 
 				if "tot" in error:
-					print "%45s : %+6.2f +/- %.2f (%.2f, %.2f)" % (delays.name, delay["mean"], error["tot"], error["ran"], error["sys"])
+					print "%45s : %+6.2f +/- %.2f (%.2f, %.2f)" % (
+					delays.name, delay["mean"], error["tot"], error["ran"], error["sys"])
 				else:
 					print "%45s : %+6.2f + %.2f - %.2f" % (delays.name, delay["mean"], error["plus"], error["minus"])
-		
-			print "#"*80
+
+			print "#" * 80
 
 			# Now this panel is done. Some general settings :
 			if centershifts != None:
 				centerdelay = centershifts[i] - centershifts[j]
 			else:
 				centerdelay = np.median(paneldelays)
-		
+
 			plt.xlim((centerdelay - rplot, centerdelay + rplot))
-			plt.ylim((ymin, nmeas+1.5))
+			plt.ylim((ymin, nmeas + 1.5))
 
 			# Blindness display options
 			if blindness:
@@ -278,11 +292,12 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 			# Tweaked display option (should disappear for an uniform display !!)
 			if tweakeddisplay:
 				plt.xticks(fontsize=15)
-				xlabelfontsize=18
+				xlabelfontsize = 18
 			else:
-				xlabelfontsize=14
+				xlabelfontsize = 14
 
-			if i == n-1 and not horizontaldisplay:
+			if i == n - 1 and not horizontaldisplay:
+
 				plt.xlabel(xlabel, fontsize=xlabelfontsize)
 			elif horizontaldisplay:
 				if showxlabelhd:
@@ -290,16 +305,20 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 				else:
 					ax.get_xaxis().set_ticks([])
 
-			if n != 2: # otherwise only one panel, no need
-				plt.annotate(delaylabel, xy=(0.03, 0.88-txtstep),  xycoords='axes fraction', fontsize=14, color="black")
-	
+
+			if n != 2:  # otherwise only one panel, no need
+				plt.annotate(delaylabel, xy=(0.03, 0.88 - txtstep), xycoords='axes fraction', fontsize=14,
+							 color="black")
+
+
 			if refshifts != None:
 				for item in refshifts:
 					refdelay = item["shifts"][i] - item["shifts"][j]
 					plt.axvline(refdelay, color=item["colour"], linestyle="--", dashes=(3, 3), zorder=-20)
-			
+
 			if refdelays != None:
 				try:  # if refdelays are in the form of delays and errors containers:
+
 					for (ipl,(delays, errors)) in enumerate(refdelays):
 
 						# Getting the delay for this particular panel
@@ -318,43 +337,43 @@ def newdelayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showb
 					plt.axvspan(delay-errors[1], delay+errors[0], facecolor="gray", alpha=0.15, zorder=-20, edgecolor="none", linewidth=0)
 					plt.axvline(delay, color="gray", linestyle='--', dashes=(5, 5), lw=1.0, zorder=-20, alpha=0.4)
 			
+
 			if hlines != None:
 				for hline in hlines:
 					plt.axhline(hline, lw=0.5, color="gray", zorder=-30)
 
-
-	
 	# The "legend" :
 	if showlegend:
-		for (ipl,(delays, errors)) in enumerate(plotlist):
+		for (ipl, (delays, errors)) in enumerate(plotlist):
 			line = "%s" % (delays.name)
 			if not tweakeddisplay:
-				plt.figtext(x = right, y = top - txtstep*ipl, s = line, verticalalignment="top", horizontalalignment="right", color=delays.plotcolour, fontsize=14)
+				plt.figtext(x=right, y=top - txtstep * ipl, s=line, verticalalignment="top",
+							horizontalalignment="right", color=delays.plotcolour, fontsize=14)
 			else:
 				if hasattr(delays, 'legendfontsize'):
 					lfontsize = delays.legendfontsize
 				else:
 					lfontsize = 16
-				plt.figtext(x = 0.75, y = top - txtstep*ipl -0.1, s = line, verticalalignment="top", horizontalalignment="center", color=delays.plotcolour, fontsize=lfontsize) # for 3-delay plots
-		if legendfromrefdelays:
-			for (ipl,(delays, errors)) in enumerate(refdelays):
-				line = "%s" % (delays.name)
-				plt.figtext(x = right, y = top - txtstep*(ipl+len(plotlist)), s = line, verticalalignment="top", horizontalalignment="right", color=delays.plotcolour, fontsize=14)
 
-	
+				plt.figtext(x=0.75, y=top - txtstep * ipl - 0.1, s=line, verticalalignment="top",
+							horizontalalignment="center", color=delays.plotcolour,
+							fontsize=lfontsize)  # for 3-delay plots
+
+		if legendfromrefdelays:
+			for (ipl, (delays, errors)) in enumerate(refdelays):
+				line = "%s" % (delays.name)
+				plt.figtext(x=right, y=top - txtstep * (ipl + len(plotlist)), s=line, verticalalignment="top",
+							horizontalalignment="right", color=delays.plotcolour, fontsize=14)
+
 	# Generic text :
 	if text != None:
 		for line in text:
 			plt.figtext(x=line[0], y=line[1], s=line[2], **line[3])
 
-
-	if filename==None:
+	if filename == None:
 		plt.show()
 	else:
 		plt.savefig(filename)
-
-	
-	
 
 
 def newdelayplot2(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showlegend=True, text=None, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename="screen", refshifts=None, refdelays=None, legendfromrefdelays=False, hatches=None, centershifts=None, ymin=0.2, hlines=None):
@@ -622,7 +641,8 @@ def normal(x, mu, sigma):
 	return (1.0/np.sqrt(2.0*np.pi*sigma*sigma)) * np.exp( - (x - mu)**2/(2*sigma*sigma))
 
 
-def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None, title=None, xtitle=0.5, ytitle=0.95, titlesize=18, niceplot=False, displaytext=True, figsize=(16, 9), left = 0.06, right=0.95, bottom=0.065, top=0.95, wspace=0.2, hspace=0.2, txtstep=0.04, majorticksstep=2, hideyaxis=True, trueshifts=None, filename=None, dataout=False, blindness=False, usemedian=False):
+def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None, title=None, xtitle=0.5, ytitle=0.95, titlesize=18, niceplot=False, displaytext=True, figsize=(16, 9), left = 0.06, right=0.95, bottom=0.065, top=0.95, wspace=0.2, hspace=0.2, txtstep=0.04, majorticksstep=2, hideyaxis=True, trueshifts=None, filename=None, dataout=False, blindness=False, usemedian=False, outdir = "./"):
+
 	"""
 	Comparing the delay distributions from different run result objects.
 	
@@ -814,7 +834,7 @@ def hists(rrlist, r=10.0, nbins=100, showqs=True, showallqs=False, qsrange=None,
 		for rr in rrlist:
 			
 			dc = delaycontainer(data = rr.tmpdata, name = rr.name, plotcolour = rr.plotcolour, objects=labels[:])	
-			pycs.gen.util.writepickle(dc, "%s_delays.pkl" % (rr.autoname))
+			pycs.gen.util.writepickle(dc, outdir+ "%s_delays.pkl" % (rr.autoname))
 			rr.tmpdata = None
 	
 	labelspacetop = 0.0
@@ -1360,7 +1380,7 @@ def newcovplot(rrlist, r=6, rerr=3, nbins = 10, nbins2d=3, binclip=True, binclip
 	return retdict
 
 
-def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plotrods=True, alpharods=0.2, ploterrorbars=True, sidebyside=True, errorrange=None, binclip=False, binclipr=10.0, title=None, xtitle=0.75, ytitle=0.95, titlesize=30, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, displayn=True, filename=None, dataout=False, tweakeddisplay=False, blindness=False):
+def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plotrods=True, alpharods=0.2, ploterrorbars=True, sidebyside=True, errorrange=None, binclip=False, binclipr=10.0, title=None, xtitle=0.75, ytitle=0.95, titlesize=30, figsize=(10, 6), left = 0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, displayn=True, filename=None, dataout=False, tweakeddisplay=False, blindness=False, outdir = "./"):
 	"""
 	
 	Plots measured delays versus true delays
@@ -1564,7 +1584,7 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plo
 		for rr in rrlist:
 			
 			dc = delaycontainer(data = rr.tmpdata, name = rr.name, plotcolour = rr.plotcolour, objects=labels[:])	
-			pycs.gen.util.writepickle(dc, "%s_errorbars.pkl" % (rr.autoname))
+			pycs.gen.util.writepickle(dc,outdir+ "%s_errorbars.pkl" % (rr.autoname))
 			rr.tmpdata = None
 	
 	labelspacetop = 0.0
