@@ -159,8 +159,8 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 				if not hasattr(group, 'elinewidth'):
 					group.elinewidth = 1.5
 
-				# colour
-				if not hasattr(group, 'plotcolor'):
+				# color
+				if not hasattr(group, 'color'):
 					group.plotcolor = "royalblue"
 
 				# marker
@@ -182,8 +182,7 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 
 				# extra properties: elinewidth, plotcolor, marker, markersize, labelfontsize, legendfontsize
 
-				plt.errorbar([median], [ypos], yerr=None, xerr=xerr, fmt='-', ecolor=group.plotcolor,
-				             elinewidth=group.elinewidth, capsize=3, barsabove=False)
+				plt.errorbar([median], [ypos], yerr=None, xerr=xerr, fmt='-', ecolor=group.plotcolor, elinewidth=group.elinewidth, capsize=3, barsabove=False)
 
 				if showran and hasattr(group, "ran_errors"):
 					plt.errorbar([median], [ypos], yerr=None, xerr=group.ran_errors[labelindex], fmt='-', ecolor=group.plotcolor, elinewidth=0.5, capsize=2, barsabove=False)

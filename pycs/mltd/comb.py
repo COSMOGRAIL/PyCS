@@ -16,12 +16,12 @@ class CScontainer():
 
 	Could be a dictionnary as well, e.g.
 
-	{"data": "C2", "knots": 25, "ml": "splml-150", "name": "C2_ks25_ml150", "drawopt": "spl1", "runopt": "spl1t5", "ncopy": 200, "nmocks": 1000, "truetsr": 3, "colour": "royalblue"}
+	{"data": "C2", "knots": 25, "ml": "splml-150", "name": "C2_ks25_ml150", "drawopt": "spl1", "runopt": "spl1t5", "ncopy": 200, "nmocks": 1000, "truetsr": 3, "color": "royalblue"}
 
 	This is simply a nicer interface between a PyCS simulation output and a Group.
 	"""
 
-	def __init__(self, data, knots, ml, name, drawopt, runopt, ncopy, nmocks, truetsr, colour):
+	def __init__(self, data, knots, ml, name, drawopt, runopt, ncopy, nmocks, truetsr):
 
 		self.data = data
 		self.knots = knots
@@ -32,8 +32,6 @@ class CScontainer():
 		self.ncopy = ncopy
 		self.nmocks = nmocks
 		self.truetsr = truetsr
-		self.colour = colour
-
 
 class Group():
 	"""
@@ -176,7 +174,6 @@ def getcombweightslist(groups):
 		weights = sum(indweights)/float(len(indweights))
 		weightslist["weights"].append(weights)
 	return weightslist
-
 
 
 def getresults(csc, useintrinsic=False):

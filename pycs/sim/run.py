@@ -289,7 +289,7 @@ def multirun(simset, lcs, optfct, kwargs_optim, optset="multirun", tsrand=10.0, 
 	between curves that you got from :py:func:`pycs.sim.draw.multidraw`, and save the results in
 	form of runresult pickles.
 	
-	.. note: Remove my ".workinon" file and I will finish the current pkl and skip the remaining ones !
+	.. note: Remove my ".workingon" file and I will finish the current pkl and skip the remaining ones !
 		This is useful to stop we cleanly.
 	
 	It is perfectly ok to launch several instances of myself on the same simset, to go faster.
