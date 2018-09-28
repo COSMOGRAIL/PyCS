@@ -228,7 +228,8 @@ def subtract(lcs, spline):
 		lp.applymagshift()
 		if lp.ml != None:
 			lp.applyml()
-		
+
+		#print lcs
 		lp.mags -= spline.eval(lp.getjds())
 			
 		rls.append(lp)

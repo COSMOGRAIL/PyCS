@@ -160,7 +160,7 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 					group.elinewidth = 1.5
 
 				# color
-				if not hasattr(group, 'color'):
+				if not hasattr(group, 'plotcolor'):
 					group.plotcolor = "royalblue"
 
 				# marker
@@ -270,7 +270,7 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 			plt.figtext(x=0.75, y=top - txtstep * ipl - 0.1, s=line, verticalalignment="top",
 			            horizontalalignment="center", color=group.plotcolor,
 			            fontsize=group.legendfontsize)  # for 3-delay plots
-		if legendfromrefgroup:
+		if legendfromrefgroup and refgroup is not None:
 			if not hasattr(refgroup, 'legendfontsize'):
 				refgroup.legendfontsize = 16
 
