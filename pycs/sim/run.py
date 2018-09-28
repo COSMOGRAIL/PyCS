@@ -18,9 +18,7 @@ import random
 import os, sys
 
 
-
-
-def applyopt(optfct, lcslist, ncpu=-1, verbose=False):
+def applyopt(optfct, lcslist, **kwargs):
 	"""
 	Applies optfct (an optimizing function that takes a list of lightcurves as single argument)
 	to all the elements (list of lightcurves)
@@ -55,11 +53,14 @@ def applyopt(optfct, lcslist, ncpu=-1, verbose=False):
 # 		return (optfctout, mylcs)
 	
 	ncpu = 1
+	verbose = True
 	if ncpu == 1:
 		if verbose:
 			print "Starting the curve shifting on a single CPU, no multiprocessing..."
 		start = time.time()
-		optfctouts = map(optfct, lcslist) # Ok to use optfct directly
+		kwargs_vec = [kwargs for k in lcslist]
+		optfctouts = [optfct(lcs, **kwargs_vec[i]) for i,lcs in enumerate(lcslist)] # Ok to use optfct directly
+
 		print "Shifted %i simulations, using 1 CPU, time : %s" % (len(lcslist), pycs.gen.util.strtd(time.time() - start))
 
 # 	else:
@@ -282,13 +283,13 @@ def collect(directory = "./test", plotcolour="#008800", name=None):
 
 
 
-def multirun(simset, lcs, optfct, optset="multirun", tsrand=10.0, analyse = True, shuffle=True, keepopt=False, trace=False, verbose=True):
+def multirun(simset, lcs, optfct, kwargs_optim, optset="multirun", tsrand=10.0, analyse = True, shuffle=True, keepopt=False, trace=False, verbose=True, destpath = "./"):
 	"""
 	Top level wrapper to get delay "histograms" : I will apply the optfct to optimize the shifts
 	between curves that you got from :py:func:`pycs.sim.draw.multidraw`, and save the results in
 	form of runresult pickles.
 	
-	.. note: Remove my ".workinon" file and I will finish the current pkl and skip the remaining ones !
+	.. note: Remove my ".workingon" file and I will finish the current pkl and skip the remaining ones !
 		This is useful to stop we cleanly.
 	
 	It is perfectly ok to launch several instances of myself on the same simset, to go faster.
@@ -320,7 +321,7 @@ def multirun(simset, lcs, optfct, optset="multirun", tsrand=10.0, analyse = True
 	"""
 	
 	# We look for the sims directory OH GOD THIS IS SO UGLY !
-	simdir = "sims_%s" % (simset)
+	simdir = destpath + "sims_%s" % (simset)
 	if not os.path.isdir(simdir):
 		raise RuntimeError("Sorry, I cannot find the directory %s" % simset)
 		
@@ -330,7 +331,7 @@ def multirun(simset, lcs, optfct, optset="multirun", tsrand=10.0, analyse = True
 	
 	
 	# We prepare the destination directory	
-	destdir = "sims_%s_opt_%s" % (simset, optset)
+	destdir = destpath+"sims_%s_opt_%s" % (simset, optset)
 	if verbose:
 		print "I'll write my results into the directory %s." % (destdir)
 	
@@ -386,7 +387,7 @@ def multirun(simset, lcs, optfct, optset="multirun", tsrand=10.0, analyse = True
 			if shuffle:
 				for simlcs in simlcslist:
 					pycs.gen.lc.shuffle(simlcs)
-			optfctouts = applyopt(optfct, simlcslist, verbose=verbose)
+			optfctouts = applyopt(optfct, simlcslist, **kwargs_optim)
 			if shuffle: # We sort them, as they will be passed the constructor of runresuts.
 				for simlcs in simlcslist:
 					pycs.gen.lc.objsort(simlcs, verbose=False)

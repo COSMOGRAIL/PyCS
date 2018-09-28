@@ -9,7 +9,7 @@ This is PyCS, a python toolbox to estimate time delays between COSMOGRAIL light 
 
 __version__ = "2.0dev"
 
-__all__ = ["gen", "disp", "spl", "sim", "tdc", "spldiff"]
+__all__ = ["gen", "disp", "spl", "sim", "tdc", "spldiff", "mltd"]
 
 
 import gen
@@ -18,5 +18,7 @@ import spl
 import sim
 import tdc
 import spldiff
+import mltd
+
 #import regdiff # would require pymc, but we don't want to add weird dependencies.
 #import regdiff2
