@@ -1,7 +1,7 @@
 Intra-dependency chart
 ======================
 
-This chart lists the dependencies of the various modules and files in PyCS.
+This chart lists the intra-dependencies of the various modules and files in PyCS.
 
 
 .. image:: _static/pycschart.png
