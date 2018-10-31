@@ -73,7 +73,6 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 	nmeas = len(plotlist)
 	print "Objects : %s" % (", ".join(objects))
 
-
 	if horizontaldisplay and n != 3:
 		print "Horizontal display works only for three delays, you have %i" % n
 		print "Switching back to regular display"
@@ -95,7 +94,8 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 	for i in range(n):  # A, B, C, D and so on
 		for j in range(n):
 
-			# print i, j
+			#print i, j
+
 			if (i == 0) or (j == n - 1):
 				continue  # No plot
 
@@ -104,6 +104,7 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 
 			if j >= i:
 				continue
+
 
 			if horizontaldisplay:
 				axisNum += 1
@@ -179,6 +180,7 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 				if not hasattr(group, 'legendfontsize'):
 					group.legendfontsize = 16
 
+				print group.legendfontsize
 
 				# extra properties: elinewidth, plotcolor, marker, markersize, labelfontsize, legendfontsize
 
@@ -286,3 +288,81 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 		plt.show()
 	else:
 		plt.savefig(filename)
+
+
+def write_delays(group, write_dir=None, mode="GLEE"):
+	"""
+	Write the group linarized distributions into a txt file, to be used seamlessly by various modeling code. So far, only GLEE is implemented.
+
+    Parameters
+    ----------
+
+	write_dir : string or None (default=None)
+		Directory path of the output files. If None, use the current working directory (cwd)
+
+	mode: string or None (default="GLEE")
+		Defines how the output has to be written.
+		GLEE: no header, positively increasing values, constant step
+	"""
+
+	if write_dir is None:
+		_wd = "."
+	else:
+		_wd = write_dir
+
+	for ind, (label, bins, vals) in enumerate(zip(group.labels, group.binslist, group.lins)):
+
+		# label: AB, AC, BC, etc...
+		# bins: edges of the histogram bins
+		# vals: value of the measured pdf at the middle of each bin
+
+		# rebase bins into a new vector whose values are the middle of the bins
+		xs = [(bins[i] + bins[i+1])/2. for i, _ in enumerate(bins[:-1])]
+
+		if mode is "GLEE":
+			# force a positively increasing delays values
+			if xs[1] < xs[0]:
+				xs = xs[::-1]
+				vals = vals[::-1]
+
+
+			# assert constant step
+			try:
+				assert len(list(set(["%.3f" % (xs[i + 1] - xs[i]) for i in range(len(xs) - 1)]))) == 1
+			except:
+				print list(set(["%.3f" % (xs[i + 1] - xs[i]) for i in range(len(xs) - 1)]))
+				raise AssertionError("The delay values step is not constant. This might be due to a rounding error: either change the digit precision of your delays, or use a different binning when linearizing.")
+
+
+		# save the data in a txt file for easier use
+		f = open(os.path.join(_wd, "%s_%s.txt" % (group.name, label)), "w")
+		if mode is not "GLEE":
+			f.write("Dt\tprob\n")
+			f.write("==\t====\n")
+		for x, val in zip(xs, vals):
+			f.write("%.3f\t%.8f\n" % (x, val))
+		f.close()
+
+		# also save the revert delays (i.e. BA instead of AB)
+		_reverted_xs = np.array(xs) * -1.0
+		if len(label) == 2:
+			newlabel = label[::-1]
+		elif len(label) == 3:
+			newlabel = label[2:]+label[:2]
+		elif len(label) == 4:
+			newlabel = label[2:]+label[:2]
+
+		if mode is "GLEE":
+			# force a positively increasing delays values
+			if _reverted_xs[1] < _reverted_xs[0]:
+				_reverted_xs = _reverted_xs[::-1]
+				vals = vals[::-1]
+
+
+		f = open(os.path.join(_wd, "%s_%s.txt" % (group.name, newlabel)), "w")
+		if mode is not "GLEE":
+			f.write("Dt\tprob\n")
+			f.write("==\t====\n")
+		for x, val in zip(_reverted_xs, vals):
+			f.write("%.3f\t%.8f\n" % (x, val))
+		f.close()
