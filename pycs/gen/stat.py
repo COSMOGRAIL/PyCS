@@ -438,7 +438,7 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 
 		if showplot:
 			plt.show()
-		plt.savefig("fig_anaoptdrawn_%s_%s_resihists.pdf" % (simset, optset))	
+		plt.savefig("fig_anaoptdrawn_%s_%s_resihists.png" % (simset, optset))
 	
 	
 	# A detailed plot of some residuals, just for a few drawn curves
@@ -455,7 +455,7 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 			if plotcurveindexes != None:
 				optorigrlcs = [optorigrlcs[index] for index in plotcurveindexes]
 				optmockrlcs = [optmockrlcs[index] for index in plotcurveindexes]
-			plotresiduals([optorigrlcs, optmockrlcs], jdrange=plotjdrange, nicelabel=False, showlegend=False, showsigmalines = False, errorbarcolour = "#999999", filename="fig_anaoptdrawn_%s_%s_resi_%i.pdf" % (simset, optset, i+1))	
+			plotresiduals([optorigrlcs, optmockrlcs], jdrange=plotjdrange, nicelabel=False, showlegend=False, showsigmalines = False, errorbarcolour = "#999999", filename="fig_anaoptdrawn_%s_%s_resi_%i.png" % (simset, optset, i+1))
 
 	
 	return stats

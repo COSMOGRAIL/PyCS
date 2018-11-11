@@ -200,7 +200,7 @@ def draw(lcs, spline, shotnoise=None, shotnoisefrac=1.0, tweakml=None, scaletwea
 				thislctweakml = tweakml
 			# We run the tweaking :
 			if l.ml != None:
-				thislctweakml([l]) # modifies in place
+				thislctweakml([l], spline) # modifies in place
 				tweakedml = l.ml.copy()
 			else:
 				print "WARNING: curve %s has no ML to tweak !" % (str(l))

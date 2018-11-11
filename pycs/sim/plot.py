@@ -1515,7 +1515,9 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plo
 					plt.ylabel("Delay measurement error [day]", fontsize=16)
 				plt.xticks(fontsize=13)
 				plt.yticks(fontsize=13)
-			
+				xmin, xmax = ax.get_xlim()
+				ax.set_xticks(np.round(np.linspace(xmin, xmax, 10)))
+
 			plt.xlim(plotrange)
 			#plt.ylim(plotrange)
 			if errorrange != None:

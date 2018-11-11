@@ -8,7 +8,7 @@ from numpy import arange, ones, array
 #import pycs.gen.splml
 
 
-def tweakml(lcs, beta=-2.0, sigma=0.05, fmin=1/500.0, fmax=None, psplot=False, sampling=0.1):
+def tweakml(lcs,spline, beta=-2.0, sigma=0.05, fmin=1/500.0, fmax=None, psplot=False, sampling=0.1):
 	"""
 	I tweak the SplineML of your curves by adding small scale structure.
 	I DO modify your lcs inplace.

@@ -19,9 +19,11 @@ class CScontainer():
 	{"data": "C2", "knots": 25, "ml": "splml-150", "name": "C2_ks25_ml150", "drawopt": "spl1", "runopt": "spl1t5", "ncopy": 200, "nmocks": 1000, "truetsr": 3, "colour": "royalblue"}
 
 	This is simply a nicer interface between a PyCS simulation output and a Group.
+
+	You can also give directly the result file without the extension '_errorbars.pkl' or 'delays.pkl'.
 	"""
 
-	def __init__(self, data, knots, ml, name, drawopt, runopt, ncopy, nmocks, truetsr, colour):
+	def __init__(self, data, knots, ml, name, drawopt, runopt, ncopy, nmocks, truetsr, colour, result_file_delays = None, result_file_errorbars = None):
 
 		self.data = data
 		self.knots = knots
@@ -33,6 +35,8 @@ class CScontainer():
 		self.nmocks = nmocks
 		self.truetsr = truetsr
 		self.colour = colour
+		self.result_file_delays = result_file_delays
+		self.result_file_errorbars = result_file_errorbars
 
 
 class Group():
@@ -185,10 +189,16 @@ def getresults(csc):
 	"""
 
 	# get the correct results path
-	cp = "%s_ks%i_%s/sims_copies_%s_n%i_opt_%s_delays.pkl" % (
-	csc.drawopt, csc.knots, csc.ml, csc.data, csc.ncopy, csc.runopt)
-	mp = "%s_ks%i_%s/sims_mocks_%s_n%it%i_opt_%s_errorbars.pkl" % (
-	csc.drawopt, csc.knots, csc.ml, csc.data, csc.nmocks, csc.truetsr, csc.runopt)
+	if csc.result_file_delays == None and csc.result_file_errorbars == None :
+		cp = "%s_ks%i_%s/sims_copies_%s_n%i_opt_%s_delays.pkl" % (
+		csc.drawopt, csc.knots, csc.ml, csc.data, csc.ncopy, csc.runopt)
+		mp = "%s_ks%i_%s/sims_mocks_%s_n%it%i_opt_%s_errorbars.pkl" % (
+		csc.drawopt, csc.knots, csc.ml, csc.data, csc.nmocks, csc.truetsr, csc.runopt)
+		#TODO : clear this
+	else :
+		cp = csc.result_file_delays
+		mp = csc.result_file_errorbars
+		print cp, mp
 
 	# collect the results
 	result = (pycs.gen.util.readpickle(cp), pycs.gen.util.readpickle(mp))

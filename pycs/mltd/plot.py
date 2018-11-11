@@ -18,7 +18,7 @@ import pycs.gen.util
 
 
 
-def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename=None, refgroup=None, legendfromrefgroup=False, centerdelays=None, ymin=0.2, hlines=None, blindness=False, horizontaldisplay=False, showxlabelhd=True):
+def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.03, majorticksstep=2, filename=None, refgroup=None, legendfromrefgroup=False, centerdelays=None, ymin=0.2, hlines=None, blindness=False, horizontaldisplay=False, showxlabelhd=True):
 	"""
 	Plots delay measurements from different methods, telescopes, sub-curves, etc in one single plot.
 
@@ -265,7 +265,7 @@ def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias
 		for ipl, group in enumerate(plotlist):
 			line = "%s" % (group.name)
 
-			plt.figtext(x=0.75, y=top - txtstep * ipl - 0.1, s=line, verticalalignment="top",
+			plt.figtext(x=0.80, y=top - txtstep * ipl - 0.12, s=line, verticalalignment="top",
 			            horizontalalignment="center", color=group.plotcolor,
 			            fontsize=group.legendfontsize)  # for 3-delay plots
 		if legendfromrefgroup:
@@ -273,7 +273,7 @@ def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias
 				refgroup.legendfontsize = 16
 
 			line = "%s" % (refgroup.name)
-			plt.figtext(x=0.75, y=top - txtstep * len(plotlist) - 0.1, s=line, verticalalignment="top", horizontalalignment="center", color="grey", fontsize=refgroup.legendfontsize)
+			plt.figtext(x=0.80, y=top - txtstep * len(plotlist) - 0.12, s=line, verticalalignment="top", horizontalalignment="center", color="grey", fontsize=refgroup.legendfontsize)
 
 	# Generic text :
 	if text != None:
