@@ -101,7 +101,7 @@ class Group():
 			bin_means = bin_means / np.sum(bin_means)
 
 			# To check we are not too far off
-			ci = confinterval(self.binslist[ind][:-1], weights=bin_means, testmode=testmode)
+			ci = confinterval(0.5 * (self.binslist[ind][1:] + self.binslist[ind][:-1]), weights=bin_means, testmode=testmode)
 			if verbose:
 				print "="*45
 				print "Delay %s:" % label, "%.2f" % self.medians[ind], "+/-", "%.2f" % scale," --> ", "%.2f" % ci[0], "+%.2f-%.2f" % (ci[2], ci[1])
@@ -240,7 +240,7 @@ def asgetresults(weightslist, testmode=True):
 	errors_down = []
 	lins = []
 	for b, w in zip(weightslist["binslist"], weightslist["weights"]):
-		ci = confinterval(b[:-1], w, testmode=testmode)
+		ci = confinterval(0.5 * (b[1:] + b[:-1]), w, testmode=testmode)
 		medians.append(ci[0])
 		errors_up.append(ci[2])
 		errors_down.append(ci[1])
@@ -490,7 +490,7 @@ def convolve_estimates(group, errors, testmode=True):
 	converrors_up = []
 	converrors_down = []
 	for c, b in zip(convols, group.binslist):
-		ci = confinterval(xs=b[:-1], weights=c, testmode=testmode)
+		ci = confinterval(xs=0.5 * (b[1:] + b[:-1]), weights=c, testmode=testmode)
 		convmedians.append(ci[0])
 		converrors_down.append(ci[1])
 		converrors_up.append(ci[2])
