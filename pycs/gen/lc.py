@@ -1908,14 +1908,14 @@ def display(lclist=[], splist=[],
 
 
 	"""
-	
+
 	import matplotlib as mpl
 	import matplotlib.pyplot as plt
 	import matplotlib.font_manager as fm
 	from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 	import matplotlib.dates
 	import matplotlib.lines
-	
+
 	if style == None:
 		pass
 	elif style in ["homepagepdf", "homepagepdfnologo"]:
@@ -1965,7 +1965,7 @@ def display(lclist=[], splist=[],
 		figsize=(10,5.5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
 		showlogo=False
-		nicefont=True
+		nicefont=False
 		showdelays=False
 		showlegend=False
 		showdates=True
@@ -1974,9 +1974,8 @@ def display(lclist=[], splist=[],
 		capsize=0
 		jdmintickstep=50
 		magmintickstep=0.2
-		showgrid=False
-		transparent=True
-		title=None
+		#showgrid=False
+		transparent=False
 
 	elif style=="internal":
 		figsize=(10,5.5)
@@ -2063,7 +2062,6 @@ def display(lclist=[], splist=[],
 				scattervalues = np.array([float(propertydict[colourpropname]) for propertydict in curve.properties])
 				axes.scatter(tmpjds, tmpmags, s=markersize, c=scattervalues, vmin=colourminval, vmax=colourmaxval, edgecolors="None")
 			else:
-
 				if curve.ploterrorbars and showerrorbars:
 					axes.errorbar(tmpjds, tmpmags, curve.magerrs, fmt=".", markersize = markersize, markeredgecolor=curve.plotcolour, color=curve.plotcolour, ecolor=errorbarcolour, capsize=capsize, label=str(curve), elinewidth=0.5)
 					#plt.errorbar(tmpjds, tmpmags, curve.magerrs, linestyle="-", marker=".", color=curve.plotcolour, ecolor="#BBBBBB", label=str(curve))

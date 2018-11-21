@@ -138,7 +138,7 @@ def colourise(lcs):
 	
 	http://www.w3schools.com/html/html_colornames.asp
 	"""
-	mycolours = ["red", "blue", "#009900", "purple", "brown", "magenta", "orange"]
+	mycolours = ["darkorange", "royalblue", "seagreen", "purple", "brown", "magenta", "orange"]
 
 	for (l,c) in zip(lcs, mycolours):
 		l.plotcolour = c
