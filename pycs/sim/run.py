@@ -59,7 +59,19 @@ def applyopt(optfct, lcslist, **kwargs):
 			print "Starting the curve shifting on a single CPU, no multiprocessing..."
 		start = time.time()
 		kwargs_vec = [kwargs for k in lcslist]
-		optfctouts = [optfct(lcs, **kwargs_vec[i]) for i,lcs in enumerate(lcslist)] # Ok to use optfct directly
+		# optfctouts = [optfct(lcs, **kwargs_vec[i]) for i,lcs in enumerate(lcslist)] # Ok to use optfct directly
+		optfctouts = []
+		sucess_dic = {'success':True, 'failed_id':[], 'error_list':[]}
+		for i, lcs in enumerate(lcslist):
+			try :
+				optout = optfct(lcs, **kwargs_vec[i])
+			except Exception as e:
+				print "WARNING : I have a probleme with the curve number %i)"%(i)
+				sucess_dic['failed_id'].append(i)
+				sucess_dic['success'] = False
+				sucess_dic['error_list'].append(e)
+				continue
+			optfctouts.append(optout)
 
 		print "Shifted %i simulations, using 1 CPU, time : %s" % (len(lcslist), pycs.gen.util.strtd(time.time() - start))
 
@@ -88,7 +100,7 @@ def applyopt(optfct, lcslist, **kwargs):
 	if optfctouts[0] == None:
 		print("### WARNING : it seems that your optfct does not return anything ! ###")
 	
-	return optfctouts
+	return optfctouts, sucess_dic
 # 		"""
 # 		sys.exit("Sorry, mp does not work yet...")
 # 		import multiprocessing
@@ -387,7 +399,7 @@ def multirun(simset, lcs, optfct, kwargs_optim, optset="multirun", tsrand=10.0, 
 			if shuffle:
 				for simlcs in simlcslist:
 					pycs.gen.lc.shuffle(simlcs)
-			optfctouts = applyopt(optfct, simlcslist, **kwargs_optim)
+			optfctouts, success_dic = applyopt(optfct, simlcslist, **kwargs_optim)
 			if shuffle: # We sort them, as they will be passed the constructor of runresuts.
 				for simlcs in simlcslist:
 					pycs.gen.lc.objsort(simlcs, verbose=False)
@@ -446,5 +458,5 @@ def multirun(simset, lcs, optfct, kwargs_optim, optset="multirun", tsrand=10.0, 
 			os.remove(workingonfilepath)
 		
 	
-
+		return success_dic
 			
