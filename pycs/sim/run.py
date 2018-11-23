@@ -125,11 +125,12 @@ class runresults:
 	The TRUE shifts are also saved (if available)
 	
 	All this is not related to a particular optimization technique.
+	Please also provide the success_dic to remove the curves where the optimiser failed.
 	
 	Note the mask funcitonallity.
 	"""
 	
-	def __init__(self, lcslist, qs=None, name="None", plotcolour = "#008800"):
+	def __init__(self, lcslist, qs=None, name="None", plotcolour = "#008800", success_dic = None):
 		"""
 		lcslist may or may not have "truetimeshifts". If not, I will put 0.0 as true shifts.
 		
@@ -139,7 +140,10 @@ class runresults:
 		I will not sort these lcs (as you might want them in an unsorted order).
 		
 		"""
-		
+		if success_dic != None :
+			print("Removing the failed optimisation...")
+			lcslist = [lcs for i,lcs in enumerate(lcslist) if i not in success_dic['failed_id']]
+
 		if qs is not None:
 			self.qs = qs
 			if qs.shape[0] != len(lcslist):
@@ -445,7 +449,7 @@ def multirun(simset, lcs, optfct, kwargs_optim, optset="multirun", tsrand=10.0, 
 
 
 		# Saving the results
-		rr = runresults(simlcslist, qs = qs, name="sims_%s_opt_%s" % (simset, optset))
+		rr = runresults(simlcslist, qs = qs, name="sims_%s_opt_%s" % (simset, optset), success_dic = success_dic)
 		pycs.gen.util.writepickle(rr, resultsfilepath)
 
 		# We remove the lock for this pkl file.
