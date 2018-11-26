@@ -66,12 +66,12 @@ def applyopt(optfct, lcslist, **kwargs):
 			try :
 				optout = optfct(lcs, **kwargs_vec[i])
 			except Exception as e:
-				print "WARNING : I have a probleme with the curve number %i)"%(i)
+				print "WARNING : I have a probleme with the curve number %i."%(i)
 				sucess_dic['failed_id'].append(i)
 				sucess_dic['success'] = False
 				sucess_dic['error_list'].append(e)
-				continue
-			optfctouts.append(optout)
+			else :
+				optfctouts.append(optout)
 
 		print "Shifted %i simulations, using 1 CPU, time : %s" % (len(lcslist), pycs.gen.util.strtd(time.time() - start))
 
@@ -96,9 +96,11 @@ def applyopt(optfct, lcslist, **kwargs):
 # 			lcs = optlcs
 # 		
 # 		print "Shifted %i simulations on %i/%i CPUs, time : %s" % (len(lcslist), ncpu, ncpuava, pycs.gen.util.strtd(time.time() - start))
-	
-	if optfctouts[0] == None:
+	print optfctouts
+	if len(optfctouts) ==0 :
 		print("### WARNING : it seems that your optfct does not return anything ! ###")
+	# if optfctouts[0] == None:
+	# 	print("### WARNING : it seems that your optfct does not return anything ! ###")
 	
 	return optfctouts, sucess_dic
 # 		"""
@@ -174,6 +176,7 @@ class runresults:
 		self.plottrue = False # By default we plot the measured delays.
 		self.plotgauss = False 
 		self.plotcolour = plotcolour
+		self.success_dic = success_dic
 		
 		self.check()
 
