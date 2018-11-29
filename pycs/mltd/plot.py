@@ -265,7 +265,7 @@ def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias
 		for ipl, group in enumerate(plotlist):
 			line = "%s" % (group.name)
 
-			plt.figtext(x=0.80, y=top - txtstep * ipl - 0.12, s=line, verticalalignment="top",
+			plt.figtext(x=0.85, y=top - txtstep * ipl - 0.12, s=line, verticalalignment="top",
 			            horizontalalignment="center", color=group.plotcolor,
 			            fontsize=group.legendfontsize)  # for 3-delay plots
 		if legendfromrefgroup:
@@ -273,7 +273,7 @@ def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias
 				refgroup.legendfontsize = 16
 
 			line = "%s" % (refgroup.name)
-			plt.figtext(x=0.80, y=top - txtstep * len(plotlist) - 0.12, s=line, verticalalignment="top", horizontalalignment="center", color="grey", fontsize=refgroup.legendfontsize)
+			plt.figtext(x=0.85, y=top - txtstep * len(plotlist) - 0.12, s=line, verticalalignment="top", horizontalalignment="center", color="grey", fontsize=refgroup.legendfontsize)
 
 	# Generic text :
 	if text != None:
