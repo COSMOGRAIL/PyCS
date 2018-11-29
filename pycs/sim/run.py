@@ -365,8 +365,8 @@ def multirun(simset, lcs, optfct, kwargs_optim, optset="multirun", tsrand=10.0, 
 		print "Initial conditions : "
 		for l in lcs:
 			print l
-	
-	
+
+	sucess_dic = {'success': True, 'failed_id': [], 'error_list': []}
 	for simpkl in simpkls:
 		
 		# First we test if this simpkl is already processed (or if another multirun is working on it).
@@ -463,7 +463,6 @@ def multirun(simset, lcs, optfct, kwargs_optim, optset="multirun", tsrand=10.0, 
 		
 		else:
 			os.remove(workingonfilepath)
-		
-	
+
 	return success_dic
 			
