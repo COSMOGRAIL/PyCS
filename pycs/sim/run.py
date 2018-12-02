@@ -448,7 +448,7 @@ def multirun(simset, lcs, optfct, kwargs_optim, optset="multirun", tsrand=10.0, 
 		if keepopt:
 			# A bit similar to trace, we save the optimized lcs in a pickle file.
 			clean_simlcslist = clean_simlist(simlcslist, success_dic)
-			outopt = {"optfctoutlist":optfctouts, "optlcslist":simlcslist}
+			outopt = {"optfctoutlist":optfctouts, "optlcslist":clean_simlcslist}
 			pycs.gen.util.writepickle(outopt, optfilepath)
 
 
@@ -471,5 +471,7 @@ def clean_simlist(simlcslist, success_dic):
 	for i in reversed(success_dic['failed_id']):
 		print "remove simlcs ",i
 		del simlcslist[i]
+
+	return simlcslist
 
 
