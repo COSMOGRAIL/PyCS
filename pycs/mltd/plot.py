@@ -65,7 +65,10 @@ def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias
 	"""
 
 	pairs = plotlist[0].labels
-	objects = sorted(list(set("".join(pairs))))
+	if plotlist[0].labels == None :
+		objects = sorted(list(set("".join(pairs))))
+	else :
+		objects = plotlist[0].objects
 	n = len(objects)
 	nmeas = len(plotlist)
 	print "Objects : %s" % (", ".join(objects))

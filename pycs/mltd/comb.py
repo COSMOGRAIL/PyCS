@@ -54,16 +54,18 @@ class Group():
 
 	  * a list of "linearized" distributions
 	  * a fancy name for display purposes
+	  * a list of name of the object if they are not standard such as ['A','B',...]
 
 	"""
 
-	def __init__(self, labels, medians, errors_up, errors_down, name, binslist=None, lins=None, nicename=None, ran_errors=None, sys_errors=None):
+	def __init__(self, labels, medians, errors_up, errors_down, name, binslist=None, lins=None, nicename=None, ran_errors=None, sys_errors=None, objects = None):
 
 		# start with some assertion tests
 		assert (len(labels) == len(medians) == len(errors_up) == len(errors_down))
 
 		# mandatory params
 		self.labels = labels
+		self.objects = objects
 		self.medians = medians
 		self.errors_up = errors_up
 		self.errors_down = errors_down
