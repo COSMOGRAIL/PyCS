@@ -142,9 +142,9 @@ class runresults:
 		I will not sort these lcs (as you might want them in an unsorted order).
 		
 		"""
-		if success_dic != None :
-			print("Removing the failed optimisation...")
-			lcslist = [lcs for i,lcs in enumerate(lcslist) if i not in success_dic['failed_id']]
+		#~ if success_dic != None :
+			#~ print("Removing the failed optimisation...")
+			#~ lcslist = [lcs for i,lcs in enumerate(lcslist) if i not in success_dic['failed_id']]
 
 		if qs is not None:
 			self.qs = qs

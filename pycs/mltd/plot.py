@@ -20,6 +20,7 @@ import pycs.gen.util
 
 def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.10, hspace=0.15, txtstep=0.02, majorticksstep=2, filename=None, refgroup=None, legendfromrefgroup=False, centerdelays=None, ymin=0.2, hlines=None, blindness=False, horizontaldisplay=False, showxlabelhd=True, update_group_style = True, auto_radius =False,
 			  tick_step_auto = True ):
+
 	"""
 	Plots delay measurements from different methods, telescopes, sub-curves, etc in one single plot.
 
@@ -181,7 +182,7 @@ def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias
 				# size of the delay annoted on top of the measurement
 				if not hasattr(group, 'labelfontsize')or update_group_style:
 					if n > 2:
-						group.labelfontsize = math.floor(-(10./12.)*(nmeas-4) + 18)
+						group.labelfontsize = max(math.floor(-(8./12.)*(nmeas-4) + 18), 8)
 					else :
 						group.labelfontsize = 18
 
@@ -189,6 +190,7 @@ def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias
 				if not hasattr(group, 'legendfontsize')or update_group_style:
 					if n > 2  :
 						group.legendfontsize = math.floor(-(4/12.)*(nmeas-4) + 16)
+						txtstep = -(0.01/12.)*(nmeas-4) + 0.03
 					else :
 						group.legendfontsize = 16
 
