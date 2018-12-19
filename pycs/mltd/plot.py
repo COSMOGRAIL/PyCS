@@ -177,6 +177,7 @@ def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias
 					else :
 						group.markersize = 8
 
+
 				# size of the delay annoted on top of the measurement
 				if not hasattr(group, 'labelfontsize')or update_group_style:
 					if n > 2:
