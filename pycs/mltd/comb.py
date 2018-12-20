@@ -14,9 +14,9 @@ class CScontainer():
 	"""
 	Curve-shifting container: basically just a bunch of informations related to the PyCS structure of storing results.
 
-	Cloud be a dictionnary as well, e.g.
+	Could be a dictionnary as well, e.g.
 
-	{"data": "C2", "knots": 25, "ml": "splml-150", "name": "C2_ks25_ml150", "drawopt": "spl1", "runopt": "spl1t5", "ncopy": 200, "nmocks": 1000, "truetsr": 3, "colour": "royalblue"}
+	{"data": "C2", "knots": 25, "ml": "splml-150", "name": "C2_ks25_ml150", "drawopt": "spl1", "runopt": "spl1t5", "ncopy": 200, "nmocks": 1000, "truetsr": 3, "color": "royalblue"}
 
 	This is simply a nicer interface between a PyCS simulation output and a Group.
 
@@ -78,6 +78,7 @@ class Group():
 		self.lins = lins
 		self.ran_errors = ran_errors
 		self.sys_errors = sys_errors
+		self.int_errors = int_errors
 
 	def linearize(self, testmode=True, verbose=True):
 		"""
@@ -95,6 +96,9 @@ class Group():
 			nsamples = 500000
 
 		lins = []
+		if verbose:
+			print "*"*10
+			print self.name
 		for ind, label in enumerate(self.labels):
 			scale = (self.errors_up[ind] + self.errors_down[ind])/2.0
 			xs = np.random.normal(loc=self.medians[ind], scale=scale, size=nsamples)
@@ -105,7 +109,7 @@ class Group():
 			bin_means = bin_means / np.sum(bin_means)
 
 			# To check we are not too far off
-			ci = confinterval(self.binslist[ind][:-1], weights=bin_means, testmode=testmode)
+			ci = confinterval(0.5 * (self.binslist[ind][1:] + self.binslist[ind][:-1]), weights=bin_means, testmode=testmode)
 			if verbose:
 				print "="*45
 				print "Delay %s:" % label, "%.2f" % self.medians[ind], "+/-", "%.2f" % scale," --> ", "%.2f" % ci[0], "+%.2f-%.2f" % (ci[2], ci[1])
@@ -137,8 +141,11 @@ class Group():
 			name = self.nicename
 
 		print "="*5, name, "="*5
+		toprint = ""
 		for ind, l in enumerate(self.labels):
-			print "%s:" % l, "%.2f +%.2f-%.2f" % (self.medians[ind], self.errors_up[ind], self.errors_down[ind])
+			toprint += "%s: " % l + "%.2f +%.2f-%.2f\n" % (self.medians[ind], self.errors_up[ind], self.errors_down[ind])
+		print toprint
+		return toprint
 
 
 
@@ -177,8 +184,7 @@ def getcombweightslist(groups):
 	return weightslist
 
 
-
-def getresults(csc):
+def getresults(csc, useintrinsic=False):
 	"""
 	Give me a CScontainer, I read the corresponding result folder and create a group from it.
 
@@ -187,7 +193,13 @@ def getresults(csc):
 	I also save the random and systematic component of the error, in case you want to display them later on.
 
 	@param cscontainer: CScontainer object
+	@param useintrinsic: Boolean. If True, add the intrinsic measured error to the total error from sims, in quadrature.
 	@return: a Group object
+
+
+	.. warning:: Altough the code says I'm using the mean measured delay, I might be using median instead! This depends on how ``pycs.sim.plot.hists`` was called! Be careful with this...
+
+
 	"""
 
 	# get the correct results path
@@ -211,15 +223,20 @@ def getresults(csc):
 	errors = []
 	ranerrors = []
 	syserrors = []
+	interrors = []
 
 	for label in labels:
 		means.append([d["mean"] for d in result[0].data if d["label"] == label][0])
-		errors.append([d["tot"] for d in result[1].data if d["label"] == label][0])
+		if not useintrinsic:
+			errors.append([d["tot"] for d in result[1].data if d["label"] == label][0])
+		else:
+			errors.append(np.sqrt([d["tot"] for d in result[1].data if d["label"] == label][0]**2 + [d["std"] for d in result[0].data if d["label"] == label][0]**2))
+			interrors.append([d["std"] for d in result[0].data if d["label"] == label][0])
 		ranerrors.append([d["ran"] for d in result[1].data if d["label"] == label][0])
 		syserrors.append([d["sys"] for d in result[1].data if d["label"] == label][0])
 
 	# create a Group out of them
-	return Group(labels=labels, medians=means, errors_up=errors, errors_down=errors, ran_errors=ranerrors, sys_errors=syserrors, name=csc.name)
+	return Group(labels=labels, medians=means, errors_up=errors, errors_down=errors, ran_errors=ranerrors, sys_errors=syserrors, int_errors=interrors, name=csc.name)
 
 
 def asgetresults(weightslist, testmode=True):
@@ -237,7 +254,7 @@ def asgetresults(weightslist, testmode=True):
 	errors_down = []
 	lins = []
 	for b, w in zip(weightslist["binslist"], weightslist["weights"]):
-		ci = confinterval(b[:-1], w, testmode=testmode)
+		ci = confinterval(0.5 * (b[1:] + b[:-1]), w, testmode=testmode)
 		medians.append(ci[0])
 		errors_up.append(ci[2])
 		errors_down.append(ci[1])
@@ -487,7 +504,7 @@ def convolve_estimates(group, errors, testmode=True):
 	converrors_up = []
 	converrors_down = []
 	for c, b in zip(convols, group.binslist):
-		ci = confinterval(xs=b[:-1], weights=c, testmode=testmode)
+		ci = confinterval(xs=0.5 * (b[1:] + b[:-1]), weights=c, testmode=testmode)
 		convmedians.append(ci[0])
 		converrors_down.append(ci[1])
 		converrors_up.append(ci[2])
@@ -593,6 +610,9 @@ def mult_estimates(groups, testmode=True):
 		multweights = np.ones(len(indweights[0]))
 		for iw in indweights:
 			multweights *= np.array(iw)
+
+		# renormalize multweights to 1
+		multweights = multweights/np.sum(multweights)
 
 		weightslist["weights"].append(multweights)
 
