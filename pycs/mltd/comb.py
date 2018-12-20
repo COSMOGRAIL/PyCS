@@ -580,7 +580,7 @@ def mult_estimates(groups, testmode=True):
 	# assert that the binnings are the same and that labels are in the same order
 	#todo: instead of rejecting if label orders are not the same, simply do the multiplication label per label, as done in other functions above.
 	for group in groups[1:]:
-		assert group.binslist == groups[0].binslist, "Group %s has different bins than group %s" % (group.name, groups[0].name)
+		assert np.allclose(group.binslist, groups[0].binslist), "Group %s has different bins than group %s" % (group.name, groups[0].name)
 		assert group.labels == groups[0].labels, "Group %s has different labels (or labels order) than group %s" % (group.name, groups[0].name)
 
 	# we assume the groups are ordered according to their labels (assert test would have failed otherwise)
