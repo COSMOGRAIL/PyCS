@@ -1083,7 +1083,7 @@ def factory(jds, mags, magerrs=None, telescopename="Unknown", object="Unknown", 
 	return newlc
 
 
-def flexibleimport(filepath, jdcol=1, magcol=2, errcol=3, startline=1, flagcol=None, propertycols=None, telescopename="Unknown", object="Unknown", plotcolour="red", verbose = True):
+def flexibleimport(filepath, jdcol=1, magcol=2, errcol=3, startline=1, flagcol=None, propertycols=None, telescopename="Unknown", object="Unknown", plotcolour="red", verbose = True, absmagerrs=False):
 	"""
 	The general form of file reading. We read only one lightcurve object.
 	To comment a line in the input file, start the line with # like in python.
@@ -1151,6 +1151,8 @@ def flexibleimport(filepath, jdcol=1, magcol=2, errcol=3, startline=1, flagcol=N
 				propdict[propname] = str(elements[propcol-1])
 		properties.append(propdict)
 
+	if absmagerrs:
+		magerrs = np.abs(np.array(magerrs))
 
 	# Make a brand new lightcurve object :
 	newlc = factory(np.array(jds), np.array(mags), magerrs=np.array(magerrs), telescopename=telescopename, object=object)
@@ -1166,7 +1168,7 @@ def flexibleimport(filepath, jdcol=1, magcol=2, errcol=3, startline=1, flagcol=N
 
 
 
-def rdbimport(filepath, object="Unknown", magcolname="mag", magerrcolname="magerr", telescopename="Unknown", plotcolour="red", mhjdcolname="mhjd", flagcolname = None, propertycolnames = "lcmanip", verbose = True):
+def rdbimport(filepath, object="Unknown", magcolname="mag", magerrcolname="magerr", telescopename="Unknown", plotcolour="red", mhjdcolname="mhjd", flagcolname = None, propertycolnames = "lcmanip", verbose = True, absmagerrs=False):
 	"""
 	The relaxed way to import lightcurves, especially those from cosmouline, provided they come as rdb files.
 	Don't care about column indices, just give the column headers that you want to read.
@@ -1223,7 +1225,7 @@ def rdbimport(filepath, object="Unknown", magcolname="mag", magerrcolname="mager
 	else:
 		propertycols = None
 
-	newlc = flexibleimport(filepath, jdcol=jdcol, magcol=magcol, errcol=errcol, startline=3, flagcol=flagcol, propertycols=propertycols, telescopename=telescopename, object=object, verbose=verbose)
+	newlc = flexibleimport(filepath, jdcol=jdcol, magcol=magcol, errcol=errcol, startline=3, flagcol=flagcol, propertycols=propertycols, telescopename=telescopename, object=object, verbose=verbose, absmagerrs=absmagerrs)
 	newlc.plotcolour = plotcolour
 	return newlc
 
@@ -1906,14 +1908,14 @@ def display(lclist=[], splist=[],
 
 
 	"""
-	
+
 	import matplotlib as mpl
 	import matplotlib.pyplot as plt
 	import matplotlib.font_manager as fm
 	from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 	import matplotlib.dates
 	import matplotlib.lines
-	
+
 	if style == None:
 		pass
 	elif style in ["homepagepdf", "homepagepdfnologo"]:
@@ -1963,7 +1965,7 @@ def display(lclist=[], splist=[],
 		figsize=(10,5.5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
 		showlogo=False
-		nicefont=True
+		nicefont=False
 		showdelays=False
 		showlegend=False
 		showdates=True
@@ -1972,9 +1974,8 @@ def display(lclist=[], splist=[],
 		capsize=0
 		jdmintickstep=50
 		magmintickstep=0.2
-		showgrid=False
-		transparent=True
-		title=None
+		#showgrid=False
+		transparent=False
 
 	elif style=="internal":
 		figsize=(10,5.5)
@@ -2061,7 +2062,6 @@ def display(lclist=[], splist=[],
 				scattervalues = np.array([float(propertydict[colourpropname]) for propertydict in curve.properties])
 				axes.scatter(tmpjds, tmpmags, s=markersize, c=scattervalues, vmin=colourminval, vmax=colourmaxval, edgecolors="None")
 			else:
-
 				if curve.ploterrorbars and showerrorbars:
 					axes.errorbar(tmpjds, tmpmags, curve.magerrs, fmt=".", markersize = markersize, markeredgecolor=curve.plotcolour, color=curve.plotcolour, ecolor=errorbarcolour, capsize=capsize, label=str(curve), elinewidth=0.5)
 					#plt.errorbar(tmpjds, tmpmags, curve.magerrs, linestyle="-", marker=".", color=curve.plotcolour, ecolor="#BBBBBB", label=str(curve))
