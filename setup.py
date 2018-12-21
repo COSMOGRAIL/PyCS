@@ -9,7 +9,7 @@ setup(
 	long_description=open('README.md').read(),
 	license='GPLv3',
 	url='http://www.cosmograil.org',
-	packages=["pycs", "pycs.gen", "pycs.sim", "pycs.disp", "pycs.spl", "pycs.regdiff", "pycs.regdiff2", "pycs.spldiff", "pycs.tdc"],
+	packages=["pycs", "pycs.gen", "pycs.sim", "pycs.disp", "pycs.spl", "pycs.regdiff", "pycs.regdiff2", "pycs.spldiff", "pycs.tdc", "pycs.mltd"],
 	package_data={'pycs.gen': ['epfl.png']}
 )
 
