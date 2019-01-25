@@ -1783,8 +1783,11 @@ def display(lclist=[], splist=[],
 	:param style: A shortcut to produce specific kinds of stylings for the plots.
 		Available styles:
 
-			* ``homepagepdf`` : for cosmograil homepage, ok also with long magnitude labels (like -13.2)
-			
+			* ``homepagepdf`` and "homepagepdfnologo" : for cosmograil homepage, ok also with long magnitude labels (like -13.2)
+			* ``2m2`` : for 2m2 data
+			* ``posterpdf`` : for 2m2 data
+			* ``internal`` : for 2m2 data
+
 	:type style: string
 
 	:param showlegend: Automatic legend (too technical/ugly for publication plots, uses str(lightcurve))
@@ -1992,6 +1995,21 @@ def display(lclist=[], splist=[],
 		showgrid=True
 		transparent=False
 
+	elif "cosmograil_dr1":
+		figsize=(10,5)
+		plotsize=(0.09, 0.97, 0.10, 0.95)
+		showlogo=False
+		nicefont=False
+		showdelays=False
+		showlegend=False
+		showdates=False
+		errorbarcolour="#777777"
+		markersize=5.0
+		capsize=0
+		jdmintickstep=50
+		magmintickstep=0.2
+		showgrid=False
+		transparent=False
 
 
 	else:
@@ -2176,7 +2194,7 @@ def display(lclist=[], splist=[],
 				axes.plot(rs.getjds(), rs.mags, "-", color=rs.plotcolour)
 				xf = np.concatenate((rs.getjds(), rs.getjds()[::-1]))
         			yf = np.concatenate((rs.mags+rs.magerrs, (rs.mags-rs.magerrs)[::-1]))
-        			plt.fill(xf, yf, facecolor = rs.plotcolour, alpha=0.2, edgecolor = (1,1,1), label=str(rs))
+        			axes.fill(xf, yf, facecolor = rs.plotcolour, alpha=0.2, edgecolor = (1,1,1), label=str(rs))
 				
 	
 	# Astronomers like minor tick marks :
@@ -2268,7 +2286,7 @@ def display(lclist=[], splist=[],
 	
 	
 	if showgrid:
-		plt.grid(zorder=20, linestyle = 'dotted')
+		axes.grid(zorder=20, linestyle = 'dotted')
 	
 	if text != None:
 		for line in text:
