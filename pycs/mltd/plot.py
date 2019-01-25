@@ -18,8 +18,8 @@ import pycs.gen.util
 
 
 
-def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.10, hspace=0.15, txtstep=0.03, majorticksstep=2, filename=None, refgroup=None, legendfromrefgroup=False, centerdelays=None, ymin=0.2, hlines=None, blindness=False, horizontaldisplay=False, showxlabelhd=True, update_group_style = True, auto_radius =False,
-			  tick_step_auto = True ):
+def delayplot(plotlist, rplot=7.0, autoobj= None, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.10, hspace=0.15, txtstep=0.03, majorticksstep=2, filename=None, refgroup=None, legendfromrefgroup=False, centerdelays=None, ymin=0.2, hlines=None, blindness=False, horizontaldisplay=False, showxlabelhd=True, update_group_style = True, auto_radius =False,
+			  tick_step_auto = True, legendx = 0.85, legendy_offset = 0.12 ):
 
 	"""
 	Plots delay measurements from different methods, telescopes, sub-curves, etc in one single plot.
@@ -70,12 +70,11 @@ def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias
 		if delays.objects != objects or errors.objects != objects:
 			raise RuntimeError("Don't ask me to overplot stuff from different objects !")
 	"""
-
 	pairs = plotlist[0].labels
-	if plotlist[0].labels == None :
+	if autoobj == None :
 		objects = sorted(list(set("".join(pairs))))
 	else :
-		objects = plotlist[0].objects
+		objects = autoobj
 
 	n = len(objects)
 	nmeas = len(plotlist)
@@ -196,8 +195,6 @@ def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias
 					else :
 						group.legendfontsize = 16
 
-				print group.legendfontsize
-
 				# extra properties: elinewidth, plotcolor, marker, markersize, labelfontsize, legendfontsize
 
 				plt.errorbar([median], [ypos], yerr=None, xerr=xerr, fmt='-', ecolor=group.plotcolor, elinewidth=group.elinewidth, capsize=3, barsabove=False)
@@ -296,7 +293,7 @@ def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias
 		for ipl, group in enumerate(plotlist):
 			line = "%s" % (group.name)
 
-			plt.figtext(x=0.85, y=top - txtstep * ipl - 0.12, s=line, verticalalignment="top",
+			plt.figtext(x=legendx, y=top - txtstep * ipl - legendy_offset, s=line, verticalalignment="top",
 			            horizontalalignment="center", color=group.plotcolor,
 			            fontsize=group.legendfontsize)  # for 3-delay plots
 		if legendfromrefgroup and refgroup is not None:
@@ -304,7 +301,7 @@ def delayplot(plotlist, rplot=7.0, displaytext=True, hidedetails=False, showbias
 				refgroup.legendfontsize = 16
 
 			line = "%s" % (refgroup.name)
-			plt.figtext(x=0.85, y=top - txtstep * len(plotlist) - 0.12, s=line, verticalalignment="top", horizontalalignment="center", color="grey", fontsize=refgroup.legendfontsize)
+			plt.figtext(x=legendx, y=top - txtstep * len(plotlist) - legendy_offset, s=line, verticalalignment="top", horizontalalignment="center", color="grey", fontsize=refgroup.legendfontsize)
 
 	# Generic text :
 	if text != None:
