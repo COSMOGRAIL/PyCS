@@ -58,7 +58,7 @@ class Group():
 
 	"""
 
-	def __init__(self, labels, medians, errors_up, errors_down, name, binslist=None, lins=None, nicename=None, ran_errors=None, sys_errors=None, objects = None):
+	def __init__(self, labels, medians, errors_up, errors_down, name, binslist=None, lins=None, nicename=None, ran_errors=None, sys_errors=None, objects = None, int_errors=None):
 
 		# start with some assertion tests
 		assert (len(labels) == len(medians) == len(errors_up) == len(errors_down))
