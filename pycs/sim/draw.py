@@ -114,7 +114,7 @@ def transfershifts(lcs, reflcs, transferml=True):
 	
 	
 
-def draw(lcs, spline, shotnoise=None, shotnoisefrac=1.0, tweakml=None, scaletweakresi=True, tweakspl=None, keepshifts=True, keeptweakedml=False, trace=False, tracedir="draw"):
+def draw(lcs, spline, shotnoise=None, shotnoisefrac=1.0, tweakml=None, scaletweakresi=True, tweakspl=None, keepshifts=True, keeptweakedml=False, keeporiginalml = True, trace=False, tracedir="draw"):
 	"""
 	Wrapper to produce one set of fake lightcurves that are similar to your lcs.
 	Give me some lightcurves, that are optimized in fluxshift, magshift, microlensing, timeshift, and the resulting spline fit
@@ -151,12 +151,13 @@ def draw(lcs, spline, shotnoise=None, shotnoisefrac=1.0, tweakml=None, scaletwea
 	:param tweakspl: a function that takes a spline and returns a tweaked spline. I will use this on
 		the sourcespline you pass me, before drawing from it.
 	
-	:param keepshifts: by default I will set the time/flux/mag/ML shifts from your lcs also to the fake curves.
-	
-	
-	:param keeptweakedml: if keepshifts is True, and keeptweakedml is True, I will keep the tweaked ML, not the input ML, on the 
+	:param keepshifts: by default I will set the time/flux/mag/ shifts from your lcs also to the fake curves.
+
+	:param keeptweakedml: if keepshifts is True, and keeptweakedml is True, I will keep the tweaked ML, not the input ML, on the
+		output curves. It makes no sens to keep the ML if not keeping the shift
+
+	:param keeporiginalml: if keepshifts is True, and keeporiginalml is True, I will keep the the input ML, on the
 		output curves.
-	
 	
 	.. note:: I will tweak the ML only of those curves that have spline ML. You probably want me to tweak the ML of all your curves !
 		So be sure to add some spline ML to all your curves before calling me !
@@ -315,10 +316,12 @@ def draw(lcs, spline, shotnoise=None, shotnoisefrac=1.0, tweakml=None, scaletwea
 			fakel.timeshift = l.timeshift
 			fakel.fluxshift = l.fluxshift
 			fakel.magshift = l.magshift
-			if keeptweakedml == False:
-				fakel.ml = origml # Yes, it's that simple ! fakel and l have the same jds, after all.
-			else:
-				fakel.ml = tweakedml
+			if keeporiginalml and keeptweakedml :
+				raise RuntimeError('I cannot keep both the tweaked ML and the original ML in your mock curve ! ')
+			if keeptweakedml :
+				fakel.ml = tweakedml # Yes, it's that simple ! fakel and l have the same jds, after all.
+			elif keeporiginalml :
+				fakel.ml = origml
 		
 		fakelcs.append(fakel)
 	
@@ -453,7 +456,7 @@ def multidraw(lcs, spline=None, optfctnots=None, onlycopy=False, n=20, npkl=5, s
 					l.timeshift = shift
 
 				if optfctnots == None: # Then we just call draw on these time-shifted curves, using the provided spline and ML etc.
-					simlcs = draw(lcscopies, spline, shotnoise=shotnoise, shotnoisefrac=shotnoisefrac, tweakml=tweakml, scaletweakresi=scaletweakresi, tweakspl=tweakspl, keepshifts=False, keeptweakedml=False, trace=trace, tracedir="trace_sims_%s_tweak" % (simset))
+					simlcs = draw(lcscopies, spline, shotnoise=shotnoise, shotnoisefrac=shotnoisefrac, tweakml=tweakml, scaletweakresi=scaletweakresi, tweakspl=tweakspl, keepshifts=False, keeptweakedml=False, keeporiginalml=False, trace=trace, tracedir="trace_sims_%s_tweak" % (simset))
 				
 				else:
 					# We fit the custom ML + all shifts except time and get a new spline
@@ -472,7 +475,7 @@ def multidraw(lcs, spline=None, optfctnots=None, onlycopy=False, n=20, npkl=5, s
 						
 					saveresiduals(lcscopies, indispline) # in case mcres
 
-					simlcs = draw(lcscopies, indispline, shotnoise=shotnoise, shotnoisefrac=shotnoisefrac, tweakml=tweakml, scaletweakresi=scaletweakresi, tweakspl=tweakspl, keepshifts=False, keeptweakedml=False, trace=trace, tracedir="trace_sims_%s_tweak" % (simset))
+					simlcs = draw(lcscopies, indispline, shotnoise=shotnoise, shotnoisefrac=shotnoisefrac, tweakml=tweakml, scaletweakresi=scaletweakresi, tweakspl=tweakspl, keepshifts=False, keeptweakedml=False, keeporiginalml=False, trace=trace, tracedir="trace_sims_%s_tweak" % (simset))
 						
 				simlcslist.append(simlcs)
 	

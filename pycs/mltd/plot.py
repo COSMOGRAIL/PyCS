@@ -19,7 +19,7 @@ import pycs.gen.util
 
 
 
-def delayplot(plotlist, rplot=7.0, autoobj= None, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.10, hspace=0.15, txtstep=0.03, majorticksstep=2, filename=None, refgroup=None, legendfromrefgroup=False, centerdelays=None, ymin=0.2, hlines=None, blindness=False, horizontaldisplay=False, showxlabelhd=True, update_group_style = True, auto_radius =False,tick_step_auto = True, legendx = 0.85, legendy_offset = 0.12 ):
+def delayplot(plotlist, rplot=7.0, autoobj= None, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.10, hspace=0.15, txtstep=0.03, majorticksstep=2, filename=None, refgroup=None, legendfromrefgroup=False, centerdelays=None, ymin=0.2, hlines=None, blindness=False, horizontaldisplay=False, showxlabelhd=True, update_group_style = True, auto_radius =False,tick_step_auto = True, legendx = 0.85, legendy_offset = 0.12, hide_technical_name = False ):
 
 
 	"""
@@ -59,6 +59,8 @@ def delayplot(plotlist, rplot=7.0, autoobj= None, displaytext=True, hidedetails=
 	@param auto_radius : automatically adjust the xlim, if true, radius won't be used.
 
 	@param tick_step_auto : automatically adjust the tickstep, if true, radius won't be used.
+
+	@hide_technical_name : hide the technical name above the error bar but keep the delay value (only for double)
 
 
 
@@ -222,7 +224,7 @@ def delayplot(plotlist, rplot=7.0, autoobj= None, displaytext=True, hidedetails=
 				if not showerr:
 					delaytext = r"$%+.1f$" % median
 
-				if n == 2:  # For doubles, we include the technique name into the txt :
+				if n == 2 and not hide_technical_name :  # For doubles, we include the technique name into the txt :
 					delaytext = r"%s : " % (group.name) + delaytext
 
 				if displaytext:
@@ -260,7 +262,7 @@ def delayplot(plotlist, rplot=7.0, autoobj= None, displaytext=True, hidedetails=
 				xlabel = "Delay [day]"
 
 			plt.xticks(fontsize=15 - 2*(n-2))
-			xlabelfontsize = 18
+			xlabelfontsize = 25
 
 			if i == n - 1 and not horizontaldisplay:
 				plt.xlabel(xlabel, fontsize=xlabelfontsize)

@@ -488,14 +488,14 @@ class lightcurve:
 	
 	# Now, stuff for microlensing and manipulating the magnitudes :
 	
-	def addml(self, microlensing):
+	def addml(self, microlensing, verbose = False):
 		"""
 		Adds a microlensing object (by add we mean it replaces one if it was already present) -- we are not just setting
 		the parameters here ! Note that we COPY the microlensing object, so that the one added is independent from yours.
 		"""
 		
-		if self.ml != None:
-			print "I replace an existing mircolensing."
+		if self.ml != None and verbose :
+			print "I replace an existing microlensing."
 			
 		
 		self.ml = microlensing.copy() # this copy is important if you append the "same" new ml object to different lcs.
@@ -1619,8 +1619,9 @@ def multidisplay(setlist=[],
 			plt.xlim(jdrange[0], jdrange[1])
 
 
-		plt.xlabel("HJD - 2400000.5 [day]", fontsize = labelfontsize)
-		plt.ylabel("Magnitude (relative)", fontsize = labelfontsize)
+		plt.xlabel("HJD - 2400000.5 (day)$", fontsize = labelfontsize)
+		if show_ylabel :
+			plt.ylabel("Magnitude (relative)$", fontsize = labelfontsize)
 
 		if showdelays:
 			txt = getnicetimedelays(lclist, separator="\n")
@@ -1755,9 +1756,9 @@ def multidisplay(setlist=[],
 
 def display(lclist=[], splist=[],
 	title=None, titlexpos=None, style=None, showlegend=True, showlogo=False, logopos="left", showdates=False, showdelays=False, nicefont=False, text=None, keeponlygrid=False,
-	jdrange=None, magrange=None, figsize=(12,8), plotsize=(0.08, 0.96, 0.09, 0.95), showgrid=False,
+	jdrange=None, magrange=None, figsize=None, plotsize=(0.08, 0.96, 0.09, 0.95), showgrid=False,
 	markersize=6, showerrorbars=True, showdatapoints=True, errorbarcolour = "#BBBBBB", capsize=3, knotsize=0.015,
-	legendloc = "best", showspldp=False, colourprop=None, hidecolourbar=False, transparent=False,
+	legendloc = "best", showspldp=False, colourprop=None, hidecolourbar=False, transparent=False,show_ylabel = True,
 	collapseref=False, hidecollapseref=False, jdmintickstep=100, magmintickstep=0.2, filename="screen", showinsert=None, insertname=None, verbose=False, ax=None):
 	"""
 	Function that uses matplotlib to plot a **list** of lightcurves/splines/GPRs, either on screen or into a file.
@@ -1922,12 +1923,13 @@ def display(lclist=[], splist=[],
 	if style == None:
 		pass
 	elif style in ["homepagepdf", "homepagepdfnologo"]:
-		figsize=(10,5)
+		if figsize==None :
+			figsize=(10,5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
 		showlogo=True
 		if style == "homepagepdfnologo":
 			showlogo=False
-		nicefont=False
+		nicefont=True
 		showdelays=False
 		showlegend=False
 		showdates=True
@@ -1938,8 +1940,11 @@ def display(lclist=[], splist=[],
 		magmintickstep=0.2
 		showgrid=True
 		transparent=False
+		show_ylabel = True
 
 	elif "2m2" in style:
+		if figsize==None :
+			figsize=(10,5)
 		figsize=(10,5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
 		showlogo = True
@@ -1961,10 +1966,11 @@ def display(lclist=[], splist=[],
 		magmintickstep=0.2
 		#showgrid=False
 		transparent=False
-
-		
+		show_ylabel = True
 		
 	elif style=="posterpdf":
+		if figsize==None :
+			figsize=(10,5)
 		figsize=(10,5.5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
 		showlogo=False
@@ -1979,8 +1985,11 @@ def display(lclist=[], splist=[],
 		magmintickstep=0.2
 		#showgrid=False
 		transparent=False
+		show_ylabel = True
 
 	elif style=="internal":
+		if figsize==None :
+			figsize=(10,5)
 		figsize=(10,5.5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
 		showlogo=False
@@ -1994,12 +2003,14 @@ def display(lclist=[], splist=[],
 		magmintickstep=0.2
 		showgrid=True
 		transparent=False
+		show_ylabel = True
 
-	elif "cosmograil_dr1":
-		figsize=(10,5)
+	elif style == "cosmograil_dr1":
+		if figsize==None :
+			figsize=(10,5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
 		showlogo=False
-		nicefont=False
+		nicefont=True
 		showdelays=False
 		showlegend=False
 		showdates=False
@@ -2010,8 +2021,25 @@ def display(lclist=[], splist=[],
 		magmintickstep=0.2
 		showgrid=False
 		transparent=False
+		show_ylabel = True
 
-
+	elif style == "cosmograil_dr1_microlensing":
+		if figsize==None :
+			figsize=(10,5)
+		plotsize=(0.09, 0.97, 0.10, 0.95)
+		showlogo=False
+		nicefont=True
+		showdelays=False
+		showlegend=False
+		showdates=False
+		errorbarcolour="#777777"
+		markersize=5.0
+		capsize=0
+		jdmintickstep=50
+		magmintickstep=0.2
+		showgrid=False
+		transparent=False
+		show_ylabel = False
 	else:
 		raise RuntimeError("I do not know the style %s" % (style))
 	
@@ -2234,8 +2262,9 @@ def display(lclist=[], splist=[],
 		axes.set_xlim(jdrange[0], jdrange[1])
 	
 	
-	axes.set_xlabel("HJD - 2400000.5 [day]", fontsize = labelfontsize)
-	axes.set_ylabel("Magnitude (relative)", fontsize = labelfontsize)
+	axes.set_xlabel("HJD - 2400000.5 (day)", fontsize = labelfontsize)
+	if show_ylabel :
+		axes.set_ylabel("Magnitude (relative)", fontsize = labelfontsize)
 	
 	if showdelays:
 		txt = getnicetimedelays(lclist, separator="\n")
@@ -2286,7 +2315,11 @@ def display(lclist=[], splist=[],
 	
 	
 	if showgrid:
-		axes.grid(zorder=20, linestyle = 'dotted')
+		if showdates:
+			yearx.grid(zorder=20, linestyle='dotted')
+		else :
+			axes.grid(zorder=20, linestyle='dotted')
+		axes.yaxis.grid(False)
 	
 	if text != None:
 		for line in text:

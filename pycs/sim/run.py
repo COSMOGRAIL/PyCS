@@ -96,7 +96,6 @@ def applyopt(optfct, lcslist, **kwargs):
 # 			lcs = optlcs
 # 		
 # 		print "Shifted %i simulations on %i/%i CPUs, time : %s" % (len(lcslist), ncpu, ncpuava, pycs.gen.util.strtd(time.time() - start))
-	print optfctouts
 	if len(optfctouts) ==0 :
 		print("### WARNING : it seems that your optfct does not return anything ! ###")
 	# if optfctouts[0] == None:
@@ -430,8 +429,8 @@ def multirun(simset, lcs, optfct, kwargs_optim, optset="multirun", tsrand=10.0, 
 			try:
 				qs = np.array(map(float, optfctouts)) # Then it's some kind of chi2, or a d2 : easy !
 				tracesplinelists = [[]]*len(simlcslist) # just for the trace
-			except:
-				
+			except Exception as e :
+				print e
 				tracesplinelists = [[]]*len(simlcslist) # just for the trace
 				qs = None
 				if analyse == True:

@@ -257,7 +257,7 @@ def mapresistats(rls):
 
 
 
-def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npkl=1000, plots=True, nplots=3, r=0.11, plotjdrange=None, plotcurveindexes=None, showplot=False, directory = "./", resihist_figsize = None):
+def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npkl=1000, plots=True, nplots=3, r=0.11, plotjdrange=None, plotcurveindexes=None, showplot=False, directory = "./", resihist_figsize = None, color = 'green'):
 	"""
 	Not flexible but very high level function to analyse the spline-fit-residuals of drawn curves and comparing them to the
 	real observations.
@@ -414,10 +414,10 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 		for (i,curve) in enumerate(curves):
 			#print (1, len(curves), i+1)
 			plt.subplot(2, len(curves), i+1)
-			plt.hist(np.concatenate([rlc.mags for rlc in curve["optmockrlclist"]]), 50, range=(-r, r), facecolor='black', alpha=0.4, normed=True, histtype="stepfilled")
+			plt.hist(np.concatenate([rlc.mags for rlc in curve["optmockrlclist"]]), 50, range=(-r, r), facecolor='black', alpha=0.4, density=True, histtype="stepfilled")
 			# Gaussian for the mock hist :
 			#plt.plot(np.linspace(-r, r, 100), normal(np.linspace(-r, r, 100), curve["origresistats"]["mean"], curve["origresistats"]["std"]), color="green")
-			plt.hist(curve["optorigrlc"].mags, 50, facecolor='green', alpha=0.4, range=(-r, r), normed=True, histtype="stepfilled")
+			plt.hist(curve["optorigrlc"].mags, 50, facecolor=color, alpha=0.4, range=(-r, r), density=True, histtype="stepfilled")
 			plt.xlabel("Spline fit residuals [mag]")
 			
 			#print plt.gca().get_ylim()
@@ -430,8 +430,8 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 			#print (1, len(curves), i+1)
 			plt.subplot(2, len(curves), len(curves)+i+1)
 			
-			plt.hist(np.array([el["zruns"] for el in curve["mockresistats"]]), 20, facecolor="black", alpha=0.4, normed=True, histtype="stepfilled")
-			plt.axvline(curve["origresistats"]["zruns"], color="green", linewidth=2.0, alpha=0.7)
+			plt.hist(np.array([el["zruns"] for el in curve["mockresistats"]]), 20, facecolor="black", alpha=0.4, density=True, histtype="stepfilled")
+			plt.axvline(curve["origresistats"]["zruns"], color=color, linewidth=2.0, alpha=0.7)
 			
 			plt.xlabel(r"$z_{\mathrm{r}}$", fontsize=18)
 			# plt.xlim(-5.0, 5.0)
@@ -582,8 +582,12 @@ def plotresiduals(rlslist, jdrange=None, magrad=0.1, errorbarcolour = "#BBBBBB",
 	else:
 		plt.xlim(np.min(rlslist[0][0].jds)-50, np.max(rlslist[0][0].jds)+50)
 	
-	if filename:
-		plt.savefig(filename)	
+	if filename and ihaveax:
+		plt.savefig(filename)
+	elif filename and not ihaveax :
+		plt.savefig(filename)
+	elif not filename and ihaveax : 
+		return
 	else:
 		plt.show()
 	
