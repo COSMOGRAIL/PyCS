@@ -141,9 +141,6 @@ class runresults:
 		I will not sort these lcs (as you might want them in an unsorted order).
 		
 		"""
-		#~ if success_dic != None :
-			#~ print("Removing the failed optimisation...")
-			#~ lcslist = [lcs for i,lcs in enumerate(lcslist) if i not in success_dic['failed_id']]
 
 		if qs is not None:
 			self.qs = qs
@@ -444,15 +441,15 @@ def multirun(simset, lcs, optfct, kwargs_optim, optset="multirun", tsrand=10.0, 
 			for (simlcs, tracesplinelist) in zip(simlcslist, tracesplinelists):
 				pycs.gen.util.trace(lclist=simlcs, splist=tracesplinelist, tracedir = tracedir)
 
+		clean_simlcslist = clean_simlist(simlcslist, success_dic)
 		if keepopt:
 			# A bit similar to trace, we save the optimized lcs in a pickle file.
-			clean_simlcslist = clean_simlist(simlcslist, success_dic)
 			outopt = {"optfctoutlist":optfctouts, "optlcslist":clean_simlcslist}
 			pycs.gen.util.writepickle(outopt, optfilepath)
 
 
 		# Saving the results
-		rr = runresults(simlcslist, qs = qs, name="sims_%s_opt_%s" % (simset, optset), success_dic = success_dic)
+		rr = runresults(clean_simlcslist, qs = qs, name="sims_%s_opt_%s" % (simset, optset), success_dic = success_dic)
 		pycs.gen.util.writepickle(rr, resultsfilepath)
 
 		# We remove the lock for this pkl file.
