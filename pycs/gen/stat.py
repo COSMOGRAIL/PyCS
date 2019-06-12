@@ -89,7 +89,15 @@ def sf(l, binsize = 200, ssf=False):
 		plt.show()
 	
 	
-	
+def mad(data, axis=None):
+	"""
+	Median absolute deviation
+	:param data: array from which to compute the MAD
+	:param axis: axis along to compute the MAD
+	:return: float, MAD of the array
+	"""
+
+	return np.median(np.absolute(data - np.median(data, axis)), axis)
 
 def erf(x):
 	"""
@@ -244,7 +252,8 @@ def resistats(rl):
 	"""
 	
 	meanmag = np.mean(rl.getmags())
-	stdmag = np.std(rl.getmags())
+	# stdmag = np.std(rl.getmags())
+	stdmag = mad(rl.getmags()) #use median absolute deviation instead, for robustness to outliers
 	runs = runstest(rl.getmags(), autolevel=False, verbose=False)
 	
 	out = {"mean":meanmag, "std":stdmag}
