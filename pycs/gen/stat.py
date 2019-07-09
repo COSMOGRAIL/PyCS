@@ -266,7 +266,7 @@ def mapresistats(rls):
 
 
 
-def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npkl=1000, plots=True, nplots=3, r=0.11, plotjdrange=None, plotcurveindexes=None, showplot=False, directory = "./", resihist_figsize = None, color = 'green'):
+def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npkl=1000, plots=True, nplots=3, r=0.11, plotjdrange=None, plotcurveindexes=None, showplot=False, directory = "./", resihist_figsize = None):
 	"""
 	Not flexible but very high level function to analyse the spline-fit-residuals of drawn curves and comparing them to the
 	real observations.
@@ -426,7 +426,7 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 			plt.hist(np.concatenate([rlc.mags for rlc in curve["optmockrlclist"]]), 50, range=(-r, r), facecolor='black', alpha=0.4, density=True, histtype="stepfilled")
 			# Gaussian for the mock hist :
 			#plt.plot(np.linspace(-r, r, 100), normal(np.linspace(-r, r, 100), curve["origresistats"]["mean"], curve["origresistats"]["std"]), color="green")
-			plt.hist(curve["optorigrlc"].mags, 50, facecolor=color, alpha=0.4, range=(-r, r), density=True, histtype="stepfilled")
+			plt.hist(curve["optorigrlc"].mags, 50, facecolor=curve["optorigrlc"].plotcolour, alpha=0.5, range=(-r, r), density=True, histtype="stepfilled")
 			plt.xlabel("Spline fit residuals [mag]")
 			
 			#print plt.gca().get_ylim()
@@ -440,7 +440,7 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 			plt.subplot(2, len(curves), len(curves)+i+1)
 			
 			plt.hist(np.array([el["zruns"] for el in curve["mockresistats"]]), 20, facecolor="black", alpha=0.4, density=True, histtype="stepfilled")
-			plt.axvline(curve["origresistats"]["zruns"], color=color, linewidth=2.0, alpha=0.7)
+			plt.axvline(curve["origresistats"]["zruns"], color=curve["optorigrlc"].plotcolour, linewidth=2.0, alpha=1.0)
 			
 			plt.xlabel(r"$z_{\mathrm{r}}$", fontsize=18)
 			# plt.xlim(-5.0, 5.0)
