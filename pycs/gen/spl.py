@@ -378,9 +378,20 @@ class Spline():
 		It's up to you to be sure that you want to move it.
 		We shift both the datapoints and the knots.
 		"""
-		
+
 		self.t += timeshift
 		self.datapoints.jds += timeshift
+
+	def shiftmag(self, magshift):
+		"""
+		Hard-shifts your spline along the mag axis.
+		By "hard-shift", I mean that unlike for a lightcurve, the spline will not know that it was shifted !
+		It's up to you to be sure that you want to move it.
+		We shift both the datapoints and the knots.
+		"""
+
+		self.c += magshift
+		self.datapoints.mags += magshift
 		
 		
 
