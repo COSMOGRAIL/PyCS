@@ -283,7 +283,7 @@ def collect(directory = "./test", plotcolour="#008800", name=None):
 
 
 
-def multirun(simset, lcs, optfct, kwargs_optim, optset="multirun", tsrand=10.0, analyse = True, shuffle=True, keepopt=False, trace=False, verbose=True, destpath = "./"):
+def multirun(simset, lcs, optfct, kwargs_optim=None, optset="multirun", tsrand=10.0, analyse = True, shuffle=True, keepopt=False, trace=False, verbose=True, destpath = "./"):
 	"""
 	Top level wrapper to get delay "histograms" : I will apply the optfct to optimize the shifts
 	between curves that you got from :py:func:`pycs.sim.draw.multidraw`, and save the results in
@@ -301,6 +301,8 @@ def multirun(simset, lcs, optfct, kwargs_optim, optset="multirun", tsrand=10.0, 
 	
 	:param lcs: Lightcurves that define the initial shifts and microlensings you want to use.
 		I will take the lightcurves from the simset, and put these shifts and ML on them.
+
+	:param kwargs_optim: kwargs to be passed to your optfct
 	
 	:param optset: A new name for the optimisation.
 
@@ -319,6 +321,8 @@ def multirun(simset, lcs, optfct, kwargs_optim, optset="multirun", tsrand=10.0, 
 		{"optfctoutlist":optfctouts, "optlcslist":simlcslist}
 	
 	"""
+	if kwargs_optim is None :
+		kwargs_optim = {}
 	
 	# We look for the sims directory OH GOD THIS IS SO UGLY !
 	simdir = destpath + "sims_%s" % (simset)
