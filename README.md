@@ -1,4 +1,5 @@
 # Python Curve Shifting
+:warning: This package is no longer maintained. Please consider using the new python3 version : [PYCS3](https://gitlab.com/vbonvin/PyCS3)
 
 PyCS is a software toolbox to estimate time delays between multiple images of gravitationally lensed quasars, developed within the [COSMOGRAIL](http://www.cosmograil.org) collaboration. It might be a bit of a mess, but hey, at least it's public.
 
