@@ -18,7 +18,10 @@ import pycs.gen.util
 
 
 
-def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.15, hspace=0.3, txtstep=0.04, majorticksstep=2, filename=None, refgroup=None, legendfromrefgroup=False, centerdelays=None, ymin=0.2, hlines=None, blindness=False, horizontaldisplay=False, showxlabelhd=True):
+
+def delayplot(plotlist, rplot=7.0, autoobj= None, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.10, hspace=0.15, txtstep=0.03, majorticksstep=2, filename=None, refgroup=None, legendfromrefgroup=False, centerdelays=None, ymin=0.2, hlines=None, blindness=False, horizontaldisplay=False, showxlabelhd=True, update_group_style = True, auto_radius =False,tick_step_auto = True, legendx = 0.85, legendy_offset = 0.12, hide_technical_name = False, xlabelfontsize = 25):
+
+
 	"""
 	Plots delay measurements from different methods, telescopes, sub-curves, etc in one single plot.
 
@@ -53,6 +56,13 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 
 	@param showxlabelhd: display or not the x label when horizontal display is True
 
+	@param auto_radius : automatically adjust the xlim, if true, radius won't be used.
+
+	@param tick_step_auto : automatically adjust the tickstep, if true, radius won't be used.
+
+	@hide_technical_name : hide the technical name above the error bar but keep the delay value (only for double)
+
+
 
 	"""
 
@@ -63,12 +73,12 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 		if delays.objects != objects or errors.objects != objects:
 			raise RuntimeError("Don't ask me to overplot stuff from different objects !")
 	"""
-
 	pairs = plotlist[0].labels
-	if autoobj == None:
+	if autoobj == None :
 		objects = sorted(list(set("".join(pairs))))
-	else:
+	else :
 		objects = autoobj
+
 	n = len(objects)
 	nmeas = len(plotlist)
 	print "Objects : %s" % (", ".join(objects))
@@ -116,15 +126,10 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 			delaylabel = "%s%s" % (objects[j], objects[i])
 			print "           Delay %s" % (delaylabel)
 
-			# General esthetics :
-			ax.get_yaxis().set_ticks([])
-			minorLocator = MultipleLocator(1.0)
-			majorLocator = MultipleLocator(majorticksstep)
-			ax.xaxis.set_minor_locator(minorLocator)
-			ax.xaxis.set_major_locator(majorLocator)
-
 			# To determine the plot range :
 			paneldelays = []
+			errors_up_list = []
+			errors_down_list = []
 
 			# Going throuh plotlist :
 
@@ -149,6 +154,8 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 				error_down = group.errors_down[labelindex]
 
 				paneldelays.append(median)
+				errors_up_list.append(error_up)
+				errors_down_list.append(error_down)
 				ypos = nmeas - ipl
 
 				xerr = np.array([[error_down, error_up]]).T
@@ -158,7 +165,7 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 
 				# error line width
 				if not hasattr(group, 'elinewidth'):
-					group.elinewidth = 1.5
+					group.elinewidth = 2.0
 
 				# color
 				if not hasattr(group, 'plotcolor'):
@@ -169,18 +176,27 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 					group.marker = None
 
 				# size of the marker
-				if not hasattr(group, 'markersize'):
-					group.markersize = 8
+				if not hasattr(group, 'markersize') or update_group_style:
+					if n > 2 :
+						group.markersize = math.floor(-(4./12.) * (nmeas - 4) + 8)
+					else :
+						group.markersize = 8
+
 
 				# size of the delay annoted on top of the measurement
-				if not hasattr(group, 'labelfontsize'):
-					group.labelfontsize = 18
+				if not hasattr(group, 'labelfontsize')or update_group_style:
+					if n > 2:
+						group.labelfontsize = max(math.floor(-(8./12.)*(nmeas-4) + 18), 8)
+					else :
+						group.labelfontsize = 18
 
 				# size of the legend
-				if not hasattr(group, 'legendfontsize'):
-					group.legendfontsize = 16
-
-				print group.legendfontsize
+				if not hasattr(group, 'legendfontsize')or update_group_style:
+					if n > 2  :
+						group.legendfontsize = math.floor(-(4/12.)*(nmeas-4) + 16)
+						txtstep = -(0.01/12.)*(nmeas-4) + 0.03
+					else :
+						group.legendfontsize = 16
 
 				# extra properties: elinewidth, plotcolor, marker, markersize, labelfontsize, legendfontsize
 
@@ -208,7 +224,7 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 				if not showerr:
 					delaytext = r"$%+.1f$" % median
 
-				if n == 2:  # For doubles, we include the technique name into the txt :
+				if n == 2 and not hide_technical_name :  # For doubles, we include the technique name into the txt :
 					delaytext = r"%s : " % (group.name) + delaytext
 
 				if displaytext:
@@ -225,17 +241,27 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 			else:
 				centerdelay = np.median(paneldelays)
 
+			if auto_radius :
+				rplot = (np.max(errors_up_list) + np.max(errors_down_list)) / 2.0 * 2.5
 			plt.xlim((centerdelay - rplot, centerdelay + rplot))
 			plt.ylim((ymin, nmeas + 1.5))
 
+			# General esthetics :
+			if tick_step_auto :
+				majorticksstep = max(2.0, int(rplot/4.0) )
+			ax.get_yaxis().set_ticks([])
+			minorLocator = MultipleLocator(1.0)
+			majorLocator = MultipleLocator(majorticksstep)
+			ax.xaxis.set_minor_locator(minorLocator)
+			ax.xaxis.set_major_locator(majorLocator)
+
 			# Blindness display options
 			if blindness:
-				xlabel = "Blind delay [day]"
+				xlabel = r"$\mathrm{Blind delay [day]}$"
 			else:
-				xlabel = "Delay [day]"
+				xlabel = r"$\mathrm{Delay [day]}$"
 
-			plt.xticks(fontsize=15)
-			xlabelfontsize = 18
+			plt.xticks(fontsize=xlabelfontsize-7)
 
 			if i == n - 1 and not horizontaldisplay:
 				plt.xlabel(xlabel, fontsize=xlabelfontsize)
@@ -246,7 +272,7 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 					ax.get_xaxis().set_ticks([])
 
 			if n != 2:  # otherwise only one panel, no need
-				plt.annotate(delaylabel, xy=(0.03, 0.88 - txtstep), xycoords='axes fraction', fontsize=14, color="black")
+				plt.annotate(delaylabel, xy=(0.03, 0.88 - txtstep), xycoords='axes fraction', fontsize=18, color="black")
 
 			if refgroup != None:
 
@@ -269,7 +295,7 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 		for ipl, group in enumerate(plotlist):
 			line = "%s" % (group.name)
 
-			plt.figtext(x=0.75, y=top - txtstep * ipl - 0.1, s=line, verticalalignment="top",
+			plt.figtext(x=legendx, y=top - txtstep * ipl - legendy_offset, s=line, verticalalignment="top",
 			            horizontalalignment="center", color=group.plotcolor,
 			            fontsize=group.legendfontsize)  # for 3-delay plots
 		if legendfromrefgroup and refgroup is not None:
@@ -277,7 +303,7 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 				refgroup.legendfontsize = 16
 
 			line = "%s" % (refgroup.name)
-			plt.figtext(x=0.75, y=top - txtstep * len(plotlist) - 0.1, s=line, verticalalignment="top", horizontalalignment="center", color="grey", fontsize=refgroup.legendfontsize)
+			plt.figtext(x=legendx, y=top - txtstep * len(plotlist) - legendy_offset, s=line, verticalalignment="top", horizontalalignment="center", color="grey", fontsize=refgroup.legendfontsize)
 
 	# Generic text :
 	if text != None:
@@ -287,7 +313,7 @@ def delayplot(plotlist, rplot=7.0, autoobj=None, displaytext=True, hidedetails=F
 	if filename == None:
 		plt.show()
 	else:
-		plt.savefig(filename)
+		plt.savefig(filename, dpi = 200)
 
 
 def write_delays(group, write_dir=None, mode="GLEE"):

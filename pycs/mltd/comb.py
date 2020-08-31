@@ -19,9 +19,11 @@ class CScontainer():
 	{"data": "C2", "knots": 25, "ml": "splml-150", "name": "C2_ks25_ml150", "drawopt": "spl1", "runopt": "spl1t5", "ncopy": 200, "nmocks": 1000, "truetsr": 3, "color": "royalblue"}
 
 	This is simply a nicer interface between a PyCS simulation output and a Group.
+
+	You can also give directly the result file without the extension '_errorbars.pkl' or 'delays.pkl'.
 	"""
 
-	def __init__(self, data, knots, ml, name, drawopt, runopt, ncopy, nmocks, truetsr):
+	def __init__(self, data, knots, ml, name, drawopt, runopt, ncopy, nmocks, truetsr, colour, result_file_delays = None, result_file_errorbars = None):
 
 		self.data = data
 		self.knots = knots
@@ -32,6 +34,10 @@ class CScontainer():
 		self.ncopy = ncopy
 		self.nmocks = nmocks
 		self.truetsr = truetsr
+		self.colour = colour
+		self.result_file_delays = result_file_delays
+		self.result_file_errorbars = result_file_errorbars
+
 
 class Group():
 	"""
@@ -48,16 +54,18 @@ class Group():
 
 	  * a list of "linearized" distributions
 	  * a fancy name for display purposes
+	  * a list of name of the object if they are not standard such as ['A','B',...]
 
 	"""
 
-	def __init__(self, labels, medians, errors_up, errors_down, name, binslist=None, lins=None, nicename=None, ran_errors=None, sys_errors=None, int_errors=None):
+	def __init__(self, labels, medians, errors_up, errors_down, name, binslist=None, lins=None, nicename=None, ran_errors=None, sys_errors=None, objects = None, int_errors=None):
 
 		# start with some assertion tests
 		assert (len(labels) == len(medians) == len(errors_up) == len(errors_down))
 
 		# mandatory params
 		self.labels = labels
+		self.objects = objects
 		self.medians = medians
 		self.errors_up = errors_up
 		self.errors_down = errors_down
@@ -195,10 +203,16 @@ def getresults(csc, useintrinsic=False):
 	"""
 
 	# get the correct results path
-	cp = "%s_ks%i_%s/sims_copies_%s_n%i_opt_%s_delays.pkl" % (
-	csc.drawopt, csc.knots, csc.ml, csc.data, csc.ncopy, csc.runopt)
-	mp = "%s_ks%i_%s/sims_mocks_%s_n%it%i_opt_%s_errorbars.pkl" % (
-	csc.drawopt, csc.knots, csc.ml, csc.data, csc.nmocks, csc.truetsr, csc.runopt)
+	if csc.result_file_delays == None and csc.result_file_errorbars == None :
+		cp = "%s_ks%i_%s/sims_copies_%s_n%i_opt_%s_delays.pkl" % (
+		csc.drawopt, csc.knots, csc.ml, csc.data, csc.ncopy, csc.runopt)
+		mp = "%s_ks%i_%s/sims_mocks_%s_n%it%i_opt_%s_errorbars.pkl" % (
+		csc.drawopt, csc.knots, csc.ml, csc.data, csc.nmocks, csc.truetsr, csc.runopt)
+		#TODO : clear this
+	else :
+		cp = csc.result_file_delays
+		mp = csc.result_file_errorbars
+		print cp, mp
 
 	# collect the results
 	result = (pycs.gen.util.readpickle(cp), pycs.gen.util.readpickle(mp))
@@ -583,7 +597,7 @@ def mult_estimates(groups, testmode=True):
 	# assert that the binnings are the same and that labels are in the same order
 	#todo: instead of rejecting if label orders are not the same, simply do the multiplication label per label, as done in other functions above.
 	for group in groups[1:]:
-		assert group.binslist == groups[0].binslist, "Group %s has different bins than group %s" % (group.name, groups[0].name)
+		assert np.allclose(group.binslist, groups[0].binslist), "Group %s has different bins than group %s" % (group.name, groups[0].name)
 		assert group.labels == groups[0].labels, "Group %s has different labels (or labels order) than group %s" % (group.name, groups[0].name)
 
 	# we assume the groups are ordered according to their labels (assert test would have failed otherwise)

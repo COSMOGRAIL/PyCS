@@ -59,7 +59,19 @@ def applyopt(optfct, lcslist, **kwargs):
 			print "Starting the curve shifting on a single CPU, no multiprocessing..."
 		start = time.time()
 		kwargs_vec = [kwargs for k in lcslist]
-		optfctouts = [optfct(lcs, **kwargs_vec[i]) for i,lcs in enumerate(lcslist)] # Ok to use optfct directly
+		# optfctouts = [optfct(lcs, **kwargs_vec[i]) for i,lcs in enumerate(lcslist)] # Ok to use optfct directly
+		optfctouts = []
+		sucess_dic = {'success':True, 'failed_id':[], 'error_list':[]}
+		for i, lcs in enumerate(lcslist):
+			try :
+				optout = optfct(lcs, **kwargs_vec[i])
+			except Exception as e:
+				print "WARNING : I have a probleme with the curve number %i."%(i)
+				sucess_dic['failed_id'].append(i)
+				sucess_dic['success'] = False
+				sucess_dic['error_list'].append(e)
+			else :
+				optfctouts.append(optout)
 
 		print "Shifted %i simulations, using 1 CPU, time : %s" % (len(lcslist), pycs.gen.util.strtd(time.time() - start))
 
@@ -84,11 +96,12 @@ def applyopt(optfct, lcslist, **kwargs):
 # 			lcs = optlcs
 # 		
 # 		print "Shifted %i simulations on %i/%i CPUs, time : %s" % (len(lcslist), ncpu, ncpuava, pycs.gen.util.strtd(time.time() - start))
-	
-	if optfctouts[0] == None:
+	if len(optfctouts) ==0 :
 		print("### WARNING : it seems that your optfct does not return anything ! ###")
+	# if optfctouts[0] == None:
+	# 	print("### WARNING : it seems that your optfct does not return anything ! ###")
 	
-	return optfctouts
+	return optfctouts, sucess_dic
 # 		"""
 # 		sys.exit("Sorry, mp does not work yet...")
 # 		import multiprocessing
@@ -113,11 +126,12 @@ class runresults:
 	The TRUE shifts are also saved (if available)
 	
 	All this is not related to a particular optimization technique.
+	Please also provide the success_dic to remove the curves where the optimiser failed.
 	
 	Note the mask funcitonallity.
 	"""
 	
-	def __init__(self, lcslist, qs=None, name="None", plotcolour = "#008800"):
+	def __init__(self, lcslist, qs=None, name="None", plotcolour = "#008800", success_dic = None):
 		"""
 		lcslist may or may not have "truetimeshifts". If not, I will put 0.0 as true shifts.
 		
@@ -127,7 +141,7 @@ class runresults:
 		I will not sort these lcs (as you might want them in an unsorted order).
 		
 		"""
-		
+
 		if qs is not None:
 			self.qs = qs
 			if qs.shape[0] != len(lcslist):
@@ -158,6 +172,7 @@ class runresults:
 		self.plottrue = False # By default we plot the measured delays.
 		self.plotgauss = False 
 		self.plotcolour = plotcolour
+		self.success_dic = success_dic
 		
 		self.check()
 
@@ -228,6 +243,21 @@ class runresults:
 		ret["max"] = np.max(self.tsarray, axis=0)
 		ret["min"] = np.min(self.tsarray, axis=0)
 		ret["type"] = "distribution"
+		return ret
+
+	def get_delays_from_ts(self):
+		"""
+        Return the time delays, from the timeshifts. I do not account for the true timeshift.
+        :return: dictionary containing the median, max, and min delays + delay labels
+        """
+		n = len(self.labels)
+		couples = [(self.tsarray[:, i], self.tsarray[:, j]) for i in range(n) for j in range(n) if i < j]
+		label_couple = [self.labels[i] + self.labels[j] for i in range(n) for j in range(n) if i < j]
+		ret = {"center": [np.median(lcs2 - lcs1) for (lcs1, lcs2) in couples]}
+		ret["max"] = [np.max(lcs2 - lcs1) for (lcs1, lcs2) in couples]
+		ret["min"] = [np.min(lcs2 - lcs1) for (lcs1, lcs2) in couples]
+		ret["delay_label"] = label_couple
+		ret["type"] = "delay distribution"
 		return ret
 		
 		
@@ -350,8 +380,8 @@ def multirun(simset, lcs, optfct, kwargs_optim=None, optset="multirun", tsrand=1
 		print "Initial conditions : "
 		for l in lcs:
 			print l
-	
-	
+
+	success_dic = {'success': True, 'failed_id': [], 'error_list': []}
 	for simpkl in simpkls:
 		
 		# First we test if this simpkl is already processed (or if another multirun is working on it).
@@ -391,7 +421,7 @@ def multirun(simset, lcs, optfct, kwargs_optim=None, optset="multirun", tsrand=1
 			if shuffle:
 				for simlcs in simlcslist:
 					pycs.gen.lc.shuffle(simlcs)
-			optfctouts = applyopt(optfct, simlcslist, **kwargs_optim)
+			optfctouts, success_dic = applyopt(optfct, simlcslist, **kwargs_optim)
 			if shuffle: # We sort them, as they will be passed the constructor of runresuts.
 				for simlcs in simlcslist:
 					pycs.gen.lc.objsort(simlcs, verbose=False)
@@ -415,8 +445,8 @@ def multirun(simset, lcs, optfct, kwargs_optim=None, optset="multirun", tsrand=1
 			try:
 				qs = np.array(map(float, optfctouts)) # Then it's some kind of chi2, or a d2 : easy !
 				tracesplinelists = [[]]*len(simlcslist) # just for the trace
-			except:
-				
+			except Exception as e :
+				print e
 				tracesplinelists = [[]]*len(simlcslist) # just for the trace
 				qs = None
 				if analyse == True:
@@ -430,14 +460,15 @@ def multirun(simset, lcs, optfct, kwargs_optim=None, optset="multirun", tsrand=1
 			for (simlcs, tracesplinelist) in zip(simlcslist, tracesplinelists):
 				pycs.gen.util.trace(lclist=simlcs, splist=tracesplinelist, tracedir = tracedir)
 
+		clean_simlcslist = clean_simlist(simlcslist, success_dic)
 		if keepopt:
 			# A bit similar to trace, we save the optimized lcs in a pickle file.
-			outopt = {"optfctoutlist":optfctouts, "optlcslist":simlcslist}
+			outopt = {"optfctoutlist":optfctouts, "optlcslist":clean_simlcslist}
 			pycs.gen.util.writepickle(outopt, optfilepath)
 
 
 		# Saving the results
-		rr = runresults(simlcslist, qs = qs, name="sims_%s_opt_%s" % (simset, optset))
+		rr = runresults(clean_simlcslist, qs = qs, name="sims_%s_opt_%s" % (simset, optset), success_dic = success_dic)
 		pycs.gen.util.writepickle(rr, resultsfilepath)
 
 		# We remove the lock for this pkl file.
@@ -448,7 +479,14 @@ def multirun(simset, lcs, optfct, kwargs_optim=None, optset="multirun", tsrand=1
 		
 		else:
 			os.remove(workingonfilepath)
-		
-	
 
+	return success_dic
 			
+def clean_simlist(simlcslist, success_dic):
+	for i in reversed(success_dic['failed_id']):
+		print "remove simlcs ",i
+		del simlcslist[i]
+
+	return simlcslist
+
+

@@ -488,14 +488,14 @@ class lightcurve:
 	
 	# Now, stuff for microlensing and manipulating the magnitudes :
 	
-	def addml(self, microlensing):
+	def addml(self, microlensing, verbose = False):
 		"""
 		Adds a microlensing object (by add we mean it replaces one if it was already present) -- we are not just setting
 		the parameters here ! Note that we COPY the microlensing object, so that the one added is independent from yours.
 		"""
 		
-		if self.ml != None:
-			print "I replace an existing mircolensing."
+		if self.ml != None and verbose :
+			print "I replace an existing microlensing."
 			
 		
 		self.ml = microlensing.copy() # this copy is important if you append the "same" new ml object to different lcs.
@@ -783,6 +783,22 @@ class lightcurve:
 			
 		if verbose:
 			print "%s : validation done !" % (self)
+
+	def remove_epochs(self, index):
+		"""
+		Delete epochs in your LightCurve
+
+		:param index: array or element with the position of the epoch to remove
+		:return:
+		"""
+
+		self.jds = np.delete(self.jds, index)
+		self.mags = np.delete(self.mags, index)
+		self.magerrs = np.delete(self.magerrs, index)
+		self.mask = np.delete(self.mask, index)
+		self.properties = np.delete(self.properties, index)
+		self.labels = np.delete(self.labels, index)
+		self.validate()
 
 	def sort(self):
 		"""
@@ -1619,8 +1635,9 @@ def multidisplay(setlist=[],
 			plt.xlim(jdrange[0], jdrange[1])
 
 
-		plt.xlabel("HJD - 2400000.5 [day]", fontsize = labelfontsize)
-		plt.ylabel("Magnitude (relative)", fontsize = labelfontsize)
+		plt.xlabel("HJD - 2400000.5 (day)$", fontsize = labelfontsize)
+		if show_ylabel :
+			plt.ylabel("Magnitude (relative)$", fontsize = labelfontsize)
 
 		if showdelays:
 			txt = getnicetimedelays(lclist, separator="\n")
@@ -1755,9 +1772,9 @@ def multidisplay(setlist=[],
 
 def display(lclist=[], splist=[],
 	title=None, titlexpos=None, style=None, showlegend=True, showlogo=False, logopos="left", showdates=False, showdelays=False, nicefont=False, text=None, keeponlygrid=False,
-	jdrange=None, magrange=None, figsize=(12,8), plotsize=(0.08, 0.96, 0.09, 0.95), showgrid=False,
+	jdrange=None, magrange=None, figsize=None, plotsize=(0.08, 0.96, 0.09, 0.95), showgrid=False,
 	markersize=6, showerrorbars=True, showdatapoints=True, errorbarcolour = "#BBBBBB", capsize=3, knotsize=0.015,
-	legendloc = "best", showspldp=False, colourprop=None, hidecolourbar=False, transparent=False,
+	legendloc = "best", showspldp=False, colourprop=None, hidecolourbar=False, transparent=False,show_ylabel = True, labelfontsize = 14,
 	collapseref=False, hidecollapseref=False, jdmintickstep=100, magmintickstep=0.2, filename="screen", showinsert=None, insertname=None, verbose=False, ax=None):
 	"""
 	Function that uses matplotlib to plot a **list** of lightcurves/splines/GPRs, either on screen or into a file.
@@ -1783,8 +1800,11 @@ def display(lclist=[], splist=[],
 	:param style: A shortcut to produce specific kinds of stylings for the plots.
 		Available styles:
 
-			* ``homepagepdf`` : for cosmograil homepage, ok also with long magnitude labels (like -13.2)
-			
+			* ``homepagepdf`` and "homepagepdfnologo" : for cosmograil homepage, ok also with long magnitude labels (like -13.2)
+			* ``2m2`` : for 2m2 data
+			* ``posterpdf`` : for 2m2 data
+			* ``internal`` : for 2m2 data
+
 	:type style: string
 
 	:param showlegend: Automatic legend (too technical/ugly for publication plots, uses str(lightcurve))
@@ -1919,12 +1939,13 @@ def display(lclist=[], splist=[],
 	if style == None:
 		pass
 	elif style in ["homepagepdf", "homepagepdfnologo"]:
-		figsize=(10,5)
+		if figsize==None :
+			figsize=(10,5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
 		showlogo=True
 		if style == "homepagepdfnologo":
 			showlogo=False
-		nicefont=False
+		nicefont=True
 		showdelays=False
 		showlegend=False
 		showdates=True
@@ -1935,8 +1956,11 @@ def display(lclist=[], splist=[],
 		magmintickstep=0.2
 		showgrid=True
 		transparent=False
+		show_ylabel = True
 
 	elif "2m2" in style:
+		if figsize==None :
+			figsize=(10,5)
 		figsize=(10,5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
 		showlogo = True
@@ -1958,10 +1982,11 @@ def display(lclist=[], splist=[],
 		magmintickstep=0.2
 		#showgrid=False
 		transparent=False
-
-		
+		show_ylabel = True
 		
 	elif style=="posterpdf":
+		if figsize==None :
+			figsize=(10,5)
 		figsize=(10,5.5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
 		showlogo=False
@@ -1976,8 +2001,11 @@ def display(lclist=[], splist=[],
 		magmintickstep=0.2
 		#showgrid=False
 		transparent=False
+		show_ylabel = True
 
 	elif style=="internal":
+		if figsize==None :
+			figsize=(10,5)
 		figsize=(10,5.5)
 		plotsize=(0.09, 0.97, 0.10, 0.95)
 		showlogo=False
@@ -1991,9 +2019,43 @@ def display(lclist=[], splist=[],
 		magmintickstep=0.2
 		showgrid=True
 		transparent=False
+		show_ylabel = True
 
+	elif style == "cosmograil_dr1":
+		if figsize==None :
+			figsize=(10,5)
+		plotsize=(0.09, 0.97, 0.10, 0.95)
+		showlogo=False
+		nicefont=True
+		showdelays=False
+		showlegend=False
+		showdates=False
+		errorbarcolour="#777777"
+		markersize=5.0
+		capsize=0
+		jdmintickstep=50
+		magmintickstep=0.2
+		showgrid=False
+		transparent=False
+		show_ylabel = True
 
-
+	elif style == "cosmograil_dr1_microlensing":
+		if figsize==None :
+			figsize=(10,5)
+		plotsize=(0.09, 0.97, 0.10, 0.95)
+		showlogo=False
+		nicefont=True
+		showdelays=False
+		showlegend=False
+		showdates=False
+		errorbarcolour="#777777"
+		markersize=5.0
+		capsize=0
+		jdmintickstep=50
+		magmintickstep=0.2
+		showgrid=False
+		transparent=False
+		show_ylabel = False
 	else:
 		raise RuntimeError("I do not know the style %s" % (style))
 	
@@ -2004,14 +2066,11 @@ def display(lclist=[], splist=[],
 
 	if colourprop != None:
 		(colourpropname, colournicename, colourminval, colourmaxval) = colourprop
-	
-	labelfontsize = 14
+
 	if nicefont:
 		#mpl.rcParams['font.size'] = 20
 		mpl.rcParams['font.family'] = 'serif'
 		#labelfontsize = 20
-	else:
-		labelfontsize = 14
 
 	if ax == None:
 		fig = plt.figure(figsize=figsize)	# sets figure size
@@ -2176,7 +2235,7 @@ def display(lclist=[], splist=[],
 				axes.plot(rs.getjds(), rs.mags, "-", color=rs.plotcolour)
 				xf = np.concatenate((rs.getjds(), rs.getjds()[::-1]))
         			yf = np.concatenate((rs.mags+rs.magerrs, (rs.mags-rs.magerrs)[::-1]))
-        			plt.fill(xf, yf, facecolor = rs.plotcolour, alpha=0.2, edgecolor = (1,1,1), label=str(rs))
+        			axes.fill(xf, yf, facecolor = rs.plotcolour, alpha=0.2, edgecolor = (1,1,1), label=str(rs))
 				
 	
 	# Astronomers like minor tick marks :
@@ -2200,7 +2259,8 @@ def display(lclist=[], splist=[],
 		cbar.set_label(colournicename) 
 
 	# And we make custom title :
-	
+	from matplotlib import rc
+	rc('text', usetex=True)
 	if title == "None" or title == None or title == "none":
 		#plt.title("Lightcurves", fontsize=18)
 		pass
@@ -2212,12 +2272,14 @@ def display(lclist=[], splist=[],
 		else:
 			axes.annotate(title, xy=(titlexpos, 1.0), xycoords='axes fraction', xytext=(0, -4),
 			textcoords='offset points', ha='center', va='top', fontsize=25)
+	rc('text', usetex=False)
 	if jdrange != None:
 		axes.set_xlim(jdrange[0], jdrange[1])
 	
 	
-	axes.set_xlabel("HJD - 2400000.5 [day]", fontsize = labelfontsize)
-	axes.set_ylabel("Magnitude (relative)", fontsize = labelfontsize)
+	axes.set_xlabel("HJD - 2400000.5 (day)", fontsize = labelfontsize)
+	if show_ylabel :
+		axes.set_ylabel("Magnitude", fontsize = labelfontsize)
 	
 	if showdelays:
 		txt = getnicetimedelays(lclist, separator="\n")
@@ -2268,7 +2330,11 @@ def display(lclist=[], splist=[],
 	
 	
 	if showgrid:
-		plt.grid(zorder=20, linestyle = 'dotted')
+		if showdates:
+			yearx.grid(zorder=20, linestyle='dotted')
+		else :
+			axes.grid(zorder=20, linestyle='dotted')
+		axes.yaxis.grid(False)
 	
 	if text != None:
 		for line in text:
@@ -2360,7 +2426,7 @@ def display(lclist=[], splist=[],
 		plt.show()
 	else:
 
-		plt.savefig(filename, transparent=transparent)
+		plt.savefig(filename, transparent=transparent, dpi = 250)
 		#if verbose:
 		print "Plot written to %s" % filename
 		plt.close() # this seems important so that the plot is not displayed when a next plt.show() is called.

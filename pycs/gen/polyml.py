@@ -100,7 +100,7 @@ def polyfit(jds, mags, magerrs, nparams):
 
 	# We do "generalized least squares" aka "heteroskedasticity correction"
 	a = np.column_stack([(jds ** pow)/magerrs for pow in pows[::-1]]) 
-	fitp = np.linalg.lstsq(a, mags/magerrs)[0]
+	fitp = np.linalg.lstsq(a, mags/magerrs,rcond=None)[0]
 	
 	# Not using weights, this would be :
 	#a = np.column_stack([(jds ** pow) for pow in pows[::-1]]) 

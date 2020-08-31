@@ -9,10 +9,13 @@ dataresults = [
 
 # ... and turn this into simple histograms, that will give the intrinsic variance.
 # The option dataout=True will save the delay point estimate, to be used below.
+print(dataresults[0].get_delays_from_ts())
+print(dataresults[1].get_delays_from_ts())
+print(dataresults[2].get_delays_from_ts())
 pycs.sim.plot.hists(dataresults, r=5.0, nbins=100, showqs=False,
-	filename="fig_intrinsicvariance.pdf", dataout=True)
+	filename="fig_intrinsicvariance.pdf", dataout=True, usemedian=True)
 	
-	
+'''	
 # We read the results obtained on the synthetic curves :
 simresults = [
 	pycs.sim.run.collect("sims_1Kset1_opt_disp", "red", "Dispersion-like technique"),
@@ -42,5 +45,5 @@ splres = (pycs.gen.util.readpickle("sims_copies_opt_spl_delays.pkl"),
 
 pycs.sim.plot.newdelayplot([dispres, regdiffres, splres], rplot=6.0, displaytext=True,
 	filename = "fig_delays.pdf", refshifts=[{"colour":"gray", "shifts":(0, -5, -20, -70)}])
-
+'''
 

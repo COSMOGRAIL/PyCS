@@ -1456,6 +1456,7 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plo
 			
 			# Preparing the bins :
 			binlims = np.linspace(plotrange[0], plotrange[1], nbins + 1)
+			print binlims
 
 
 			for irr, rr in enumerate(rrlist): # We go through the different runresult objects
@@ -1513,9 +1514,9 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plo
 				if plotrods:
 					if not sidebyside:
 						if ploterrorbars:
-							ax.bar(binlims[:-1], binmeans, yerr=binstds, width=width, color=rr.plotcolour, ecolor=rr.plotcolour, error_kw={"capsize":2.5, "capthick":0.5, "markeredgewidth":0.5}, edgecolor=rr.plotcolour, alpha = alpharods)
+							ax.bar(binlims[:-1] + width/2.0, binmeans, yerr=binstds, width=width, color=rr.plotcolour, ecolor=rr.plotcolour, error_kw={"capsize":2.5, "capthick":0.5, "markeredgewidth":0.5}, edgecolor=rr.plotcolour, alpha = alpharods)
 						else:
-							ax.bar(binlims[:-1], binmeans, width=width, color=rr.plotcolour, edgecolor=rr.plotcolour, alpha = alpharods)
+							ax.bar(binlims[:-1] + width/2.0, binmeans, width=width, color=rr.plotcolour, edgecolor=rr.plotcolour, alpha = alpharods)
 					else:
 						width = width/len(rrlist)
 						squeezefactor = 1.0
@@ -1523,9 +1524,9 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plo
 						offset = width * (1.0-squeezefactor)/2.0
 						
 						if ploterrorbars:
-							ax.bar(binlims[:-1] + offset + irr*plotwidth, binmeans, yerr=binstds, width=plotwidth, color=rr.plotcolour, ecolor=rr.plotcolour, error_kw={"capsize":2.5, "capthick":0.5, "markeredgewidth":0.5}, edgecolor=rr.plotcolour, alpha = alpharods, linewidth=0)
+							ax.bar(binlims[:-1]+ width/2.0 + offset + irr*plotwidth, binmeans, yerr=binstds, width=plotwidth, color=rr.plotcolour, ecolor=rr.plotcolour, error_kw={"capsize":2.5, "capthick":0.5, "markeredgewidth":0.5}, edgecolor=rr.plotcolour, alpha = alpharods, linewidth=0)
 						else:
-							ax.bar(binlims[:-1] + offset + irr*plotwidth, binmeans, width=plotwidth, color=rr.plotcolour, edgecolor=rr.plotcolour, alpha = alpharods)
+							ax.bar(binlims[:-1]+ width/2.0 + offset + irr*plotwidth, binmeans, width=plotwidth, color=rr.plotcolour, edgecolor=rr.plotcolour, alpha = alpharods)
 					
 				# That's it for the different runresult objects, back to the common stuff for this particular panel :
 			
@@ -1555,7 +1556,9 @@ def measvstrue(rrlist, r=10.0, nbins = 10, plotpoints=True, alphapoints=1.0, plo
 					plt.ylabel("Delay measurement error [day]", fontsize=16)
 				plt.xticks(fontsize=13)
 				plt.yticks(fontsize=13)
-			
+				xmin, xmax = ax.get_xlim()
+				ax.set_xticks(np.round(np.linspace(xmin, xmax, 10)))
+
 			plt.xlim(plotrange)
 			#plt.ylim(plotrange)
 			if errorrange != None:

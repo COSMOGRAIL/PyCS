@@ -89,7 +89,15 @@ def sf(l, binsize = 200, ssf=False):
 		plt.show()
 	
 	
-	
+def mad(data, axis=None):
+	"""
+	Median absolute deviation
+	:param data: array from which to compute the MAD
+	:param axis: axis along to compute the MAD
+	:return: float, MAD of the array
+	"""
+
+	return np.median(np.absolute(data - np.median(data, axis)), axis)
 
 def erf(x):
 	"""
@@ -244,7 +252,8 @@ def resistats(rl):
 	"""
 	
 	meanmag = np.mean(rl.getmags())
-	stdmag = np.std(rl.getmags())
+	# stdmag = np.std(rl.getmags())
+	stdmag = mad(rl.getmags()) #use median absolute deviation instead, for robustness to outliers
 	runs = runstest(rl.getmags(), autolevel=False, verbose=False)
 	
 	out = {"mean":meanmag, "std":stdmag}
@@ -257,7 +266,7 @@ def mapresistats(rls):
 
 
 
-def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npkl=1000, plots=True, nplots=3, r=0.11, plotjdrange=None, plotcurveindexes=None, showplot=False, directory = "./"):
+def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npkl=1000, plots=True, nplots=3, r=0.11, plotjdrange=None, plotcurveindexes=None, showplot=False, directory = "./", resihist_figsize = None):
 	"""
 	Not flexible but very high level function to analyse the spline-fit-residuals of drawn curves and comparing them to the
 	real observations.
@@ -404,18 +413,20 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 	# Resi and zruns histos combined into one nicer figure :
 	
 	if plots:
-	
-		plt.figure(figsize=(3*len(curves), 4))
+		if resihist_figsize == None :
+			plt.figure(figsize=(3*len(curves), 4))
+		else :
+			plt.figure(figsize=resihist_figsize)
 		plt.subplots_adjust(left=0.02, bottom=0.12, right=0.98, top=0.98, wspace=0.08, hspace=0.37)
 		
 		# Resi histos :
 		for (i,curve) in enumerate(curves):
 			#print (1, len(curves), i+1)
 			plt.subplot(2, len(curves), i+1)
-			plt.hist(np.concatenate([rlc.mags for rlc in curve["optmockrlclist"]]), 50, range=(-r, r), facecolor='black', alpha=0.4, normed=True, histtype="stepfilled")
+			plt.hist(np.concatenate([rlc.mags for rlc in curve["optmockrlclist"]]), 50, range=(-r, r), facecolor='black', alpha=0.4, normed=1, histtype="stepfilled")
 			# Gaussian for the mock hist :
 			#plt.plot(np.linspace(-r, r, 100), normal(np.linspace(-r, r, 100), curve["origresistats"]["mean"], curve["origresistats"]["std"]), color="green")
-			plt.hist(curve["optorigrlc"].mags, 50, facecolor='green', alpha=0.4, range=(-r, r), normed=True, histtype="stepfilled")
+			plt.hist(curve["optorigrlc"].mags, 50, facecolor=curve["optorigrlc"].plotcolour, alpha=0.5, range=(-r, r), normed=1, histtype="stepfilled")
 			plt.xlabel("Spline fit residuals [mag]")
 			
 			#print plt.gca().get_ylim()
@@ -428,8 +439,8 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 			#print (1, len(curves), i+1)
 			plt.subplot(2, len(curves), len(curves)+i+1)
 			
-			plt.hist(np.array([el["zruns"] for el in curve["mockresistats"]]), 20, facecolor="black", alpha=0.4, normed=True, histtype="stepfilled")
-			plt.axvline(curve["origresistats"]["zruns"], color="green", linewidth=2.0, alpha=0.7)
+			plt.hist(np.array([el["zruns"] for el in curve["mockresistats"]]), 20, facecolor="black", alpha=0.4, normed=1, histtype="stepfilled")
+			plt.axvline(curve["origresistats"]["zruns"], color=curve["optorigrlc"].plotcolour, linewidth=2.0, alpha=1.0)
 			
 			plt.xlabel(r"$z_{\mathrm{r}}$", fontsize=18)
 			# plt.xlim(-5.0, 5.0)
@@ -439,7 +450,7 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 
 		if showplot:
 			plt.show()
-		plt.savefig("fig_anaoptdrawn_%s_%s_resihists.pdf" % (simset, optset))	
+		plt.savefig("fig_anaoptdrawn_%s_%s_resihists.png" % (simset, optset))
 	
 	
 	# A detailed plot of some residuals, just for a few drawn curves
@@ -456,14 +467,16 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 			if plotcurveindexes != None:
 				optorigrlcs = [optorigrlcs[index] for index in plotcurveindexes]
 				optmockrlcs = [optmockrlcs[index] for index in plotcurveindexes]
-			plotresiduals([optorigrlcs, optmockrlcs], jdrange=plotjdrange, nicelabel=False, showlegend=False, showsigmalines = False, errorbarcolour = "#999999", filename="fig_anaoptdrawn_%s_%s_resi_%i.pdf" % (simset, optset, i+1))	
+			plotresiduals([optorigrlcs, optmockrlcs], jdrange=plotjdrange, nicelabel=False, showlegend=False, showsigmalines = False, errorbarcolour = "#999999", filename="fig_anaoptdrawn_%s_%s_resi_%i.png" % (simset, optset, i+1))
 
 	
 	return stats
 	
 	
 
-def plotresiduals(rlslist, jdrange=None, magrad=0.1, errorbarcolour = "#BBBBBB", showerrorbars=True, showlegend=True, nicelabel=True, showsigmalines=True, filename=None):
+def plotresiduals(rlslist, jdrange=None, magrad=0.1, errorbarcolour = "#BBBBBB", 
+				  showerrorbars=True, showlegend=True, nicelabel=True, 
+				  showsigmalines=True, filename=None, ax = None):
 	"""
 	We plot the residual lightcurves in separate frames.
 	
@@ -489,9 +502,17 @@ def plotresiduals(rlslist, jdrange=None, magrad=0.1, errorbarcolour = "#BBBBBB",
 	eps = 0.001
 	
 	npanels = len(rlslist[0])
+	if ax == None:
+		fig = plt.figure(figsize=(12,1.6*npanels))	# sets figure size
+		fig.subplots_adjust(left=0.07, right=0.99, top=0.95, bottom=0.17, hspace=0.05)
+		ax = plt.gca()
+		ihaveax = False
+	else :
+		ihaveax = True
+
 	
-	fig = plt.figure(figsize=(12,1.6*npanels))
-	fig.subplots_adjust(left = 0.07, right=0.99, top=0.95, bottom=0.14, hspace=0.05)
+	# fig = plt.figure(figsize=(12,1.6*npanels))
+	# fig.subplots_adjust(left = 0.07, right=0.99, top=0.95, bottom=0.14, hspace=0.05)
 
 
 	#plt.rc('font', family = 'serif', serif = 'STIXGeneral')
@@ -500,12 +521,15 @@ def plotresiduals(rlslist, jdrange=None, magrad=0.1, errorbarcolour = "#BBBBBB",
 	for i in range(npanels): # i is the panel index
 		
 		rls = [rlslist[j][i] for j in range(len(rlslist))] # j is the curve index.
-
-		if i > 0:
-			ax = plt.subplot(npanels, 1, i+1, sharex=ax0, sharey=ax0)
-		else:
-			ax = plt.subplot(npanels, 1, i+1)
+		
+		if ihaveax : 
 			ax0 = ax
+		else : 
+			if i > 0:
+				ax = plt.subplot(npanels, 1, i+1, sharex=ax0, sharey=ax0)
+			else:
+				ax = plt.subplot(npanels, 1, i+1)
+				ax0 = ax
 			
 		for (j, rl) in enumerate(rls):
 		
@@ -528,7 +552,7 @@ def plotresiduals(rlslist, jdrange=None, magrad=0.1, errorbarcolour = "#BBBBBB",
 				ax.axhline(y = -stats["std"], lw=0.5, color=rl.plotcolour)
 			
 			if nicelabel:
-				ax.text(0.60 + (0.087 * j), 0.85 , label, transform=ax.transAxes, color = rl.plotcolour)
+				ax.text(0.04 + (0.087 * j), 0.82 , label, transform=ax.transAxes, color = rl.plotcolour)
 			else:
 				if not showlegend:
 					if j == 0:
@@ -553,22 +577,25 @@ def plotresiduals(rlslist, jdrange=None, magrad=0.1, errorbarcolour = "#BBBBBB",
 		#ax.set_ylabel("Residual [mag]")
 		
 		
-		ax.set_xlabel("HJD - 2400000.5 [day]")
-		#a.set_xlim(52750, 55400)
-		
+		ax.set_xlabel("HJD - 2400000.5 [day]", fontsize =18)
+
 		if i != npanels-1:
 			plt.setp(ax.get_xticklabels(), visible=False)
 			ax.set_xlabel("")
 	
-	fig.text(0.01, 0.5, 'Residuals [mag]', rotation=90, verticalalignment="center", horizontalalignment="center")
+	ax.text(0.015, 0.54, ' Spline Residuals [mag]', rotation=90, verticalalignment="center", horizontalalignment="center", transform=plt.gcf().transFigure, fontsize = 16)
 		
 	if jdrange != None:
 		plt.xlim(jdrange[0], jdrange[1])
 	else:
 		plt.xlim(np.min(rlslist[0][0].jds)-50, np.max(rlslist[0][0].jds)+50)
 	
-	if filename:
-		plt.savefig(filename)	
+	if filename and ihaveax:
+		plt.savefig(filename)
+	elif filename and not ihaveax :
+		plt.savefig(filename)
+	elif not filename and ihaveax : 
+		return
 	else:
 		plt.show()
 	

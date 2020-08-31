@@ -3,7 +3,7 @@
 # This is done by defining the curve shifting functions that will be used in your scripts.
 
 import pycs
-#import pycs.regdiff # (needs pymc)
+import pycs.regdiff # (needs pymc)
 
 # A simple attempt to get a multi-purpose free-knot spline method :
 def spl(lcs):
@@ -21,8 +21,8 @@ def disp(lcs):
 	return pycs.disp.topopt.opt_full(lcs, rawdispersionmethod, nit=5, verbose=True)
 
 # The regression difference method : (needs pymc) : uncomment import on line 6 !
-#def regdiff(lcs):
-#	return pycs.regdiff.multiopt.opt_ts(lcs, pd=5, scale=200.0, verbose=True)
+def regdiff(lcs):
+	return pycs.regdiff.multiopt.opt_ts(lcs, pd=5, scale=200.0, verbose=True)
 
 
 # The small scale extrinsic variability, used to generated the synthetic curves:

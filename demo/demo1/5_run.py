@@ -9,9 +9,9 @@ import myopt
 lcs = pycs.gen.util.readpickle("data/trialcurves.pkl")
 
 # We set some plausible guess delays (by eye, or maybe from the modelfit)
-lcs[1].shifttime(-7.0)
-lcs[2].shifttime(-22.0)
-lcs[3].shifttime(-65.0)
+lcs[1].shifttime(-5.0)
+lcs[2].shifttime(-20.0)
+lcs[3].shifttime(-60.0)
 
 # Now uncomment the calls to multirun below, and run them on the "copies" and on the synthetic data.
 # These functions are designed so that several python instances can run them "in parallel"
@@ -21,16 +21,17 @@ lcs[3].shifttime(-65.0)
 
 
 # Free-knot spline technique
-"""
+
 # We define the microlensing model. Here we use the same as in 3_modelfit :
-pycs.gen.splml.addtolc(lcs[0], knotstep=150)
+'''pycs.gen.splml.addtolc(lcs[0], knotstep=150)
 pycs.gen.splml.addtolc(lcs[1], knotstep=150)
 pycs.gen.splml.addtolc(lcs[2], knotstep=150)
 pycs.gen.splml.addtolc(lcs[3], knotstep=150)
+kwargs_optim = {}
 
-pycs.sim.run.multirun("copies", lcs, myopt.spl, optset="spl", tsrand=10.0, keepopt=True)
-pycs.sim.run.multirun("1Kset1", lcs, myopt.spl, optset="spl", tsrand=10.0, keepopt=True)
-
+pycs.sim.run.multirun("copies", lcs, myopt.spl, kwargs_optim, optset="spl", tsrand=10.0, keepopt=True)
+# pycs.sim.run.multirun("1Kset1", lcs, myopt.spl, kwargs_optim, optset="spl", tsrand=10.0, keepopt=True)
+'''
 # When you run the spline technique using this multirun function, put keepopt=True as shown.
 # This will allow to easily compare the residuals from the synthetic curves
 # with the residuals from the observed data.
@@ -38,22 +39,22 @@ pycs.sim.run.multirun("1Kset1", lcs, myopt.spl, optset="spl", tsrand=10.0, keepo
 # You are free to change optset to whatever name you like. It should reflect the full method,
 # including the settings of the microlensing. 
 
-"""
+
 
 # Dispersion-like technique
-"""
+'''
 pycs.gen.polyml.addtolc(lcs[0], nparams=2, autoseasonsgap = 60.0)
 pycs.gen.polyml.addtolc(lcs[1], nparams=2, autoseasonsgap = 60.0)
 pycs.gen.polyml.addtolc(lcs[2], nparams=2, autoseasonsgap = 60.0)
 pycs.gen.polyml.addtolc(lcs[3], nparams=2, autoseasonsgap = 60.0)
+kwargs_optim = {}
+pycs.sim.run.multirun("copies", lcs, myopt.disp, kwargs_optim, optset="disp", tsrand=10.0)
+# pycs.sim.run.multirun("1Kset1", lcs, myopt.disp, kwargs_optim, optset="disp", tsrand=10.0)
+'''
 
-pycs.sim.run.multirun("copies", lcs, myopt.disp, optset="disp", tsrand=10.0)
-pycs.sim.run.multirun("1Kset1", lcs, myopt.disp, optset="disp", tsrand=10.0)
-
-"""
 
 # Regression difference technique
-"""
-pycs.sim.run.multirun("copies", lcs, myopt.regdiff, optset="regdiff", tsrand=10.0)
-pycs.sim.run.multirun("1Kset1", lcs, myopt.regdiff, optset="regdiff", tsrand=10.0)
-"""
+kwargs_optim = {}
+pycs.sim.run.multirun("copies", lcs, myopt.regdiff, kwargs_optim, optset="regdiff", tsrand=10.0)
+#pycs.sim.run.multirun("1Kset1", lcs, myopt.regdiff, optset="regdiff", tsrand=10.0)
+
