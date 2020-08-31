@@ -8,7 +8,7 @@ import pymcgp
 import pycs.gen.spl
 import copy as pythoncopy
 import scipy.optimize as spopt
-
+import time
 
 class rslc():
 	"""
@@ -110,9 +110,11 @@ def factory(l, pad=300, pd=2, plotcolour=None, covkernel="matern", pow=1.5, amp=
 	mean_mag = np.mean(mags)
 	def meanprior(query):
 		return (0.0 * query + mean_mag)
-		
-	regfct = pymcgp.regression(jds, mags, magerrs, meanprior, covkernel=covkernel, pow=pow, amp=amp, scale=scale, errscale=errscale)
 
+	start = time.time()
+	regfct = pymcgp.regression(jds, mags, magerrs, meanprior, covkernel=covkernel, pow=pow, amp=amp, scale=scale, errscale=errscale)
+	stop = time.time()
+	print("Took : %2.2f" % (stop - start))
 	(rsmags, rsmagerrs) = regfct(rsjds) # that fucker does not want to be executed in a multiprocessing loop. Why ?
 
 	return rslc(rsjds, rsmags, rsmagerrs, pad, pd, timeshift=timeshift, name=name, plotcolour=plotcolour)

@@ -19,7 +19,7 @@ import pycs.gen.util
 
 
 
-def delayplot(plotlist, rplot=7.0, autoobj= None, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.10, hspace=0.15, txtstep=0.03, majorticksstep=2, filename=None, refgroup=None, legendfromrefgroup=False, centerdelays=None, ymin=0.2, hlines=None, blindness=False, horizontaldisplay=False, showxlabelhd=True, update_group_style = True, auto_radius =False,tick_step_auto = True, legendx = 0.85, legendy_offset = 0.12, hide_technical_name = False ):
+def delayplot(plotlist, rplot=7.0, autoobj= None, displaytext=True, hidedetails=False, showbias=True, showran=True, showerr=True, showlegend=True, text=None, figsize=(10, 6), left=0.06, right=0.97, top=0.99, bottom=0.08, wspace=0.10, hspace=0.15, txtstep=0.03, majorticksstep=2, filename=None, refgroup=None, legendfromrefgroup=False, centerdelays=None, ymin=0.2, hlines=None, blindness=False, horizontaldisplay=False, showxlabelhd=True, update_group_style = True, auto_radius =False,tick_step_auto = True, legendx = 0.85, legendy_offset = 0.12, hide_technical_name = False, xlabelfontsize = 25):
 
 
 	"""
@@ -165,7 +165,7 @@ def delayplot(plotlist, rplot=7.0, autoobj= None, displaytext=True, hidedetails=
 
 				# error line width
 				if not hasattr(group, 'elinewidth'):
-					group.elinewidth = 1.5
+					group.elinewidth = 2.0
 
 				# color
 				if not hasattr(group, 'plotcolor'):
@@ -248,7 +248,7 @@ def delayplot(plotlist, rplot=7.0, autoobj= None, displaytext=True, hidedetails=
 
 			# General esthetics :
 			if tick_step_auto :
-				majorticksstep = max(2.0, int(rplot/5.0) )
+				majorticksstep = max(2.0, int(rplot/4.0) )
 			ax.get_yaxis().set_ticks([])
 			minorLocator = MultipleLocator(1.0)
 			majorLocator = MultipleLocator(majorticksstep)
@@ -257,12 +257,11 @@ def delayplot(plotlist, rplot=7.0, autoobj= None, displaytext=True, hidedetails=
 
 			# Blindness display options
 			if blindness:
-				xlabel = "Blind delay [day]"
+				xlabel = r"$\mathrm{Blind delay [day]}$"
 			else:
-				xlabel = "Delay [day]"
+				xlabel = r"$\mathrm{Delay [day]}$"
 
-			plt.xticks(fontsize=15 - 2*(n-2))
-			xlabelfontsize = 25
+			plt.xticks(fontsize=xlabelfontsize-7)
 
 			if i == n - 1 and not horizontaldisplay:
 				plt.xlabel(xlabel, fontsize=xlabelfontsize)
@@ -273,7 +272,7 @@ def delayplot(plotlist, rplot=7.0, autoobj= None, displaytext=True, hidedetails=
 					ax.get_xaxis().set_ticks([])
 
 			if n != 2:  # otherwise only one panel, no need
-				plt.annotate(delaylabel, xy=(0.03, 0.88 - txtstep), xycoords='axes fraction', fontsize=14, color="black")
+				plt.annotate(delaylabel, xy=(0.03, 0.88 - txtstep), xycoords='axes fraction', fontsize=18, color="black")
 
 			if refgroup != None:
 
@@ -314,7 +313,7 @@ def delayplot(plotlist, rplot=7.0, autoobj= None, displaytext=True, hidedetails=
 	if filename == None:
 		plt.show()
 	else:
-		plt.savefig(filename)
+		plt.savefig(filename, dpi = 200)
 
 
 def write_delays(group, write_dir=None, mode="GLEE"):

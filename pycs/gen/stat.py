@@ -423,10 +423,10 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 		for (i,curve) in enumerate(curves):
 			#print (1, len(curves), i+1)
 			plt.subplot(2, len(curves), i+1)
-			plt.hist(np.concatenate([rlc.mags for rlc in curve["optmockrlclist"]]), 50, range=(-r, r), facecolor='black', alpha=0.4, density=True, histtype="stepfilled")
+			plt.hist(np.concatenate([rlc.mags for rlc in curve["optmockrlclist"]]), 50, range=(-r, r), facecolor='black', alpha=0.4, normed=1, histtype="stepfilled")
 			# Gaussian for the mock hist :
 			#plt.plot(np.linspace(-r, r, 100), normal(np.linspace(-r, r, 100), curve["origresistats"]["mean"], curve["origresistats"]["std"]), color="green")
-			plt.hist(curve["optorigrlc"].mags, 50, facecolor=curve["optorigrlc"].plotcolour, alpha=0.5, range=(-r, r), density=True, histtype="stepfilled")
+			plt.hist(curve["optorigrlc"].mags, 50, facecolor=curve["optorigrlc"].plotcolour, alpha=0.5, range=(-r, r), normed=1, histtype="stepfilled")
 			plt.xlabel("Spline fit residuals [mag]")
 			
 			#print plt.gca().get_ylim()
@@ -439,7 +439,7 @@ def anaoptdrawn(optoriglcs, optorigspline, simset="simset", optset="optset", npk
 			#print (1, len(curves), i+1)
 			plt.subplot(2, len(curves), len(curves)+i+1)
 			
-			plt.hist(np.array([el["zruns"] for el in curve["mockresistats"]]), 20, facecolor="black", alpha=0.4, density=True, histtype="stepfilled")
+			plt.hist(np.array([el["zruns"] for el in curve["mockresistats"]]), 20, facecolor="black", alpha=0.4, normed=1, histtype="stepfilled")
 			plt.axvline(curve["origresistats"]["zruns"], color=curve["optorigrlc"].plotcolour, linewidth=2.0, alpha=1.0)
 			
 			plt.xlabel(r"$z_{\mathrm{r}}$", fontsize=18)
@@ -504,7 +504,7 @@ def plotresiduals(rlslist, jdrange=None, magrad=0.1, errorbarcolour = "#BBBBBB",
 	npanels = len(rlslist[0])
 	if ax == None:
 		fig = plt.figure(figsize=(12,1.6*npanels))	# sets figure size
-		fig.subplots_adjust(left=0.07, right=0.99, top=0.95, bottom=0.14, hspace=0.05)
+		fig.subplots_adjust(left=0.07, right=0.99, top=0.95, bottom=0.17, hspace=0.05)
 		ax = plt.gca()
 		ihaveax = False
 	else :
@@ -577,14 +577,13 @@ def plotresiduals(rlslist, jdrange=None, magrad=0.1, errorbarcolour = "#BBBBBB",
 		#ax.set_ylabel("Residual [mag]")
 		
 		
-		ax.set_xlabel("HJD - 2400000.5 [day]")
-		#a.set_xlim(52750, 55400)
-		
+		ax.set_xlabel("HJD - 2400000.5 [day]", fontsize =18)
+
 		if i != npanels-1:
 			plt.setp(ax.get_xticklabels(), visible=False)
 			ax.set_xlabel("")
 	
-	ax.text(0.01, 0.5, 'Residuals [mag]', rotation=90, verticalalignment="center", horizontalalignment="center")
+	ax.text(0.015, 0.54, ' Spline Residuals [mag]', rotation=90, verticalalignment="center", horizontalalignment="center", transform=plt.gcf().transFigure, fontsize = 16)
 		
 	if jdrange != None:
 		plt.xlim(jdrange[0], jdrange[1])

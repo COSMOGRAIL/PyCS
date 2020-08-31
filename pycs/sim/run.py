@@ -244,6 +244,21 @@ class runresults:
 		ret["min"] = np.min(self.tsarray, axis=0)
 		ret["type"] = "distribution"
 		return ret
+
+	def get_delays_from_ts(self):
+		"""
+        Return the time delays, from the timeshifts. I do not account for the true timeshift.
+        :return: dictionary containing the median, max, and min delays + delay labels
+        """
+		n = len(self.labels)
+		couples = [(self.tsarray[:, i], self.tsarray[:, j]) for i in range(n) for j in range(n) if i < j]
+		label_couple = [self.labels[i] + self.labels[j] for i in range(n) for j in range(n) if i < j]
+		ret = {"center": [np.median(lcs2 - lcs1) for (lcs1, lcs2) in couples]}
+		ret["max"] = [np.max(lcs2 - lcs1) for (lcs1, lcs2) in couples]
+		ret["min"] = [np.min(lcs2 - lcs1) for (lcs1, lcs2) in couples]
+		ret["delay_label"] = label_couple
+		ret["type"] = "delay distribution"
+		return ret
 		
 		
 		

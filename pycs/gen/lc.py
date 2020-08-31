@@ -784,6 +784,22 @@ class lightcurve:
 		if verbose:
 			print "%s : validation done !" % (self)
 
+	def remove_epochs(self, index):
+		"""
+		Delete epochs in your LightCurve
+
+		:param index: array or element with the position of the epoch to remove
+		:return:
+		"""
+
+		self.jds = np.delete(self.jds, index)
+		self.mags = np.delete(self.mags, index)
+		self.magerrs = np.delete(self.magerrs, index)
+		self.mask = np.delete(self.mask, index)
+		self.properties = np.delete(self.properties, index)
+		self.labels = np.delete(self.labels, index)
+		self.validate()
+
 	def sort(self):
 		"""
 		We sort the lightcurve points according to jds.
@@ -1758,7 +1774,7 @@ def display(lclist=[], splist=[],
 	title=None, titlexpos=None, style=None, showlegend=True, showlogo=False, logopos="left", showdates=False, showdelays=False, nicefont=False, text=None, keeponlygrid=False,
 	jdrange=None, magrange=None, figsize=None, plotsize=(0.08, 0.96, 0.09, 0.95), showgrid=False,
 	markersize=6, showerrorbars=True, showdatapoints=True, errorbarcolour = "#BBBBBB", capsize=3, knotsize=0.015,
-	legendloc = "best", showspldp=False, colourprop=None, hidecolourbar=False, transparent=False,show_ylabel = True,
+	legendloc = "best", showspldp=False, colourprop=None, hidecolourbar=False, transparent=False,show_ylabel = True, labelfontsize = 14,
 	collapseref=False, hidecollapseref=False, jdmintickstep=100, magmintickstep=0.2, filename="screen", showinsert=None, insertname=None, verbose=False, ax=None):
 	"""
 	Function that uses matplotlib to plot a **list** of lightcurves/splines/GPRs, either on screen or into a file.
@@ -2050,14 +2066,11 @@ def display(lclist=[], splist=[],
 
 	if colourprop != None:
 		(colourpropname, colournicename, colourminval, colourmaxval) = colourprop
-	
-	labelfontsize = 14
+
 	if nicefont:
 		#mpl.rcParams['font.size'] = 20
 		mpl.rcParams['font.family'] = 'serif'
 		#labelfontsize = 20
-	else:
-		labelfontsize = 14
 
 	if ax == None:
 		fig = plt.figure(figsize=figsize)	# sets figure size
@@ -2246,7 +2259,8 @@ def display(lclist=[], splist=[],
 		cbar.set_label(colournicename) 
 
 	# And we make custom title :
-	
+	from matplotlib import rc
+	rc('text', usetex=True)
 	if title == "None" or title == None or title == "none":
 		#plt.title("Lightcurves", fontsize=18)
 		pass
@@ -2258,13 +2272,14 @@ def display(lclist=[], splist=[],
 		else:
 			axes.annotate(title, xy=(titlexpos, 1.0), xycoords='axes fraction', xytext=(0, -4),
 			textcoords='offset points', ha='center', va='top', fontsize=25)
+	rc('text', usetex=False)
 	if jdrange != None:
 		axes.set_xlim(jdrange[0], jdrange[1])
 	
 	
 	axes.set_xlabel("HJD - 2400000.5 (day)", fontsize = labelfontsize)
 	if show_ylabel :
-		axes.set_ylabel("Magnitude (relative)", fontsize = labelfontsize)
+		axes.set_ylabel("Magnitude", fontsize = labelfontsize)
 	
 	if showdelays:
 		txt = getnicetimedelays(lclist, separator="\n")
@@ -2411,7 +2426,7 @@ def display(lclist=[], splist=[],
 		plt.show()
 	else:
 
-		plt.savefig(filename, transparent=transparent)
+		plt.savefig(filename, transparent=transparent, dpi = 250)
 		#if verbose:
 		print "Plot written to %s" % filename
 		plt.close() # this seems important so that the plot is not displayed when a next plt.show() is called.
